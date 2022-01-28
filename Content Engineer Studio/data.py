@@ -4,3 +4,5 @@ descriptors = [
     ['Korrektes FAQ ausgespielt/Flow gestartet', 'Ausgespieltes FAQ/Flow nicht korrekt'],
     ['Kundenanliegen gelöst', 'Kundenanliegen nicht gelöst']
     ]
+
+example_flows = ['Some flow', 'Some other flow', 'Example flow', 'Some FAQ']
