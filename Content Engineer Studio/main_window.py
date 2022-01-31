@@ -52,7 +52,6 @@ class TextEdit(QTextEdit):
         height += self.frameWidth() * 2
         hint.setHeight(height)
         return hint
-    
 
 ########################################################################################
 # Main
@@ -145,6 +144,7 @@ class MainWindow(QMainWindow):
         format = QTextCharFormat()
         if cursor.hasSelection() and current_color != 4294901760:
             format.setBackground(Qt.red)
+            # format.setBackground(QColor(55, 92, 123))
         else:
             format.setBackground(QColor(70, 70, 70))
         cursor.setCharFormat(format)
@@ -168,14 +168,22 @@ class MainWindow(QMainWindow):
         for item in list(self.df.columns.values)[start:end]:
             self.cell_selector.addItem(item)
 
+
     def populate_canned(self):
-        self.canned.setColumnCount(2)
-        self.canned.setRowCount(len(descriptors))
-        for idx, row in enumerate(descriptors):
-            self.canned.setItem(idx,0, QTableWidgetItem(row[0]))
-            self.canned.setItem(idx,1, QTableWidgetItem(row[1]))
+        self.canned.setColumnCount(4)
+        self.canned.setRowCount(len(canned_questions))
+        for idx, row in enumerate(canned_questions):
+            self.canned.setItem(idx,0, QTableWidgetItem(row))
+            # rb_group = QButtonGroup(objectName=row)
+            for i, choice in enumerate(multiple_choice):
+                # self.canned.setItem(idx, i+1, QTableWidgetItem(choice))
+                combo = QRadioButton(self)
+                combo.setText(choice)
+                self.canned.setCellWidget(idx, i+1, combo)
+        # self.canned.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.canned.resizeColumnsToContents()
-        self.canned.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # self.canned.setColumnWidth(0, 320)
+
 
     def populate_sidebar(self):
         self.sidebar.setColumnCount(1)
@@ -184,8 +192,6 @@ class MainWindow(QMainWindow):
             self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 1)))
             if row['bool_check'] == 1:
                 self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120))
-            # else:
-            #     self.sidebar.item(idx, 0).setBackground(QtGui.QColor(22, 41, 85))
         self.sidebar.resizeColumnsToContents()
         self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
   
