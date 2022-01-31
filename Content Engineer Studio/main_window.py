@@ -1,7 +1,7 @@
 import sys
 from PyQt5.uic import loadUi
-from PyQt5 import QtCore, QtWidgets, QtGui 
-from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import * 
 from excel_helpers import * 
@@ -10,11 +10,12 @@ from stylesheets import *
 
 class TextEdit(QTextEdit):
     '''
-    Text edits in tables
+    For auto resizing text edits in tables
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.textChanged.connect(self.updateGeometry)
+        
 
     def sizeHint(self):
         hint = super().sizeHint()
@@ -53,6 +54,7 @@ class MainWindow(QMainWindow):
         self.analysis.textChanged.connect(self.save_analysis)
         self.left.clicked.connect(self.btn_left)
         self.right.clicked.connect(self.btn_right)
+        # self.combo.selectionChanged.connect(self.strikethrough)
 
         # Methods to be executed on startup
         self.populate_canned()
@@ -69,7 +71,7 @@ class MainWindow(QMainWindow):
         self.populate_chat()
 
         # Tests
-        print(xw.books.active.name)
+        # print(xw.books.active.name)
         # print(self.df.head)
 
 
@@ -78,7 +80,7 @@ class MainWindow(QMainWindow):
         Intercepts resize events for the table widget
         '''
         if event.type() == event.Resize:
-            QTimer.singleShot(0, self.tableWidget_3.resizeRowsToContents)
+            QTimer.singleShot(0, self.chat.resizeRowsToContents)
         return super().eventFilter(source, event)
 
 
@@ -99,13 +101,28 @@ class MainWindow(QMainWindow):
         self.chat.setColumnCount(1)
         self.chat.setRowCount(len(example_chat))
         for idx, message in enumerate(example_chat):
-            self.chat.setItem(idx,0, QTableWidgetItem(message))
+            if idx % 2 == 0:
+                combo = TextEdit(self, objectName='chat_bubble_bot') 
+            else:
+                combo = TextEdit(self, objectName='chat_bubble_customer') 
+            self.chat.setCellWidget(idx, 0, combo)
+            combo.setText(message)
+            if idx % 2 == 0:
+                combo.setAlignment(Qt.AlignRight)
+            combo.textChanged.connect(
+                lambda idx=idx: self.chat.resizeRowToContents(idx))
+            combo.selectionChanged.connect(self.strikethrough)
+
+        self.chat.installEventFilter(self)
+        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        
             # if idx % 2 == 0:
             #     self.chat.item(idx, 0).setBackground(QtGui.QColor(212, 177, 106))
             # else:
             #     self.chat.item(idx, 0).setBackground(QtGui.QColor(120, 135, 171))
-        self.chat.resizeColumnsToContents()
-        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+    def strikethrough(self):
+        self.combo.setTextColor(QtGui.QColor(120, 135, 171))
 
     def populate_analysis(self, signal):
         self.analysis.setText(self.df.loc[self.row][signal+self.cell_selector_start])
@@ -115,9 +132,6 @@ class MainWindow(QMainWindow):
             self.cell_selector.addItem(item)
 
     def populate_canned(self):
-        '''
-        Populates TableWidget of canned sentences
-        '''
         self.canned.setColumnCount(2)
         self.canned.setRowCount(len(descriptors))
         for idx, row in enumerate(descriptors):
@@ -126,24 +140,21 @@ class MainWindow(QMainWindow):
         self.canned.resizeColumnsToContents()
         self.canned.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-
     def populate_sidebar(self):
         self.sidebar.setColumnCount(1)
         self.sidebar.setRowCount(len(self.df.index))
         for idx, row in self.df.iterrows():
             self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 1)))
             if row['bool_check'] == 1:
-                self.sidebar.item(idx, 0).setBackground(QtGui.QColor(105, 79, 144))
+                self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120))
             # else:
             #     self.sidebar.item(idx, 0).setBackground(QtGui.QColor(22, 41, 85))
         self.sidebar.resizeColumnsToContents()
         self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
   
-    
     def populate_status_bar(self, row, start, end):
         self.status_bar.setText(''.join(self.df.iloc[row:row+1, start:end+1].to_string(header=False, index=False)))
 
-    
     def populate_flows(self, flows):
         self.flows.setColumnCount(1)
         self.flows.setRowCount(len(flows))
