@@ -9,24 +9,110 @@ Available at: https://github.com/GTRONICK/QSS/blob/master/ElegantDark.qss
 QMainWindow {
 	background-color: rgb(82, 82, 82);
 }
-
 QTableView {
     background-color:rgb(70, 70, 70);
     color: rgb(230, 230, 230);
     selection-color: rgb(255, 255, 255);
     selection-background-color: rgb(55, 92, 123);
 }
-
-sidebar_css {
-    background-color:rgb(82, 82, 82);
-    color: rgb(230, 230, 230);
-    selection-background-color: rgb(113, 141, 165);
+#actions {
+    selection-background-color: rgb(170, 132, 57);
 }
-
+#flows {
+    selection-background-color: rgb(170, 158, 57);
+}
 QTextEdit {
 	background-color:rgb(70, 70, 70);
 	color: rgb(230, 230, 230);
-    font-size: 14
+}
+#analysis {
+	background-color:rgb(70, 70, 70);
+	color: rgb(230, 230, 230);
+    font-size: 11pt;
+}
+#chat_bubble_customer {
+    font-size: 10pt;
+    border-style: outset;
+    border-left-width: 5px;
+    
+    border-left-color: rgb(105, 79, 144);
+    padding-left: 4px;
+    background-color: rgb(90, 90, 90);
+}
+#chat_bubble_bot {
+    font-size: 10pt;
+    text-align: right;
+    border-style: outset;
+    border-right-width: 5px;
+    border-right-color: rgb(212, 177, 106);
+    padding-right: 4px;
+    read-only
+    
+
+    /*
+    margin-right: 4px;
+    text-decoration: line-through;
+    */
+}
+QComboBox {
+	border-style: outset;
+	border-width: 2px;
+	border-top-color: qlineargradient(spread:pad, x1:0.5, y1:0.6, x2:0.5, y2:0.4, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-right-color: qlineargradient(spread:pad, x1:0.4, y1:0.5, x2:0.6, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-left-color: qlineargradient(spread:pad, x1:0.6, y1:0.5, x2:0.4, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-bottom-color: rgb(58, 58, 58);
+	border-bottom-width: 1px;
+	border-style: solid;
+	color: rgb(255, 255, 255);
+	padding: 2px;
+	background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));
+}
+QComboBox::drop-down  {
+	border-style: outset;
+	border-width: 2px;
+	border-top-color: qlineargradient(spread:pad, x1:0.5, y1:0.6, x2:0.5, y2:0.4, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-right-color: qlineargradient(spread:pad, x1:0.4, y1:0.5, x2:0.6, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-left-color: qlineargradient(spread:pad, x1:0.6, y1:0.5, x2:0.4, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-bottom-color: rgb(58, 58, 58);
+	border-bottom-width: 1px;
+	border-style: solid;
+}
+QComboBox::down-arrow   {
+	border-style: outset;
+	border-width: 2px;
+	border-top-color: qlineargradient(spread:pad, x1:0.5, y1:0.6, x2:0.5, y2:0.4, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-right-color: qlineargradient(spread:pad, x1:0.4, y1:0.5, x2:0.6, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-left-color: qlineargradient(spread:pad, x1:0.6, y1:0.5, x2:0.4, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-bottom-color: rgb(58, 58, 58);
+	border-bottom-width: 1px;
+	border-style: solid;
+
+}
+QComboBox:hover{
+	border-style: outset;
+	border-width: 2px;
+	border-top-color: qlineargradient(spread:pad, x1:0.5, y1:0.6, x2:0.5, y2:0.4, stop:0 rgba(180, 180, 180, 255), stop:1 rgba(110, 110, 110, 255));
+	border-right-color: qlineargradient(spread:pad, x1:0.4, y1:0.5, x2:0.6, y2:0.5, stop:0 rgba(180, 180, 180, 255), stop:1 rgba(110, 110, 110, 255));
+	border-left-color: qlineargradient(spread:pad, x1:0.6, y1:0.5, x2:0.4, y2:0.5, stop:0 rgba(180, 180, 180, 255), stop:1 rgba(110, 110, 110, 255));
+	border-bottom-color: rgb(115, 115, 115);
+	border-bottom-width: 1px;
+	border-style: solid;
+	color: rgb(255, 255, 255);
+	padding: 2px;
+	background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(107, 107, 107, 255), stop:1 rgba(157, 157, 157, 255));
+}
+QComboBox:pressed{
+	border-style: outset;
+	border-width: 2px;
+	border-top-color: qlineargradient(spread:pad, x1:0.5, y1:0.6, x2:0.5, y2:0.4, stop:0 rgba(62, 62, 62, 255), stop:1 rgba(22, 22, 22, 255));
+	border-right-color: qlineargradient(spread:pad, x1:0.4, y1:0.5, x2:0.6, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-left-color: qlineargradient(spread:pad, x1:0.6, y1:0.5, x2:0.4, y2:0.5, stop:0 rgba(115, 115, 115, 255), stop:1 rgba(62, 62, 62, 255));
+	border-bottom-color: rgb(58, 58, 58);
+	border-bottom-width: 1px;
+	border-style: solid;
+	color: rgb(255, 255, 255);
+	padding: 2px;
+	background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));
 }
 QPushButton{
 	border-style: outset;

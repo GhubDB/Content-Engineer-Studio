@@ -25,6 +25,8 @@ class excel:
         Loads Excel files
         '''
         filename = Path(filename)
+        # with xw.App() as app:
+        #     wb = app.books[filename]
         wb = xw.Book(filename)
         sheet = wb.sheets[sheet]
         df = sheet.range('A1').options(pd.DataFrame, expand='table').value
@@ -36,7 +38,7 @@ class excel:
         '''
         Adds header bool_check to df and assigns 1 to rows that have incomplete values under this header
         '''
-        df.loc[(df['Price'].isnull()) | (df['Location'].isnull()),"bool_check"]=True
+        df.loc[(df['Transcript Link'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()), "bool_check"]=True
         return 
 
     def overwrite_warn(df, idx, **kwargs):

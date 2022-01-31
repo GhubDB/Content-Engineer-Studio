@@ -1,12 +1,32 @@
 import sys
+import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QMainWindow
+# from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtWidgets import * 
+from PyQt5.QtGui import QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat
 from excel_helpers import * 
 from data import *
 from stylesheets import *
+
+class Highlighter(QSyntaxHighlighter):
+    '''
+    For highlighting anonymized text blocks
+    '''
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._mapping = {}
+
+    def add__mapping(self, pattern, pattern_format):
+        self._mapping[pattern] = pattern_format
+
+    def highlightBlock(self, text_block):
+        for pattern, fmt in self._mapping.items():
+            for match in re.finditer(pattern, text_block):
+                start, end = match.span()
+                self.setFormat(start, end-start, fmt)
+
 
 class TextEdit(QTextEdit):
     '''
@@ -14,8 +34,8 @@ class TextEdit(QTextEdit):
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.textChanged.connect(self.updateGeometry)
-        
+        self.textChanged.connect(self.updateGeometry)  
+              
 
     def sizeHint(self):
         hint = super().sizeHint()
@@ -32,8 +52,11 @@ class TextEdit(QTextEdit):
         height += self.frameWidth() * 2
         hint.setHeight(height)
         return hint
+    
 
-
+########################################################################################
+# Main
+########################################################################################
 class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -41,6 +64,7 @@ class MainWindow(QMainWindow):
         self.row = 0
         self.header_len = 0
         self.index_len = 0
+        self.highlighter = Highlighter()
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 4
@@ -54,12 +78,10 @@ class MainWindow(QMainWindow):
         self.analysis.textChanged.connect(self.save_analysis)
         self.left.clicked.connect(self.btn_left)
         self.right.clicked.connect(self.btn_right)
-        # self.combo.selectionChanged.connect(self.strikethrough)
+        # self.analysis.cursorPositionChanged.connect(self.test)
 
         # Methods to be executed on startup
         self.populate_canned()
-        
-
         self.populate_flows(example_flows)
         self.populate_actions(example_actions)
         self.df = excel.load('transcripts.xlsx', 'Sheet1')
@@ -73,15 +95,6 @@ class MainWindow(QMainWindow):
         # Tests
         # print(xw.books.active.name)
         # print(self.df.head)
-
-
-    def eventFilter(self, source, event):
-        '''
-        Intercepts resize events for the table widget
-        '''
-        if event.type() == event.Resize:
-            QTimer.singleShot(0, self.chat.resizeRowsToContents)
-        return super().eventFilter(source, event)
 
 
     def row_selector(self, selected):
@@ -101,28 +114,52 @@ class MainWindow(QMainWindow):
         self.chat.setColumnCount(1)
         self.chat.setRowCount(len(example_chat))
         for idx, message in enumerate(example_chat):
+            oname1, oname2 = 'chat_bubble_bot', 'chat_bubble_customer'
             if idx % 2 == 0:
-                combo = TextEdit(self, objectName='chat_bubble_bot') 
+                combo = TextEdit(self, objectName=oname1) 
             else:
-                combo = TextEdit(self, objectName='chat_bubble_customer') 
+                combo = TextEdit(self, objectName=oname2) 
             self.chat.setCellWidget(idx, 0, combo)
             combo.setText(message)
             if idx % 2 == 0:
                 combo.setAlignment(Qt.AlignRight)
-            combo.textChanged.connect(
-                lambda idx=idx: self.chat.resizeRowToContents(idx))
-            combo.selectionChanged.connect(self.strikethrough)
-
+            combo.setStyleSheet('selection-background-color: red;')
+            combo.textChanged.connect(lambda idx=idx: self.chat.resizeRowToContents(idx))
+            combo.cursorPositionChanged.connect(self.highlight_selection)
         self.chat.installEventFilter(self)
         self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        
-            # if idx % 2 == 0:
-            #     self.chat.item(idx, 0).setBackground(QtGui.QColor(212, 177, 106))
-            # else:
-            #     self.chat.item(idx, 0).setBackground(QtGui.QColor(120, 135, 171))
 
-    def strikethrough(self):
-        self.combo.setTextColor(QtGui.QColor(120, 135, 171))
+
+    def eventFilter(self, source, event):
+        '''
+        Intercepts resize events for the table widget
+        '''
+        if event.type() == event.Resize:
+            QTimer.singleShot(0, self.chat.resizeRowsToContents)
+        return super().eventFilter(source, event)
+
+    def highlight_selection(self):
+        sender = self.sender()
+        cursor = sender.textCursor()
+        current_color = cursor.charFormat().background().color().rgb()
+        format = QTextCharFormat()
+        if cursor.hasSelection() and current_color != 4294901760:
+            format.setBackground(Qt.red)
+        else:
+            format.setBackground(QColor(70, 70, 70))
+        cursor.setCharFormat(format)
+
+    def highlight(self):
+        '''
+        Highlights the user selected text
+        '''
+        class_format = QTextCharFormat()
+        class_format.setBackground(Qt.red)
+        class_format.setFontWeight(QFont.Bold)
+        # pattern = INSERT REGEX PATTERN HERE
+        self.highlighter.add_mapping(class_format)
+        # class_format.setTextColor(QColor(120, 135, 171))
+
 
     def populate_analysis(self, signal):
         self.analysis.setText(self.df.loc[self.row][signal+self.cell_selector_start])

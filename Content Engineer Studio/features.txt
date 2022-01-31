@@ -15,10 +15,14 @@ read and edit open excel files
 - update open file with values from studio 
 - navigate cells
 - display completed and uncompleted rows
+- display filename and worksheet in status bar
 
 options
 - turn webscraping on and off
 - prompt user when overwriting existing data
+- mark cells that are being worked on
+- automate syncing open excel file to local disk
+- automate detecting open excel files
 
 count the highlighted flows & bot answers on every save and make the program learn from user input
 
@@ -32,5 +36,7 @@ ev. webscraping bot confidence measurements
 
 
 requires further access/data
+- writing settings to file or to registry
 - displaying relevant flows and adding screenshots or path data to excel table
 - open and auto fill tickets
+- 
