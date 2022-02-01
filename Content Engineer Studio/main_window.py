@@ -3,6 +3,7 @@ import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import *
+from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat
 from excel_helpers import * 
@@ -33,8 +34,8 @@ class TextEdit(QTextEdit):
     '''
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.textChanged.connect(self.updateGeometry)  
-              
+        self.textChanged.connect(self.updateGeometry) 
+        
 
     def sizeHint(self):
         hint = super().sizeHint()
@@ -52,6 +53,8 @@ class TextEdit(QTextEdit):
         hint.setHeight(height)
         return hint
 
+
+
 ########################################################################################
 # Main
 ########################################################################################
@@ -66,6 +69,7 @@ class MainWindow(QMainWindow):
         self.canned_states = {}
         self.action_states = {}
         self.flow_states = {}
+        self.marked_messages = []
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 4
@@ -82,8 +86,8 @@ class MainWindow(QMainWindow):
         self.right.clicked.connect(self.btn_right)
         self.down.clicked.connect(self.btn_down)
         self.up.clicked.connect(self.btn_up)
-        self.save.clicked.connect(self.btn_save)
-        self.flows.itemSelectionChanged.connect(self.flows_selection)
+        self.save.clicked.connect(self.btn_save) # not implemented
+        self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
         # self.analysis.cursorPositionChanged.connect(self.test)
 
         # Methods to be executed on startup
@@ -119,6 +123,7 @@ class MainWindow(QMainWindow):
         if len(idx) > 0:
             self.row = idx[0].row()
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
+        self.populate_canned()
         self.populate_analysis()
     
     def clear_selections(self):
@@ -136,16 +141,30 @@ class MainWindow(QMainWindow):
         self.chat.setColumnCount(1)
         self.chat.setRowCount(len(example_chat))
         for idx, message in enumerate(example_chat):
-            oname1, oname2 = 'chat_bubble_bot', 'chat_bubble_customer'
             if idx % 2 == 0:
-                combo = TextEdit(self, objectName=oname1) 
+                combo = TextEdit(self, objectName=f'chat_bubble_bot_{idx}') 
             else:
-                combo = TextEdit(self, objectName=oname2) 
+                combo = TextEdit(self, objectName=f'chat_bubble_customer_{idx}') 
             self.chat.setCellWidget(idx, 0, combo)
             combo.setText(message)
+            combo.installEventFilter(self)
+            # Bot
             if idx % 2 == 0:
+                combo.setStyleSheet('font-size: 10pt;\
+                                    text-align: right; \
+                                    border-style: outset;\
+                                    border-right-width: 5px;\
+                                    border-right-color: rgb(45, 136, 45);\
+                                    padding-right: 4px;')
                 combo.setAlignment(Qt.AlignRight)
-            # combo.setStyleSheet('selection-background-color: red;')
+            # customer
+            else:
+                combo.setStyleSheet('font-size: 10pt; \
+                                    border-style: outset; \
+                                    border-left-width: 5px; \
+                                    border-left-color: rgb(83, 43, 114); \
+                                    padding-left: 4px; \
+                                    background-color: rgb(90, 90, 90);')
             combo.textChanged.connect(lambda idx=idx: self.chat.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection)
         self.chat.installEventFilter(self)
@@ -153,12 +172,66 @@ class MainWindow(QMainWindow):
 
 
     def eventFilter(self, source, event):
-        '''
-        Intercepts resize events for the table widget
-        '''
         if event.type() == event.Resize:
             QTimer.singleShot(0, self.chat.resizeRowsToContents)
+        if event.type() == QEvent.MouseButtonPress:
+            if event.button() == Qt.RightButton:
+                QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
         return super().eventFilter(source, event)
+
+    def select_chat(self, event, source):
+        if 'bot' in source.objectName():
+            if source.objectName() not in self.marked_messages:
+                self.marked_messages.append(source.objectName())
+                source.setStyleSheet('font-size: 10pt;\
+                                    font-weight: bold; \
+                                    text-align: right; \
+                                    border-style: outset;\
+                                    border-right-width: 10px;\
+                                    border-right-color: rgb(45, 136, 45);\
+                                    border-left-width: 2px;\
+                                    border-left-color: rgb(45, 136, 45);\
+                                    border-top-width: 2px;\
+                                    border-top-color: rgb(45, 136, 45);\
+                                    border-bottom-width: 2px;\
+                                    border-bottom-color: rgb(45, 136, 45);\
+                                    padding-right: 4px;')
+                source.setAlignment(Qt.AlignRight)  
+            else:
+                self.marked_messages.remove(source.objectName())
+                source.setStyleSheet('font-size: 10pt;\
+                                    text-align: right; \
+                                    border-style: outset;\
+                                    border-right-width: 5px;\
+                                    border-right-color: rgb(45, 136, 45);\
+                                    padding-right: 4px;')
+                source.setAlignment(Qt.AlignRight)
+
+        else:
+            if source.objectName() not in self.marked_messages:
+                self.marked_messages.append(source.objectName())
+                source.setStyleSheet('font-size: 10pt; \
+                                    font-weight: bold; \
+                                    border-style: outset; \
+                                    border-left-width: 10px; \
+                                    border-left-color: rgb(83, 43, 114); \
+                                    border-right-width: 2px; \
+                                    border-right-color: rgb(83, 43, 114); \
+                                    border-top-width: 2px; \
+                                    border-top-color: rgb(83, 43, 114); \
+                                    border-bottom-width: 2px; \
+                                    border-bottom-color: rgb(83, 43, 114); \
+                                    padding-left: 4px; \
+                                    background-color: rgb(90, 90, 90);')
+            else:
+                self.marked_messages.remove(source.objectName())
+                source.setStyleSheet('font-size: 10pt; \
+                                    border-style: outset; \
+                                    border-left-width: 5px; \
+                                    border-left-color: rgb(83, 43, 114); \
+                                    padding-left: 4px; \
+                                    background-color: rgb(90, 90, 90);')
+
 
     def highlight_selection(self):
         '''
@@ -168,9 +241,10 @@ class MainWindow(QMainWindow):
         cursor = sender.textCursor()
         current_color = cursor.charFormat().background().color().rgb()
         format = QTextCharFormat()
-        if cursor.hasSelection() and current_color != 4294901760:
-            format.setBackground(Qt.red)
-            # format.setBackground(QColor(55, 92, 123))
+        if cursor.hasSelection() and current_color != 4282679021:
+            # format.setBackground(Qt.light-blue)
+            format.setBackground(QColor(68, 126, 237))
+            # format.setForeground(Qt.black)
         else:
             format.clearBackground()
         cursor.setCharFormat(format)
@@ -196,20 +270,31 @@ class MainWindow(QMainWindow):
 
 
     def populate_canned(self):
-        self.canned.setColumnCount(4)
+        self.canned.setColumnCount(5)
         self.canned.setRowCount(len(canned_questions))
         for idx, row in enumerate(canned_questions):
             self.canned.setItem(idx,0, QTableWidgetItem(row))
-            rb_group = QButtonGroup(self, objectName='rb_group')
+            rb_group = QButtonGroup(self, objectName=f'rb_group_{idx}')
+            oname = f'rb_group_{idx}'
             rb_group.idReleased.connect(self.canned_selection)
             rb_group.setExclusive(True)
             for i, choice in enumerate(multiple_choice):
                 combo = QRadioButton(self)
                 combo.setText(choice)
+                # combo.setId(i)
+                if self.row in self.canned_states:
+                    if oname in self.canned_states[self.row]:
+                        if self.canned_states[self.row][oname] == choice:
+                            combo.setChecked(True)
                 rb_group.addButton(combo)
                 self.canned.setCellWidget(idx, i+1, combo)
-        # self.canned.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.canned.resizeColumnsToContents()
+        self.canned.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        # self.canned.resizeColumnsToContents()
+        self.canned.horizontalHeader().resizeSection(1, 50)
+        self.canned.horizontalHeader().resizeSection(2, 55)
+        self.canned.horizontalHeader().resizeSection(3, 85)
+        self.canned.horizontalHeader().resizeSection(4, 70)
+
         # self.canned.setColumnWidth(0, 320)
 
     def canned_selection(self):
@@ -221,6 +306,9 @@ class MainWindow(QMainWindow):
             self.canned_states[self.row] = {btn.objectName():btn.checkedButton().text()}
         else:
             self.canned_states[self.row][btn.objectName()] = btn.checkedButton().text()
+
+    def set_checked(self):
+        pass
 
 
     def populate_sidebar(self):
@@ -269,9 +357,9 @@ class MainWindow(QMainWindow):
         self.actions.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # self.actions.resizeColumnsToContents()
 
-    ############################################################
+    ################################################################################################
     # Buttons
-    ############################################################
+    ################################################################################################
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
@@ -294,7 +382,6 @@ class MainWindow(QMainWindow):
 
     def btn_save(self):
         pass
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
