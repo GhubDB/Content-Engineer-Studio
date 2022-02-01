@@ -90,14 +90,20 @@ class MainWindow(QMainWindow):
         self.populate_canned()
         self.populate_flows(example_flows)
         self.populate_actions(example_actions)
+
+        # Executed on excel.load
         self.df = excel.load('transcripts.xlsx', 'Sheet1')
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
         excel.incomplete(self.df)
         self.populate_sidebar()
-        # self.sidebar.selectRow(0)
+        index = self.sidebar.model().index(0, 0)
+        self.sidebar.selectionModel().select(
+            index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
+        
+        
         self.populate_chat()
 
         # Tests
@@ -112,6 +118,7 @@ class MainWindow(QMainWindow):
         idx = selected.indexes()
         if len(idx) > 0:
             self.row = idx[0].row()
+        self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
         self.populate_analysis()
     
     def clear_selections(self):
@@ -206,6 +213,9 @@ class MainWindow(QMainWindow):
         # self.canned.setColumnWidth(0, 320)
 
     def canned_selection(self):
+        '''
+        Keeps track of selected radiobuttons for each row of the excel file
+        '''
         btn = self.sender()
         if self.row not in self.canned_states:
             self.canned_states[self.row] = {btn.objectName():btn.checkedButton().text()}
@@ -259,6 +269,9 @@ class MainWindow(QMainWindow):
         self.actions.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # self.actions.resizeColumnsToContents()
 
+    ############################################################
+    # Buttons
+    ############################################################
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
@@ -278,17 +291,6 @@ class MainWindow(QMainWindow):
             index = self.sidebar.model().index(self.row + 1, 0)
             self.sidebar.selectionModel().select(
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
-            # self.sidebar.clearSelection()
-
-        # self.sidebar.selectionModel().select(0)
-
-            # self.sidebar.setCurrentIndex(0, QItemSelectionModel::NoUpdate)
-
-            # self.sidebar.model().index(0, 1) 
-
-            # self.sidebar.selectRow(self.row + 1)
-        # print(self.sidebar.selectionModel().currentIndex())
-        # print(self.sidebar.selectionModel().selectedRows())
 
     def btn_save(self):
         pass
