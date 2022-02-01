@@ -2,8 +2,7 @@ import sys
 import re
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtCore import Qt, QTimer
-# from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtCore import *
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat
 from excel_helpers import * 
@@ -64,6 +63,9 @@ class MainWindow(QMainWindow):
         self.header_len = 0
         self.index_len = 0
         self.highlighter = Highlighter()
+        self.canned_states = {}
+        self.action_states = {}
+        self.flow_states = {}
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 4
@@ -72,11 +74,16 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('CE Studio')
         
         # Connecting functions
-        self.sidebar.selectionModel().selectionChanged.connect(self.row_selector)
+        [self.sidebar.selectionModel().selectionChanged.connect(x) for x in 
+        [self.row_selector, self.clear_selections]]
         self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
         self.analysis.textChanged.connect(self.save_analysis)
         self.left.clicked.connect(self.btn_left)
         self.right.clicked.connect(self.btn_right)
+        self.down.clicked.connect(self.btn_down)
+        self.up.clicked.connect(self.btn_up)
+        self.save.clicked.connect(self.btn_save)
+        self.flows.itemSelectionChanged.connect(self.flows_selection)
         # self.analysis.cursorPositionChanged.connect(self.test)
 
         # Methods to be executed on startup
@@ -85,8 +92,10 @@ class MainWindow(QMainWindow):
         self.populate_actions(example_actions)
         self.df = excel.load('transcripts.xlsx', 'Sheet1')
         self.header_len = len(self.df.columns)
+        self.index_len = len(self.df.index)
         excel.incomplete(self.df)
         self.populate_sidebar()
+        # self.sidebar.selectRow(0)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
         self.populate_chat()
@@ -98,10 +107,17 @@ class MainWindow(QMainWindow):
 
     def row_selector(self, selected):
         '''
-        Keeps the current row number updated
+        Master Controller. Keeps the current row number updated
         '''
         idx = selected.indexes()
-        self.row = idx[0].row()
+        if len(idx) > 0:
+            self.row = idx[0].row()
+        self.populate_analysis()
+    
+    def clear_selections(self):
+        self.flows.clearSelection()
+        self.actions.clearSelection()
+        # self.canned.rb_group.setChecked(False)
 
     def save_analysis(self):
         '''
@@ -122,7 +138,7 @@ class MainWindow(QMainWindow):
             combo.setText(message)
             if idx % 2 == 0:
                 combo.setAlignment(Qt.AlignRight)
-            combo.setStyleSheet('selection-background-color: red;')
+            # combo.setStyleSheet('selection-background-color: red;')
             combo.textChanged.connect(lambda idx=idx: self.chat.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection)
         self.chat.installEventFilter(self)
@@ -138,6 +154,9 @@ class MainWindow(QMainWindow):
         return super().eventFilter(source, event)
 
     def highlight_selection(self):
+        '''
+        Highlights and unhighlights the user selected text
+        '''
         sender = self.sender()
         cursor = sender.textCursor()
         current_color = cursor.charFormat().background().color().rgb()
@@ -146,12 +165,12 @@ class MainWindow(QMainWindow):
             format.setBackground(Qt.red)
             # format.setBackground(QColor(55, 92, 123))
         else:
-            format.setBackground(QColor(70, 70, 70))
+            format.clearBackground()
         cursor.setCharFormat(format)
 
     def highlight(self):
         '''
-        Highlights the user selected text
+        Highlights predefined patterns in the chat log
         '''
         class_format = QTextCharFormat()
         class_format.setBackground(Qt.red)
@@ -161,8 +180,8 @@ class MainWindow(QMainWindow):
         # class_format.setTextColor(QColor(120, 135, 171))
 
 
-    def populate_analysis(self, signal):
-        self.analysis.setText(self.df.loc[self.row][signal+self.cell_selector_start])
+    def populate_analysis(self):
+        self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex()+self.cell_selector_start])
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
@@ -174,15 +193,24 @@ class MainWindow(QMainWindow):
         self.canned.setRowCount(len(canned_questions))
         for idx, row in enumerate(canned_questions):
             self.canned.setItem(idx,0, QTableWidgetItem(row))
-            # rb_group = QButtonGroup(objectName=row)
+            rb_group = QButtonGroup(self, objectName='rb_group')
+            rb_group.idReleased.connect(self.canned_selection)
+            rb_group.setExclusive(True)
             for i, choice in enumerate(multiple_choice):
-                # self.canned.setItem(idx, i+1, QTableWidgetItem(choice))
                 combo = QRadioButton(self)
                 combo.setText(choice)
+                rb_group.addButton(combo)
                 self.canned.setCellWidget(idx, i+1, combo)
         # self.canned.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.canned.resizeColumnsToContents()
         # self.canned.setColumnWidth(0, 320)
+
+    def canned_selection(self):
+        btn = self.sender()
+        if self.row not in self.canned_states:
+            self.canned_states[self.row] = {btn.objectName():btn.checkedButton().text()}
+        else:
+            self.canned_states[self.row][btn.objectName()] = btn.checkedButton().text()
 
 
     def populate_sidebar(self):
@@ -204,7 +232,24 @@ class MainWindow(QMainWindow):
         for idx, row in enumerate(flows):
             self.flows.setItem(idx,0, QTableWidgetItem(row))
         self.flows.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        # self.flows.resizeColumnsToContents()
+
+
+    def flows_selection(self):
+        cells = self.sender()
+
+        # self.flows.setSelected()
+
+        # self.flow_states[self.row] = cells.selectedItems()
+        # print(self.flow_states)
+
+
+        # print(cells.selectedItems())
+        # if self.row not in self.flow_states:
+        #     self.canned_states[self.row] = {btn.objectName():btn.checkedButton().text()}
+        #     print('not')
+        # else:
+        #     self.canned_states[self.row][btn.objectName()] = btn.checkedButton().text()
+        #     print ('in')
 
     def populate_actions(self, actions):
         self.actions.setColumnCount(1)
@@ -223,9 +268,28 @@ class MainWindow(QMainWindow):
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 1)
 
     def btn_up(self):
-        pass
+        if self.row > 0:
+            index = self.sidebar.model().index(self.row - 1, 0)
+            self.sidebar.selectionModel().select(
+                index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
+
     def btn_down(self):
-        pass
+        if self.row < self.index_len:
+            index = self.sidebar.model().index(self.row + 1, 0)
+            self.sidebar.selectionModel().select(
+                index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
+            # self.sidebar.clearSelection()
+
+        # self.sidebar.selectionModel().select(0)
+
+            # self.sidebar.setCurrentIndex(0, QItemSelectionModel::NoUpdate)
+
+            # self.sidebar.model().index(0, 1) 
+
+            # self.sidebar.selectRow(self.row + 1)
+        # print(self.sidebar.selectionModel().currentIndex())
+        # print(self.sidebar.selectionModel().selectedRows())
+
     def btn_save(self):
         pass
 

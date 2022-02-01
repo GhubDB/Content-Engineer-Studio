@@ -12,8 +12,11 @@ QMainWindow {
 QTableView {
     background-color:rgb(70, 70, 70);
     color: rgb(230, 230, 230);
+    /*
     selection-color: rgb(255, 255, 255);
+    */
     selection-background-color: rgb(55, 92, 123);
+    
 }
 #actions {
     selection-background-color: rgb(170, 132, 57);
@@ -178,6 +181,20 @@ QLineEdit {
 }
 QLabel {
 	color:rgb(255,255,255);	
+}
+QRadioButton {
+    color: rgb(230, 230, 230);
+    selection-background-color: rgb(55, 92, 123);
+}
+QRadioButton::indicator {
+    color: rgb(230, 230, 230);
+    selection-background-color: rgb(55, 92, 123);
+    selection-color: rgb(55, 92, 123);
+}
+QRadioButton::indicator::checked {
+    color: rgb(230, 230, 230);
+    selection-background-color: rgb(55, 92, 123);
+    selection-color: rgb(55, 92, 123);
 }
 QProgressBar {
 	text-align: center;
