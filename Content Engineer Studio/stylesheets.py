@@ -7,38 +7,40 @@ Last updated: 17/04/2018
 Available at: https://github.com/GTRONICK/QSS/blob/master/ElegantDark.qss
 */
 QMainWindow {
-	background-color: rgb(82, 82, 82);
+	background-color: rgb(70, 70, 70);
 }
 QTableView {
-    background-color:rgb(70, 70, 70);
+    background-color:rgb(50, 50, 50);
     color: rgb(230, 230, 230);
-    /*
-    selection-color: rgb(255, 255, 255);
-    */
-    selection-background-color: rgb(55, 92, 123);
     
+    selection-color: rgb(255, 255, 255);
+    
+    selection-background-color: rgb(55, 92, 123);
+  
 }
+/*
 #actions {
     selection-background-color: rgb(170, 132, 57);
 }
 #flows {
     selection-background-color: rgb(170, 158, 57);
 }
+*/
 QTextEdit {
-	background-color:rgb(70, 70, 70);
+	background-color:rgb(60, 60, 60);
 	color: rgb(230, 230, 230);
 }
 #analysis {
-	background-color:rgb(70, 70, 70);
+	background-color:rgb(50, 50, 50);
 	color: rgb(230, 230, 230);
     font-size: 11pt;
 }
+/*
 #chat_bubble_customer {
     font-size: 10pt;
     border-style: outset;
     border-left-width: 5px;
-    
-    border-left-color: rgb(105, 79, 144);
+    border-left-color: rgb(83, 43, 114);
     padding-left: 4px;
     background-color: rgb(90, 90, 90);
 }
@@ -47,14 +49,18 @@ QTextEdit {
     text-align: right;
     border-style: outset;
     border-right-width: 5px;
-    border-right-color: rgb(212, 177, 106);
+    border-right-color: rgb(45, 136, 45);
     padding-right: 4px;
-    read-only
     
-
-    /*
+    read-only
     margin-right: 4px;
     text-decoration: line-through;
+}
+*/
+#canned::item {
+    /*
+    border: 0px;
+    padding-right: 5px;
     */
 }
 QComboBox {
@@ -210,7 +216,7 @@ QProgressBar::chunk {
 	border-radius: 5px;
 }
 QMenuBar {
-	background:rgb(82, 82, 82);
+	background:rgb(70, 70, 70);
 }
 QMenuBar::item {
 	color:rgb(223,219,210);

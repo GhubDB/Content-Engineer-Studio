@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1481</width>
+    <width>1278</width>
     <height>693</height>
    </rect>
   </property>
@@ -35,7 +35,7 @@
       </property>
       <property name="minimumSize">
        <size>
-        <width>500</width>
+        <width>650</width>
         <height>0</height>
        </size>
       </property>
@@ -79,6 +79,12 @@
         <horstretch>0</horstretch>
         <verstretch>2</verstretch>
        </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>400</width>
+        <height>0</height>
+       </size>
       </property>
       <property name="font">
        <font>
@@ -359,6 +365,9 @@
       <property name="selectionMode">
        <enum>QAbstractItemView::NoSelection</enum>
       </property>
+      <property name="showGrid">
+       <bool>false</bool>
+      </property>
       <property name="gridStyle">
        <enum>Qt::SolidLine</enum>
       </property>
@@ -389,7 +398,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1481</width>
+     <width>1278</width>
      <height>26</height>
     </rect>
    </property>

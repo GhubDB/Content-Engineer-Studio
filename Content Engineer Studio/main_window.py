@@ -142,11 +142,12 @@ class MainWindow(QMainWindow):
         self.chat.setRowCount(len(example_chat))
         for idx, message in enumerate(example_chat):
             if idx % 2 == 0:
-                combo = TextEdit(self, objectName=f'chat_bubble_bot_{idx}') 
+                combo = TextEdit(self, objectName=f'bot_{idx}') 
             else:
-                combo = TextEdit(self, objectName=f'chat_bubble_customer_{idx}') 
+                combo = TextEdit(self, objectName=f'customer_{idx}') 
             self.chat.setCellWidget(idx, 0, combo)
             combo.setText(message)
+            combo.setContextMenuPolicy(Qt.PreventContextMenu)
             combo.installEventFilter(self)
             # Bot
             if idx % 2 == 0:
@@ -172,10 +173,14 @@ class MainWindow(QMainWindow):
 
 
     def eventFilter(self, source, event):
+        '''
+        Filters Events and calls the respective functions
+        '''
         if event.type() == event.Resize:
             QTimer.singleShot(0, self.chat.resizeRowsToContents)
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
+                # print(source.objectName())
                 QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
         return super().eventFilter(source, event)
 
@@ -195,6 +200,7 @@ class MainWindow(QMainWindow):
                                     border-top-color: rgb(45, 136, 45);\
                                     border-bottom-width: 2px;\
                                     border-bottom-color: rgb(45, 136, 45);\
+                                    background-color: rgb(70, 81, 70); \
                                     padding-right: 4px;')
                 source.setAlignment(Qt.AlignRight)  
             else:
@@ -204,6 +210,7 @@ class MainWindow(QMainWindow):
                                     border-style: outset;\
                                     border-right-width: 5px;\
                                     border-right-color: rgb(45, 136, 45);\
+                                    background-color: rgb(70, 70, 70); \
                                     padding-right: 4px;')
                 source.setAlignment(Qt.AlignRight)
 
@@ -222,7 +229,7 @@ class MainWindow(QMainWindow):
                                     border-bottom-width: 2px; \
                                     border-bottom-color: rgb(83, 43, 114); \
                                     padding-left: 4px; \
-                                    background-color: rgb(90, 90, 90);')
+                                    background-color: rgb(74, 69, 78);')
             else:
                 self.marked_messages.remove(source.objectName())
                 source.setStyleSheet('font-size: 10pt; \
@@ -381,7 +388,11 @@ class MainWindow(QMainWindow):
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 
     def btn_save(self):
-        pass
+        print(self.chat.cellWidget(0, 0).document())
+        # for message in self.marked_messages:
+        #     print(self.chat.cellWidget(int(''.join(filter(str.isdigit, message))), 0).toPlainText())
+        # print(self.chat.cellWidget(0, 0).toPlainText())
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

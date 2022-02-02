@@ -40,3 +40,11 @@ requires further access/data
 - displaying relevant flows and adding screenshots or path data to excel table
 - open and auto fill tickets
 - 
+
+
+
+Notes:
+- source.objectName() will find the object name from the source of an event
+- self.sender() will find the id of the element that fired the event
+- setContextMenuPolicy(Qt::ContextMenuPolicy policy) translates to combo.setContextMenuPolicy(Qt.PreventContextMenu)
+- self.chat.cellWidget(0, 0) will get the widget in the specified cell. Use .toplainText() to get the text contents.
