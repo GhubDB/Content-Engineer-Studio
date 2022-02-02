@@ -2,6 +2,7 @@ webscraping chat sessions for customer messages
 - displaying messages and allow users to select/deselect them
 - editing parts of the message so as to anonymize parts
 - analyzing customer messages for parts to anonymize
+- turning auto anonymizing on and off
 
 webscrpaping chat sessions for bot messages
 - analyzing bot messages for relevance
@@ -41,7 +42,11 @@ requires further access/data
 - open and auto fill tickets
 - 
 
-
+libraries:
+- pandas
+- PyQt5
+- beautifulsoup4
+- selenium
 
 Notes:
 - source.objectName() will find the object name from the source of an event

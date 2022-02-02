@@ -71,6 +71,8 @@ class MainWindow(QMainWindow):
         self.action_states = {}
         self.flow_states = {}
         self.marked_messages = []
+        self.output = []
+        self.sorted_message_cells =  []
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 4
@@ -89,7 +91,6 @@ class MainWindow(QMainWindow):
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save) # not implemented
         self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
-        # self.analysis.cursorPositionChanged.connect(self.test)
 
         # Methods to be executed on startup
         self.populate_canned()
@@ -126,6 +127,19 @@ class MainWindow(QMainWindow):
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
         self.populate_canned()
         self.populate_analysis()
+ 
+
+    def eventFilter(self, source, event):
+        '''
+        Filters Events and calls the respective functions
+        '''
+        if event.type() == event.Resize:
+            QTimer.singleShot(0, self.chat.resizeRowsToContents)
+        if event.type() == QEvent.MouseButtonPress:
+            if event.button() == Qt.RightButton:
+                # print(source.objectName())
+                QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
+        return super().eventFilter(source, event)
     
     def clear_selections(self):
         self.flows.clearSelection()
@@ -172,18 +186,6 @@ class MainWindow(QMainWindow):
         self.chat.installEventFilter(self)
         self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-
-    def eventFilter(self, source, event):
-        '''
-        Filters Events and calls the respective functions
-        '''
-        if event.type() == event.Resize:
-            QTimer.singleShot(0, self.chat.resizeRowsToContents)
-        if event.type() == QEvent.MouseButtonPress:
-            if event.button() == Qt.RightButton:
-                # print(source.objectName())
-                QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
-        return super().eventFilter(source, event)
 
     def select_chat(self, event, source):
         if 'bot' in source.objectName():
@@ -265,14 +267,33 @@ class MainWindow(QMainWindow):
         # pattern = INSERT REGEX PATTERN HERE
         self.highlighter.add_mapping(class_format)
         # class_format.setTextColor(QColor(120, 135, 171))
+    
 
+    def getChatText(self):
+        self.output = []
+        # Isolate numbers from list of selected message object names and add the sorted output to new list
+        if len(self.marked_messages) > 0:
+            self.sorted_message_cells = sorted(
+                [int(''.join(filter(str.isdigit, message))) for message in self.marked_messages])
+            # Iterate over selected chat messages
+            for message in self.sorted_message_cells:
+                # Convert the text of the message at the grid location to HTML and parse it
+                message_html = BeautifulSoup(self.chat.cellWidget(message, 0).toHtml(), 'html.parser')
+                # Find all span tags and replace the text with ***
+                tags = message_html.find_all('span')
+                for tag in tags:
+                    tag.string = '***'
+                self.output.append(message_html.get_text())
+            return ''.join(self.output)
 
-    def populate_analysis(self):
-        self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex()+self.cell_selector_start])
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
             self.cell_selector.addItem(item)
+
+
+    def populate_analysis(self):
+        self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex()+self.cell_selector_start])
 
 
     def populate_canned(self):
@@ -387,15 +408,10 @@ class MainWindow(QMainWindow):
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 
     def btn_save(self):
+        pass
         # print(self.chat.cellWidget(0, 0).document())
-        # for message in self.marked_messages:
-        #     print(self.chat.cellWidget(int(''.join(filter(str.isdigit, message))), 0).toPlainText())
-        # print(self.chat.cellWidget(0, 0).toPlainText())
-        var = BeautifulSoup(self.chat.cellWidget(1, 0).toHtml(), 'html.parser')
-        tags = var.find_all('span')
-        for tag in tags:
-            tag.string = '***'
-        print(var.get_text())
+
+
         
 
 if __name__ == '__main__':
