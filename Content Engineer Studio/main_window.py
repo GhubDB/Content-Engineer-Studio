@@ -9,6 +9,7 @@ from PyQt5.QtGui import QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextC
 from excel_helpers import * 
 from data import *
 from stylesheets import *
+from bs4 import BeautifulSoup
 
 class Highlighter(QSyntaxHighlighter):
     '''
@@ -249,9 +250,7 @@ class MainWindow(QMainWindow):
         current_color = cursor.charFormat().background().color().rgb()
         format = QTextCharFormat()
         if cursor.hasSelection() and current_color != 4282679021:
-            # format.setBackground(Qt.light-blue)
             format.setBackground(QColor(68, 126, 237))
-            # format.setForeground(Qt.black)
         else:
             format.clearBackground()
         cursor.setCharFormat(format)
@@ -388,10 +387,15 @@ class MainWindow(QMainWindow):
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 
     def btn_save(self):
-        print(self.chat.cellWidget(0, 0).document())
+        # print(self.chat.cellWidget(0, 0).document())
         # for message in self.marked_messages:
         #     print(self.chat.cellWidget(int(''.join(filter(str.isdigit, message))), 0).toPlainText())
         # print(self.chat.cellWidget(0, 0).toPlainText())
+        var = BeautifulSoup(self.chat.cellWidget(1, 0).toHtml(), 'html.parser')
+        tags = var.find_all('span')
+        for tag in tags:
+            tag.string = '***'
+        print(var.get_text())
         
 
 if __name__ == '__main__':
