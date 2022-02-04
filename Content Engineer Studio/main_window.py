@@ -71,8 +71,7 @@ class MainWindow(QMainWindow):
         self.action_states = {}
         self.flow_states = {}
         self.marked_messages = []
-        self.output = []
-        self.sorted_message_cells =  []
+        self.excel = Excel()
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 4
@@ -98,18 +97,16 @@ class MainWindow(QMainWindow):
         self.populate_actions(example_actions)
 
         # Executed on excel.load
-        self.df = excel.load('transcripts.xlsx', 'Sheet1')
+        self.df = self.excel.load('transcripts.xlsx', 'Sheet1')
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
-        excel.incomplete(self.df)
+        self.excel.incomplete(self.df)
         self.populate_sidebar()
         index = self.sidebar.model().index(0, 0)
         self.sidebar.selectionModel().select(
             index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
-        
-        
         self.populate_chat()
 
         # Tests
@@ -122,11 +119,18 @@ class MainWindow(QMainWindow):
         Master Controller. Keeps the current row number updated
         '''
         idx = selected.indexes()
-        if len(idx) > 0:
+        if len(idx) > 0 and idx != self.row:
             self.row = idx[0].row()
+        self.saveOnRowChange()
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
         self.populate_canned()
         self.populate_analysis()
+
+    def saveOnRowChange(self):
+        if len(self.marked_messages) > 0:
+            messages = self.getChatText()
+            self.excel.updateCells(lambda: ['\n'.join(message) for sender, message in messages if 'bot' in sender], self.row, 6)
+            self.excel.updateCells(lambda: ['\n'.join(message) for sender, message in messages if 'customer' in sender], self.row, 6)
  
 
     def eventFilter(self, source, event):
@@ -166,7 +170,7 @@ class MainWindow(QMainWindow):
             combo.installEventFilter(self)
             # Bot
             if idx % 2 == 0:
-                combo.setStyleSheet('font-size: 10pt;\
+                combo.setStyleSheet('font-size: 11pt;\
                                     text-align: right; \
                                     border-style: outset;\
                                     border-right-width: 5px;\
@@ -175,7 +179,7 @@ class MainWindow(QMainWindow):
                 combo.setAlignment(Qt.AlignRight)
             # customer
             else:
-                combo.setStyleSheet('font-size: 10pt; \
+                combo.setStyleSheet('font-size: 11pt; \
                                     border-style: outset; \
                                     border-left-width: 5px; \
                                     border-left-color: rgb(83, 43, 114); \
@@ -188,10 +192,13 @@ class MainWindow(QMainWindow):
 
 
     def select_chat(self, event, source):
+        '''
+        Handles highlighting of user selected chat messages and adding them to a data structure
+        '''
         if 'bot' in source.objectName():
             if source.objectName() not in self.marked_messages:
                 self.marked_messages.append(source.objectName())
-                source.setStyleSheet('font-size: 10pt;\
+                source.setStyleSheet('font-size: 11pt;\
                                     font-weight: bold; \
                                     text-align: right; \
                                     border-style: outset;\
@@ -208,7 +215,7 @@ class MainWindow(QMainWindow):
                 source.setAlignment(Qt.AlignRight)  
             else:
                 self.marked_messages.remove(source.objectName())
-                source.setStyleSheet('font-size: 10pt;\
+                source.setStyleSheet('font-size: 11pt;\
                                     text-align: right; \
                                     border-style: outset;\
                                     border-right-width: 5px;\
@@ -220,7 +227,7 @@ class MainWindow(QMainWindow):
         else:
             if source.objectName() not in self.marked_messages:
                 self.marked_messages.append(source.objectName())
-                source.setStyleSheet('font-size: 10pt; \
+                source.setStyleSheet('font-size: 11pt; \
                                     font-weight: bold; \
                                     border-style: outset; \
                                     border-left-width: 10px; \
@@ -235,7 +242,7 @@ class MainWindow(QMainWindow):
                                     background-color: rgb(74, 69, 78);')
             else:
                 self.marked_messages.remove(source.objectName())
-                source.setStyleSheet('font-size: 10pt; \
+                source.setStyleSheet('font-size: 11pt; \
                                     border-style: outset; \
                                     border-left-width: 5px; \
                                     border-left-color: rgb(83, 43, 114); \
@@ -245,7 +252,7 @@ class MainWindow(QMainWindow):
 
     def highlight_selection(self):
         '''
-        Highlights and unhighlights the user selected text
+        Highlights and unhighlights user selected text
         '''
         sender = self.sender()
         cursor = sender.textCursor()
@@ -270,21 +277,26 @@ class MainWindow(QMainWindow):
     
 
     def getChatText(self):
-        self.output = []
+        '''
+        Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
+        '''
+        output = {}
+        message_cells = []
         # Isolate numbers from list of selected message object names and add the sorted output to new list
         if len(self.marked_messages) > 0:
-            self.sorted_message_cells = sorted(
-                [int(''.join(filter(str.isdigit, message))) for message in self.marked_messages])
+            [message_cells.append(message.split('_')) for message in self.marked_messages]
+            message_cells = sorted(message_cells)
             # Iterate over selected chat messages
-            for message in self.sorted_message_cells:
+            for message, idx in message_cells:
                 # Convert the text of the message at the grid location to HTML and parse it
-                message_html = BeautifulSoup(self.chat.cellWidget(message, 0).toHtml(), 'html.parser')
+                message_html = BeautifulSoup(self.chat.cellWidget(int(idx), 0).toHtml(), 'html.parser')
                 # Find all span tags and replace the text with ***
                 tags = message_html.find_all('span')
                 for tag in tags:
                     tag.string = '***'
-                self.output.append(message_html.get_text())
-            return ''.join(self.output)
+
+                output[message] = message_html.get_text()
+            return output
 
 
     def populate_cell_selector(self, start, end):
@@ -334,9 +346,9 @@ class MainWindow(QMainWindow):
         else:
             self.canned_states[self.row][btn.objectName()] = btn.checkedButton().text()
 
-    def set_checked(self):
-        pass
 
+    def getCanned(self):
+        pass
 
     def populate_sidebar(self):
         self.sidebar.setColumnCount(1)
