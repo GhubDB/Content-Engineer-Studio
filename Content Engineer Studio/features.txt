@@ -1,8 +1,11 @@
+#################################################################
+Analysis suite
 webscraping chat sessions for customer messages
 - displaying messages and allow users to select/deselect them
 - editing parts of the message so as to anonymize parts
 - analyzing customer messages for parts to anonymize
 - turning auto anonymizing on and off
+- check if it's actually a safe link
 
 webscrpaping chat sessions for bot messages
 - analyzing bot messages for relevance
@@ -35,19 +38,53 @@ opening chat test environment and webscraping the results
 
 ev. webscraping bot confidence measurements
 
+#################################################################
+Testing suite
 
+enter test sentence
+program opens test chat and enters test sentence, retrieves answer when ready.
+program matches answer to faq/flow 
+user selects if correct answer was given. if not, user can select the correct faq/flow
+allow users to suggest a FAQ that is better suited if the one that is used works, but is not ideal.
+optional Notes
+write output to excel file
+have the option to resubmit the previous n questions.
+structure the excel file by FAQ ID and flow ID
+
+make file searchable by questions where the bot fails to provide the correct answers.
+
+once updates are made to faq's or flows retest all collected sentences against the new flows or FAQ's
+generate output that shows which of the previously tested questions do not work with the new changes.
+
+enter testing suite from the analysis suite and carry over the data. 
+save user configuration and the user's position in the excel sheet/workbook
+
+maybe allow users to add tested questions directly to variants with the necessary highlighting
+
+have FAQ search field check if this question has been tested. show green for tested and working, red for tested and not working, orange for not tested yet
+have search field check other excel lists for questions similar to the one asked and suggest search terms to the user.
+#################################################################
+FAQ design suite
+Design a new FAQ and use the database to find questions that have been asked in the past. 
+add those questions to the variants for your new FAQ
+
+
+##################################################################
 requires further access/data
 - writing settings to file or to registry
 - displaying relevant flows and adding screenshots or path data to excel table
 - open and auto fill tickets
-- 
+- allow categorizing of cases and adding the details to existing open issues in order to collect them in one location.
 
+
+#################################################################
 libraries:
 - pandas
 - PyQt5
 - beautifulsoup4
 - selenium
 
+#################################################################
 Notes:
 - source.objectName() will find the object name from the source of an event
 - self.sender() will find the id of the element that fired the event

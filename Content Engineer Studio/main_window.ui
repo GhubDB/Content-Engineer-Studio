@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1278</width>
-    <height>693</height>
+    <width>1534</width>
+    <height>661</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,7 +29,7 @@
      <widget class="QTableWidget" name="chat">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-        <horstretch>0</horstretch>
+        <horstretch>3</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -43,6 +43,9 @@
        <enum>QFrame::Panel</enum>
       </property>
       <property name="verticalScrollBarPolicy">
+       <enum>Qt::ScrollBarAlwaysOff</enum>
+      </property>
+      <property name="horizontalScrollBarPolicy">
        <enum>Qt::ScrollBarAlwaysOff</enum>
       </property>
       <attribute name="horizontalHeaderVisible">
@@ -76,13 +79,13 @@
      <widget class="QTextEdit" name="analysis">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>2</verstretch>
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="minimumSize">
        <size>
-        <width>400</width>
+        <width>550</width>
         <height>0</height>
        </size>
       </property>
@@ -125,7 +128,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>200</width>
+        <width>250</width>
         <height>16777215</height>
        </size>
       </property>
@@ -156,7 +159,14 @@
      </widget>
     </item>
     <item row="5" column="2" colspan="2">
-     <widget class="QComboBox" name="cell_selector"/>
+     <widget class="QComboBox" name="cell_selector">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>1</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
     </item>
     <item row="6" column="4" rowspan="6">
      <widget class="QTableWidget" name="flows">
@@ -174,7 +184,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>200</width>
+        <width>250</width>
         <height>16777215</height>
        </size>
       </property>
@@ -334,7 +344,7 @@
      <widget class="QTableWidget" name="canned">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
+        <horstretch>1</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
@@ -398,7 +408,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1278</width>
+     <width>1534</width>
      <height>26</height>
     </rect>
    </property>

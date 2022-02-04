@@ -12,29 +12,36 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-class excel:
+class Excel:
     '''
     Handles loading, reading and updating Excel files
     '''
     def __init__(self):
-        pass
-        # self.df = df
+        self.sheet = ''
+        self.wb = ''
 
-    def load(filename, sheet):
+    def load(self, filename, sheet):
         '''
         Loads Excel files
         '''
         filename = Path(filename)
         # with xw.App() as app:
         #     wb = app.books[filename]
-        wb = xw.Book(filename)
-        sheet = wb.sheets[sheet]
-        df = sheet.range('A1').options(pd.DataFrame, expand='table').value
+        self.wb = xw.Book(filename)
+        self.sheet = self.wb.sheets[sheet]
+        df = self.sheet.range('A1').options(pd.DataFrame, expand='table').value
         df = df.reset_index()
         return df
+
+
+    def updateCells(self, input, header, row):
+        '''
+        Inserts values into excel sheet
+        '''
+        self.sheet.range(header, row).value = input
     
 
-    def incomplete(df):
+    def incomplete(self, df):
         '''
         Adds header bool_check to df and assigns 1 to rows that have incomplete values under this header
         '''
@@ -45,17 +52,6 @@ class excel:
         '''
         Checks if data is being overwritten 
         '''
-
-
-    def update_cells(df, idx):
-        '''
-        Inserts values into excel sheet
-        '''
-
-    
-
-# df = excel.load('sample.xlsx', 'Sheet1')
-
 
 
 # df.loc[(df['Price'].isnull()) | (df['Location'].isnull()),"bool_check"]=True
@@ -97,16 +93,16 @@ df.describe()
 #################
 # driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
-# driver.get('https://kemono.party/account/login')
+# driver.get('')
 
 # login = driver.find_element(By.ID, 'old-username')
-# login.send_keys('bluegrey')
+# login.send_keys('')
 
 # login = driver.find_element(By.ID, 'old-password')
-# login.send_keys('reverberate3')
+# login.send_keys('')
 # login.send_keys('\n')
 
-# driver.get('https://kemono.party/favorites')
+# driver.get('')
 
 
 # favourites = WebDriverWait(driver, 10).until(

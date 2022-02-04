@@ -49,16 +49,16 @@ for message in messages:
 
 
 
-'''driver.get('https://kemono.party/account/login')
+'''driver.get('')
 
 login = driver.find_element(By.ID, 'old-username')
-login.send_keys('bluegrey')
+login.send_keys('')
 
 login = driver.find_element(By.ID, 'old-password')
-login.send_keys('reverberate3')
+login.send_keys('')
 login.send_keys('\n')
 
-driver.get('https://kemono.party/favorites')
+driver.get('')
 
 try:
     favourites = WebDriverWait(driver, 10).until(

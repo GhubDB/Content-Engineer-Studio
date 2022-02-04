@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         self.excel = Excel()
 
         # Sets the starting column number for the cell selector combo box
-        self.cell_selector_start = 4
+        self.cell_selector_start = 6
 
         loadUi('main_window.ui', self)
         self.setWindowTitle('CE Studio')
@@ -102,9 +102,9 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
         self.populate_sidebar()
-        index = self.sidebar.model().index(0, 0)
-        self.sidebar.selectionModel().select(
-            index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
+        # index = self.sidebar.model().index(0, 0)
+        # self.sidebar.selectionModel().select(
+        #     index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
         self.populate_chat()
@@ -118,19 +118,39 @@ class MainWindow(QMainWindow):
         '''
         Master Controller. Keeps the current row number updated
         '''
+        self.saveOnRowChange()
+
+        # Updates the self.row property
         idx = selected.indexes()
         if len(idx) > 0 and idx != self.row:
             self.row = idx[0].row()
-        self.saveOnRowChange()
+
+        # Reloading excel sheet for test purposes
+        self.df = self.excel.load('transcripts.xlsx', 'Sheet1')
+        self.header_len = len(self.df.columns)
+        self.index_len = len(self.df.index)
+        self.excel.incomplete(self.df)
+
+        # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
+
         self.populate_canned()
         self.populate_analysis()
 
     def saveOnRowChange(self):
+        '''
+        Saves current states to Excel
+        '''
         if len(self.marked_messages) > 0:
-            messages = self.getChatText()
-            self.excel.updateCells(lambda: ['\n'.join(message) for sender, message in messages if 'bot' in sender], self.row, 6)
-            self.excel.updateCells(lambda: ['\n'.join(message) for sender, message in messages if 'customer' in sender], self.row, 6)
+            customer, bot  = self.getChatText()
+            self.excel.updateCells(customer, self.row + 2, 5)
+            self.excel.updateCells(bot, self.row + 2, 6)
+        
+        # if self.df.loc[self.cell_selector_start][self.df.header_len - 1] is not None:
+        self.excel.updateCells(self.df.loc[self.cell_selector_start], 
+        self.row + 2, self.cell_selector_start)
+        self.excel.updateCells(self.df.loc[self.df.header_len - 1], 
+        self.row + 2, self.cell_selector_start)
  
 
     def eventFilter(self, source, event):
@@ -280,12 +300,13 @@ class MainWindow(QMainWindow):
         '''
         Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
         '''
-        output = {}
+        bot = []
+        customer = []
         message_cells = []
         # Isolate numbers from list of selected message object names and add the sorted output to new list
         if len(self.marked_messages) > 0:
             [message_cells.append(message.split('_')) for message in self.marked_messages]
-            message_cells = sorted(message_cells)
+            message_cells = sorted(message_cells, key = lambda x: x[1])
             # Iterate over selected chat messages
             for message, idx in message_cells:
                 # Convert the text of the message at the grid location to HTML and parse it
@@ -294,9 +315,11 @@ class MainWindow(QMainWindow):
                 tags = message_html.find_all('span')
                 for tag in tags:
                     tag.string = '***'
-
-                output[message] = message_html.get_text()
-            return output
+                if 'bot' in message:
+                    bot.append(message_html.get_text())
+                else:
+                    customer.append(message_html.get_text())
+            return ''.join(customer), ''.join(bot)
 
 
     def populate_cell_selector(self, start, end):
@@ -354,7 +377,7 @@ class MainWindow(QMainWindow):
         self.sidebar.setColumnCount(1)
         self.sidebar.setRowCount(len(self.df.index))
         for idx, row in self.df.iterrows():
-            self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 1)))
+            self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 2)))
             if row['bool_check'] == 1:
                 self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120))
         self.sidebar.resizeColumnsToContents()
