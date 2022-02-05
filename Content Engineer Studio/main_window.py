@@ -102,9 +102,9 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
         self.populate_sidebar()
-        # index = self.sidebar.model().index(0, 0)
-        # self.sidebar.selectionModel().select(
-        #     index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
+        index = self.sidebar.model().index(0, 0)
+        self.sidebar.selectionModel().select(
+            index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
         self.populate_chat()
@@ -146,11 +146,16 @@ class MainWindow(QMainWindow):
             self.excel.updateCells(customer, self.row + 2, 5)
             self.excel.updateCells(bot, self.row + 2, 6)
         
-        # if self.df.loc[self.cell_selector_start][self.df.header_len - 1] is not None:
-        self.excel.updateCells(self.df.loc[self.cell_selector_start], 
-        self.row + 2, self.cell_selector_start)
-        self.excel.updateCells(self.df.loc[self.df.header_len - 1], 
-        self.row + 2, self.cell_selector_start)
+
+        self.excel.updateCells(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].values, 
+            self.row + 2, self.cell_selector_start + 1)
+
+        # print(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].to_string(header=False, index=False))
+        # print(self.df.iloc[1:2, 2:4].values)
+
+
+        # self.excel.saveWB()
+ 
  
 
     def eventFilter(self, source, event):
@@ -328,7 +333,7 @@ class MainWindow(QMainWindow):
 
 
     def populate_analysis(self):
-        self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex()+self.cell_selector_start])
+        self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
 
 
     def populate_canned(self):
@@ -384,7 +389,7 @@ class MainWindow(QMainWindow):
         self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
   
     def populate_status_bar(self, row, start, end):
-        self.status_bar.setText(''.join(self.df.iloc[row:row+1, start:end+1].to_string(header=False, index=False)))
+        self.status_bar.setText(self.df.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
 
     def populate_flows(self, flows):
         self.flows.setColumnCount(1)
