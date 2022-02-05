@@ -90,3 +90,11 @@ Notes:
 - self.sender() will find the id of the element that fired the event
 - setContextMenuPolicy(Qt::ContextMenuPolicy policy) translates to combo.setContextMenuPolicy(Qt.PreventContextMenu)
 - self.chat.cellWidget(0, 0) will get the widget in the specified cell. Use .toplainText() to get the text contents.
+- print(wb.sheets) will show the sheets of a workbook
+
+- df.iloc[1,0].values will give a list with the values at grid location 1,0
+- df.iloc[0:5, 0:3].values will give lists in the specified saveOnRowChange
+- a dataframe of the specified range will be returned if .values is not used
+
+- use for message in messages:
+    message.get_attribute('class') or message.get_property('class') for checking element attributes

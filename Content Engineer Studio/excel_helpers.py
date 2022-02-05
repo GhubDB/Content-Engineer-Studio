@@ -40,6 +40,8 @@ class Excel:
         '''
         self.sheet.range(header, row).value = input
     
+    def saveWB(self):
+        self.wb.save()
 
     def incomplete(self, df):
         '''

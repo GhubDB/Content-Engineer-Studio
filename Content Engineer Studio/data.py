@@ -7,7 +7,7 @@ descriptors = [
 
 # add Priorität, bereits in Arbeit?
 # add faq paste function 
-canned_questions = ['Gibt es Verbesserungspotenzial?', 'Hat der Bot das Anliegen korrekt erkannt?', 'Korrektes FAQ ausgespielt/Flow gestartet?', 'Kundenanliegen gelöst?', 'T2A gerechtfertigt?']
+canned_questions = ['Hat der Bot das Anliegen korrekt erkannt?', 'Korrektes FAQ ausgespielt/Flow gestartet?', 'Kundenanliegen gelöst?', 'T2A gerechtfertigt?']
 multiple_choice = ['Ja', 'Nein', 'Teilweise', 'None']
 
 example_flows = ['Some flow', 'Some other flow', 'Example flow', 'Some FAQ']

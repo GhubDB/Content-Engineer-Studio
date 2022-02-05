@@ -8,7 +8,7 @@ class PythonOrgSerach(unittest.TestCase):
 
     def setUp(self):
         self.driver = webdriver.Chrome("C:\Program Files (x86)\chromedriver.exe")
-        self.driver.get('http://www.python.org')
+        self.driver.get('https://www.cleverbot.com/conv/202202041647/WYDS891QFL_Hello-who-are-you')
 
 
 

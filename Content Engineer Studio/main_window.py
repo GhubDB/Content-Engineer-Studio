@@ -7,6 +7,7 @@ from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat
 from excel_helpers import * 
+from selenium_helpers import *
 from data import *
 from stylesheets import *
 from bs4 import BeautifulSoup
@@ -63,15 +64,16 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        self.excel = Excel()
+        self.highlighter = Highlighter()
+        self.scraper = MainDriver()
         self.row = 0
         self.header_len = 0
         self.index_len = 0
-        self.highlighter = Highlighter()
         self.canned_states = {}
         self.action_states = {}
         self.flow_states = {}
         self.marked_messages = []
-        self.excel = Excel()
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 6
@@ -88,7 +90,7 @@ class MainWindow(QMainWindow):
         self.right.clicked.connect(self.btn_right)
         self.down.clicked.connect(self.btn_down)
         self.up.clicked.connect(self.btn_up)
-        self.save.clicked.connect(self.btn_save) # not implemented
+        self.save.clicked.connect(self.btn_save)
         self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
 
         # Methods to be executed on startup
@@ -107,7 +109,7 @@ class MainWindow(QMainWindow):
             index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
-        self.populate_chat()
+        
 
         # Tests
         # print(xw.books.active.name)
@@ -118,7 +120,10 @@ class MainWindow(QMainWindow):
         '''
         Master Controller. Keeps the current row number updated
         '''
+        # Save and clean up before next row is loaded
         self.saveOnRowChange()
+        self.clearChat()
+        self.marked_messages = []
 
         # Updates the self.row property
         idx = selected.indexes()
@@ -130,6 +135,12 @@ class MainWindow(QMainWindow):
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
+
+        # Loading web page, web scraping and adding results to self.chat
+
+        self.scraper.setUp(url=self.df.iloc[self.row+2, 3])
+        chat_text = self.scraper.cleverbot()
+        self.populate_chat(chat_text)
 
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
@@ -150,11 +161,7 @@ class MainWindow(QMainWindow):
         self.excel.updateCells(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].values, 
             self.row + 2, self.cell_selector_start + 1)
 
-        # print(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].to_string(header=False, index=False))
-        # print(self.df.iloc[1:2, 2:4].values)
-
-
-        # self.excel.saveWB()
+        self.excel.saveWB()
  
  
 
@@ -181,20 +188,20 @@ class MainWindow(QMainWindow):
         '''
         self.df.loc[self.row][self.cell_selector.currentText()] = self.analysis.toPlainText()
     
-    def populate_chat(self):
+    def populate_chat(self, chat):
         self.chat.setColumnCount(1)
-        self.chat.setRowCount(len(example_chat))
-        for idx, message in enumerate(example_chat):
-            if idx % 2 == 0:
+        self.chat.setRowCount(len(chat))
+        for idx, sender,  in enumerate(chat):
+            if sender[0] == 'bot':
                 combo = TextEdit(self, objectName=f'bot_{idx}') 
             else:
                 combo = TextEdit(self, objectName=f'customer_{idx}') 
             self.chat.setCellWidget(idx, 0, combo)
-            combo.setText(message)
+            combo.setText(sender[1])
             combo.setContextMenuPolicy(Qt.PreventContextMenu)
             combo.installEventFilter(self)
             # Bot
-            if idx % 2 == 0:
+            if sender[0] == 'bot':
                 combo.setStyleSheet('font-size: 11pt;\
                                     text-align: right; \
                                     border-style: outset;\
@@ -214,6 +221,10 @@ class MainWindow(QMainWindow):
             combo.cursorPositionChanged.connect(self.highlight_selection)
         self.chat.installEventFilter(self)
         self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+    def clearChat(self):
+        # self.chat.clear()
+        self.chat.setRowCount(0)
 
 
     def select_chat(self, event, source):
@@ -273,32 +284,6 @@ class MainWindow(QMainWindow):
                                     border-left-color: rgb(83, 43, 114); \
                                     padding-left: 4px; \
                                     background-color: rgb(90, 90, 90);')
-
-
-    def highlight_selection(self):
-        '''
-        Highlights and unhighlights user selected text
-        '''
-        sender = self.sender()
-        cursor = sender.textCursor()
-        current_color = cursor.charFormat().background().color().rgb()
-        format = QTextCharFormat()
-        if cursor.hasSelection() and current_color != 4282679021:
-            format.setBackground(QColor(68, 126, 237))
-        else:
-            format.clearBackground()
-        cursor.setCharFormat(format)
-
-    def highlight(self):
-        '''
-        Highlights predefined patterns in the chat log
-        '''
-        class_format = QTextCharFormat()
-        class_format.setBackground(Qt.red)
-        class_format.setFontWeight(QFont.Bold)
-        # pattern = INSERT REGEX PATTERN HERE
-        self.highlighter.add_mapping(class_format)
-        # class_format.setTextColor(QColor(120, 135, 171))
     
 
     def getChatText(self):
@@ -325,6 +310,32 @@ class MainWindow(QMainWindow):
                 else:
                     customer.append(message_html.get_text())
             return ''.join(customer), ''.join(bot)
+
+
+    def highlight_selection(self):
+        '''
+        Highlights and unhighlights user selected text
+        '''
+        sender = self.sender()
+        cursor = sender.textCursor()
+        current_color = cursor.charFormat().background().color().rgb()
+        format = QTextCharFormat()
+        if cursor.hasSelection() and current_color != 4282679021:
+            format.setBackground(QColor(68, 126, 237))
+        else:
+            format.clearBackground()
+        cursor.setCharFormat(format)
+
+    def highlight(self):
+        '''
+        Highlights predefined patterns in the chat log
+        '''
+        class_format = QTextCharFormat()
+        class_format.setBackground(Qt.red)
+        class_format.setFontWeight(QFont.Bold)
+        # pattern = INSERT REGEX PATTERN HERE
+        self.highlighter.add_mapping(class_format)
+        # class_format.setTextColor(QColor(120, 135, 171))
 
 
     def populate_cell_selector(self, start, end):
@@ -448,7 +459,7 @@ class MainWindow(QMainWindow):
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 
     def btn_save(self):
-        pass
+        self.saveOnRowChange()
         # print(self.chat.cellWidget(0, 0).document())
 
 
