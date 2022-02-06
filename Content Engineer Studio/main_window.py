@@ -71,15 +71,15 @@ class MainWindow(QMainWindow):
         self.header_len = 0
         self.index_len = 0
         self.canned_states = {}
-        self.action_states = {}
-        self.flow_states = {}
+        self.action_states = {} #not implemented
+        self.flow_states = {} #not implemented
         self.marked_messages = []
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 6
 
         loadUi('main_window.ui', self)
-        self.setWindowTitle('CE Studio')
+        self.setWindowTitle('Content Engineer Studio')
         
         # Connecting functions
         [self.sidebar.selectionModel().selectionChanged.connect(x) for x in 
@@ -104,9 +104,9 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
         self.populate_sidebar()
-        index = self.sidebar.model().index(0, 0)
-        self.sidebar.selectionModel().select(
-            index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
+        # index = self.sidebar.model().index(0, 0)
+        # self.sidebar.selectionModel().select(
+        #     index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
         
@@ -138,7 +138,7 @@ class MainWindow(QMainWindow):
 
         # Loading web page, web scraping and adding results to self.chat
 
-        self.scraper.setUp(url=self.df.iloc[self.row+2, 3])
+        self.scraper.setUp(url=self.df.iloc[self.row, 3])
         chat_text = self.scraper.cleverbot()
         self.populate_chat(chat_text)
 
@@ -344,7 +344,12 @@ class MainWindow(QMainWindow):
 
 
     def populate_analysis(self):
+        # '''Bugfix for number only entries on the excel sheet needed. 
+        #   File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
+        # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+        # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+  
 
 
     def populate_canned(self):

@@ -13,6 +13,9 @@ webscrpaping chat sessions for bot messages
 
 webscraping bot flows and suggesting relevant flows
 - displaying flows and allow users to select/deselect them
+- allow user to select a better suited flow/FAQ if the bot chose the wrong one and add both the correct and the incorrect flow/FAQ to Excel
+- auto select according to database
+
 
 read and edit open excel files
 - open pages from links in excel for webscraping
@@ -98,3 +101,13 @@ Notes:
 
 - use for message in messages:
     message.get_attribute('class') or message.get_property('class') for checking element attributes
+
+
+#################################################################
+Bugs:
+    '''Bugfix for number only entries on the excel sheet needed. 
+        File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
+    self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+    TypeError: setText(self, str): argument 1 has unexpected type 'numpy.float64'''
+----
+    fix needed for display of self.chat during webscraping. user selections are not registered if entered during this time.

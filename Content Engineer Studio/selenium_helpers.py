@@ -17,9 +17,17 @@ class MainDriver():
     def __init__(self):
         pass
 
-    def setUp(self, url=None, filepath=None): #https://www.cleverbot.com/conv/202202041647/WYDS891QFL_Hello-who-are-you
+
+    def setUp(self, url=None, filepath=None, size=None): #https://www.cleverbot.com/conv/202202041647/WYDS891QFL_Hello-who-are-you
         options = webdriver.ChromeOptions()
-        options.add_argument('--enable-extensions')
+        # options.add_argument('--enable-extensions')
+        options.add_experimental_option(
+            "excludeSwitches", ['enable-automation'])
+        if size:
+            options.add_argument(size)
+        else:
+            options.add_argument("window-size=850,1420")
+        options.add_argument("window-position=0,0")
         self.driver = webdriver.Chrome(
             executable_path="C:\Program Files (x86)\chromedriver.exe", chrome_options=options)
         self.driver.get(url)
