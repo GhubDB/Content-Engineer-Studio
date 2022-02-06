@@ -680,6 +680,9 @@
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::MultiSelection</enum>
+          </property>
           <attribute name="horizontalHeaderVisible">
            <bool>false</bool>
           </attribute>

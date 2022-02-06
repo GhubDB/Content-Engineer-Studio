@@ -18,7 +18,6 @@ class Excel:
     '''
     def __init__(self):
         self.sheet = ''
-        self.wb = ''
 
     def load(self, filename, sheet):
         '''
@@ -27,11 +26,11 @@ class Excel:
         filename = Path(filename)
         # with xw.App() as app:
         #     wb = app.books[filename]
-        self.wb = xw.Book(filename)
-        self.sheet = self.wb.sheets[sheet]
+        wb = xw.Book(filename)
+        self.sheet = wb.sheets[sheet]
         df = self.sheet.range('A1').options(pd.DataFrame, expand='table').value
         df = df.reset_index()
-        return df
+        return df, wb
 
 
     def updateCells(self, input, header, row):
@@ -40,15 +39,20 @@ class Excel:
         '''
         self.sheet.range(header, row).value = input
     
-    def saveWB(self):
-        self.wb.save()
+    def saveWB(self, wb):
+        '''
+        Saves specified wb
+        '''
+        wb.save()
 
-    def incomplete(self, df):
+    def incomplete(self, df, start, end):
         '''
         Adds header bool_check to df and assigns 1 to rows that have incomplete values under this header
         '''
-        df.loc[(df['Transcript Link'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()), "bool_check"]=True
-        return 
+        missing = df.iloc[: , start:end + 1]
+        
+        # df.loc[(df['Transcript Link'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()), "bool_check"]=True
+        return missing.isna()
 
     def overwrite_warn(df, idx, **kwargs):
         '''
