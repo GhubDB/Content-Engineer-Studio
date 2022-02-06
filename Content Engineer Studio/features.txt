@@ -31,6 +31,7 @@ options
 - automate syncing open excel file to local disk
 - automate detecting open excel files
 
+implement preloading and caching feature that loads the next x chat sessions and starts analysis queues so the user can continue immediately.
 count the highlighted flows & bot answers on every save and make the program learn from user input
 
 display relevant FAQ for flows

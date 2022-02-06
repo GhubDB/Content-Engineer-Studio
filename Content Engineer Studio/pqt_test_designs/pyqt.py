@@ -1,42 +1,35 @@
-from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow
-import sys
+from PyQt5.QtWidgets import *
+from PyQt5.uic import loadUi
 
-class MyWindow(QMainWindow):
-    def __init__(self):
-        super(MyWindow, self).__init__()
-        self.setGeometry(0, 0, 300, 300)
-        self.setWindowTitle('CE Studio')
-        self.initUI()
+class SubWidget( QWidget ) :
+    def __init__ ( self, parent = None ) :
+        super( SubWidget, self ).__init__( parent )
+        button = QPushButton( 'toggle' )
+        checkbox = QCheckBox( 'check' )
+        button.clicked.connect( checkbox.toggle )
+        hLayout = QHBoxLayout( self )
+        hLayout.addWidget( button )
+        hLayout.addWidget( checkbox )
+        self.setLayout( hLayout )
 
-    def initUI(self):
-        self.label = QtWidgets.QLabel(self)
-        self.label.setText('test')
+class Window( QMainWindow ) :
+    def __init__ ( self, parent = None ) :
+        super( Window, self ).__init__( parent )
+        # loadUi( 'main-something.ui', self )
+        button = QPushButton( 'add' )
+        button.clicked.connect( self.add )
+        self.vLayout = QVBoxLayout( self )
+        self.vLayout.addWidget( button )
+        centralWidget = QWidget()
+        centralWidget.setLayout( self.vLayout )
+        self.setCentralWidget( centralWidget )
 
-        self.button = QtWidgets.QPushButton(self)
-        self.button.setText('This is a Button')
-        self.button.move(50,50)
-        self.button.clicked.connect(self.clicked)
+    def add ( self ) :
+        self.vLayout.addWidget( SubWidget( self ) )
+        # self.vLayout.addWidget( loadUi( 'sub-something.ui', self ) )
 
-    def clicked(self):
-        self.label.setText('you pressed the button')
-        self.update()
-
-    def update(self):
-        self.label.adjustSize()
-
-
-
-
-def clicked():
-    print('clicked')
-
-
-def window():
-    app = QApplication(sys.argv)
-    win= MyWindow()
-
-    win.show()
-    sys.exit(app.exec_())
-
-window()
+if __name__ == "__main__" :
+    app = QApplication( [] )
+    w = Window()
+    w.show()
+    app.exec_()

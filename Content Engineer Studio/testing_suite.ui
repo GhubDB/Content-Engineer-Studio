@@ -105,6 +105,18 @@
     <enum>QAbstractItemView::SelectItems</enum>
    </property>
   </widget>
+  <widget class="QStackedWidget" name="stackedWidget">
+   <property name="geometry">
+    <rect>
+     <x>730</x>
+     <y>50</y>
+     <width>531</width>
+     <height>481</height>
+    </rect>
+   </property>
+   <widget class="QWidget" name="page"/>
+   <widget class="QWidget" name="page_2"/>
+  </widget>
  </widget>
  <resources/>
  <connections/>
