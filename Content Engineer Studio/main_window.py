@@ -100,6 +100,9 @@ class MainWindow(QMainWindow):
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save)
         self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
+        self.switch_to_analysis_suite.clicked.connect(self.switchToAnalysis)
+        self.export_to_testing_suite.clicked.connect(self.switchToTesting)
+        self.switch_to_testing_suite.clicked.connect(self.switchToTesting)
 
         # Executed on excel.load
         self.df = self.excel.load('transcripts.xlsx', 'Sheet1')
@@ -527,6 +530,15 @@ class MainWindow(QMainWindow):
     def btn_save(self):
         self.saveOnRowChange()
         # print(self.chat.cellWidget(0, 0).document())
+
+    def switchToAnalysis(self):
+        self.stackedWidget.setCurrentWidget(self.analysis_suite)
+
+    def switchToTesting(self):
+        self.stackedWidget.setCurrentWidget(self.testing_suite)
+
+    def ExportToTesting(self):
+        self.stackedWidget.setCurrentWidget(self.testing_suite)
 
 
         
