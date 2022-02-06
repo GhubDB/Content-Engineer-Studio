@@ -5,12 +5,17 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import * 
-from PyQt5.QtGui import QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat
 from excel_helpers import * 
 from selenium_helpers import *
 from data import *
 from stylesheets import *
 from bs4 import BeautifulSoup
+
+'''class Finder(QSortFilterProxyModel):
+    def __init__(self):
+        super().__init__()
+        searchbar.textChanged.connect(self.filter_proxy_model.setFilterRegExp)'''
 
 class Highlighter(QSyntaxHighlighter):
     '''
@@ -70,10 +75,13 @@ class MainWindow(QMainWindow):
         self.row = 0
         self.header_len = 0
         self.index_len = 0
+        # Keeps track of the sum of df.bool_check in order to find out if row colors need to be changed.
+        self.repopulate_sidebar = 0
         self.canned_states = {}
         self.action_states = {} #not implemented
         self.flow_states = {} #not implemented
         self.marked_messages = []
+        self.filter_proxy_model = ''
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 6
@@ -92,11 +100,8 @@ class MainWindow(QMainWindow):
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save)
         self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
-
-        # Methods to be executed on startup
-        self.populate_canned()
-        self.populate_flows(example_flows)
-        self.populate_actions(example_actions)
+        self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
+        # self.searchbar.textChanged.connect(self.filter_proxy_model.setFilterRegExp)
 
         # Executed on excel.load
         self.df = self.excel.load('transcripts.xlsx', 'Sheet1')
@@ -104,11 +109,23 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
         self.populate_sidebar()
+
+        self.faq = self.excel.load('recipes.xlsx', 'Sheet1')
+
+        # Methods to be executed on startup
+        self.populate_canned()
+        self.populate_flows(example_flows)
+        self.populate_actions(example_actions)
+        self.populate_search_column_select()
+
+        '''Sets sidebar to first item selected on startup'''
         # index = self.sidebar.model().index(0, 0)
         # self.sidebar.selectionModel().select(
         #     index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
+
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, -1)
+        
         
 
         # Tests
@@ -135,6 +152,7 @@ class MainWindow(QMainWindow):
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
+        self.populate_sidebar()
 
         # Loading web page, web scraping and adding results to self.chat
 
@@ -152,18 +170,18 @@ class MainWindow(QMainWindow):
         '''
         Saves current states to Excel
         '''
+        # Saving chat messages
         if len(self.marked_messages) > 0:
             customer, bot  = self.getChatText()
             self.excel.updateCells(customer, self.row + 2, 5)
             self.excel.updateCells(bot, self.row + 2, 6)
         
-
+        # Saving analysis contents
         self.excel.updateCells(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].values, 
             self.row + 2, self.cell_selector_start + 1)
 
+        # Saves the excel file
         self.excel.saveWB()
- 
- 
 
     def eventFilter(self, source, event):
         '''
@@ -349,10 +367,33 @@ class MainWindow(QMainWindow):
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+
+    
+    def populate_search_column_select(self):
+        for item in list(self.faq.columns.values):
+            self.search_column_select.addItem(item)
   
 
+    def populate_search_box(self):
+        model = QStandardItemModel(len(self.faq.index), 1)
+        # self.search_box.setColumnCount(1)
+        # model.setHorizontalHeaderLabels(self.faq.columns[self.search_column_select.currentIndex()])
+        
+        for idx, _ in enumerate(self.faq.iterrows()):
+            item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
+            model.setItem(idx, 0 , item)
+
+        filter_proxy_model = QSortFilterProxyModel()
+        filter_proxy_model.setSourceModel(model)
+        filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        filter_proxy_model.setFilterKeyColumn(0)
+        self.search_box.setModel(filter_proxy_model)
+        self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        
+        
 
     def populate_canned(self):
+        # Radiobuttons
         self.canned.setColumnCount(5)
         self.canned.setRowCount(len(canned_questions))
         for idx, row in enumerate(canned_questions):
@@ -395,14 +436,23 @@ class MainWindow(QMainWindow):
         pass
 
     def populate_sidebar(self):
-        self.sidebar.setColumnCount(1)
-        self.sidebar.setRowCount(len(self.df.index))
-        for idx, row in self.df.iterrows():
-            self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 2)))
-            if row['bool_check'] == 1:
-                self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120))
-        self.sidebar.resizeColumnsToContents()
-        self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        if len(self.df.index) != self.sidebar.rowCount():
+            # Keeps track of the sum of df.bool_check in order to find out if row colors need to be changed.
+            self.repopulate_sidebar = self.df.bool_check.sum()
+            # print(self.repopulate_sidebar)
+            self.sidebar.setColumnCount(1)
+            self.sidebar.setRowCount(len(self.df.index))
+            for idx, row in self.df.iterrows():
+                self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 2)))
+                if row['bool_check'] == 1:
+                    self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120))
+            self.sidebar.resizeColumnsToContents()
+            self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        if self.df.bool_check.sum() != self.repopulate_sidebar:
+            [self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120)) if row['bool_check'] == 1
+            else self.sidebar.item(idx, 0).setBackground(QtGui.QColor(70, 70, 70)) for idx, row in self.df.iterrows() ]
+            # print('recolor')
   
     def populate_status_bar(self, row, start, end):
         self.status_bar.setText(self.df.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
