@@ -375,22 +375,6 @@
       </attribute>
      </widget>
     </item>
-    <item row="0" column="2" colspan="3">
-     <widget class="QTextEdit" name="searchbar">
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>25</height>
-       </size>
-      </property>
-      <property name="verticalScrollBarPolicy">
-       <enum>Qt::ScrollBarAlwaysOff</enum>
-      </property>
-      <property name="horizontalScrollBarPolicy">
-       <enum>Qt::ScrollBarAsNeeded</enum>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="2" colspan="4">
      <widget class="QTableView" name="search_box">
       <property name="frameShape">
@@ -412,6 +396,9 @@
        <bool>false</bool>
       </attribute>
      </widget>
+    </item>
+    <item row="0" column="2" colspan="3">
+     <widget class="QLineEdit" name="searchbar"/>
     </item>
    </layout>
   </widget>

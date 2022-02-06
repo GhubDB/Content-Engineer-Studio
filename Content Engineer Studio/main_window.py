@@ -100,8 +100,6 @@ class MainWindow(QMainWindow):
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save)
         self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
-        self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
-        # self.searchbar.textChanged.connect(self.filter_proxy_model.setFilterRegExp)
 
         # Executed on excel.load
         self.df = self.excel.load('transcripts.xlsx', 'Sheet1')
@@ -109,14 +107,27 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.excel.incomplete(self.df)
         self.populate_sidebar()
-
         self.faq = self.excel.load('recipes.xlsx', 'Sheet1')
+
+        # Adding search box
+        self.populate_search_column_select()
+        model = QStandardItemModel(len(self.faq.index), 1)
+        for idx, _ in enumerate(self.faq.iterrows()):
+            item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
+            model.setItem(idx, 0 , item)
+        filter_proxy_model = QSortFilterProxyModel()
+        filter_proxy_model.setSourceModel(model)
+        filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        filter_proxy_model.setFilterKeyColumn(0)
+        self.search_box.setModel(filter_proxy_model)
+        self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
 
         # Methods to be executed on startup
         self.populate_canned()
         self.populate_flows(example_flows)
         self.populate_actions(example_actions)
-        self.populate_search_column_select()
+        # self.populate_search_column_select()
 
         '''Sets sidebar to first item selected on startup'''
         # index = self.sidebar.model().index(0, 0)
@@ -375,10 +386,10 @@ class MainWindow(QMainWindow):
   
 
     def populate_search_box(self):
-        model = QStandardItemModel(len(self.faq.index), 1)
-        # self.search_box.setColumnCount(1)
-        # model.setHorizontalHeaderLabels(self.faq.columns[self.search_column_select.currentIndex()])
-        
+        '''
+        Populates the search box with values from FAQ excel sheet
+        '''
+        model = QStandardItemModel(len(self.faq.index), 1)        
         for idx, _ in enumerate(self.faq.iterrows()):
             item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
             model.setItem(idx, 0 , item)
@@ -389,12 +400,12 @@ class MainWindow(QMainWindow):
         filter_proxy_model.setFilterKeyColumn(0)
         self.search_box.setModel(filter_proxy_model)
         self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
-        
+
         
 
     def populate_canned(self):
         # Radiobuttons
-        self.canned.setColumnCount(5)
+        self.canned.setColumnCount(len(canned_questions )+1)
         self.canned.setRowCount(len(canned_questions))
         for idx, row in enumerate(canned_questions):
             self.canned.setItem(idx,0, QTableWidgetItem(row))
@@ -417,7 +428,7 @@ class MainWindow(QMainWindow):
         self.canned.horizontalHeader().resizeSection(1, 50)
         self.canned.horizontalHeader().resizeSection(2, 55)
         self.canned.horizontalHeader().resizeSection(3, 85)
-        self.canned.horizontalHeader().resizeSection(4, 70)
+        # self.canned.horizontalHeader().resizeSection(4, 70)
 
         # self.canned.setColumnWidth(0, 320)
 
