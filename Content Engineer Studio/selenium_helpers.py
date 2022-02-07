@@ -49,8 +49,8 @@ class MainDriver():
 
     def tearDown(self):
         try:
-            # self.driver.close()
-            self.driver.quit()
+            self.driver.close()
+            # self.driver.quit()
         except AttributeError:
             pass
 

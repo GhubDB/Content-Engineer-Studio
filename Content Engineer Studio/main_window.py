@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
         self.save_2.clicked.connect(self.btn_save_2)
         self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
         self.switch_to_analysis_suite.clicked.connect(self.switchToAnalysis)
-        self.export_to_testing_suite.clicked.connect(self.switchToTesting)
+        self.export_to_testing_suite.clicked.connect(self.exportToTesting)
         self.switch_to_testing_suite.clicked.connect(self.switchToTesting)
         self.chat_input.returnPressed.connect(self.send_btn)
         self.send.clicked.connect(self.send_btn)
@@ -413,7 +413,7 @@ class MainWindow(QMainWindow):
                                     background-color: rgb(90, 90, 90);')
     
 
-    def getChatText(self):
+    def getChatText(self, export=None):
         '''
         Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
         '''
@@ -436,6 +436,8 @@ class MainWindow(QMainWindow):
                     bot.append(message_html.get_text())
                 else:
                     customer.append(message_html.get_text())
+            if export:
+                return customer
             return ''.join(customer), ''.join(bot)
 
 
@@ -622,15 +624,22 @@ class MainWindow(QMainWindow):
 
     def switchToAnalysis(self):
         self.stackedWidget.setCurrentWidget(self.analysis_suite)
-        self.webscraper.tearDown()
+        # self.webscraper.tearDown()
 
     def switchToTesting(self):
         self.stackedWidget.setCurrentWidget(self.testing_suite)
-        self.webscraper.tearDown()
+        # self.webscraper.tearDown()
 
-    def ExportToTesting(self):
+    def exportToTesting(self):
+        print('!')
+        customer= self.getChatText(export=1)
+        if customer:
+            for message in customer:
+                print(message)
+                item = QtGui.QStandardItem(message.lstrip())
+                self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
-        self.webscraper.tearDown()
+        # self.webscraper.tearDown()
 
     ################################################################################################
     '''
@@ -947,6 +956,9 @@ class MainWindow(QMainWindow):
     def populateHistory(self, input):
         item = QtGui.QStandardItem(input)
         self.history_model.appendRow(item)
+
+
+
   
     # def populate_status_bar_2(self, row, start, end):
     #     self.status_bar_2.setText(self.df_2.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
@@ -978,7 +990,7 @@ class MainWindow(QMainWindow):
     def new_dialog_btn(self):
         self.clearChat_2()
         self.chat_test = []
-        self.webscraper.tearDown()
+        # self.webscraper.tearDown()
         self.webscraper.setUp(url='https://www.cleverbot.com/')
         self.webscraper.clickCleverbotAgree()
 
@@ -1008,13 +1020,13 @@ class MainWindow(QMainWindow):
 
     def btn_up_2(self):
         if self.row_2 > 0:
-            index = self.sidebar_2.model().index(self.row - 1, 0)
+            index = self.sidebar_2.model().index(self.row_2 - 1, 0)
             self.sidebar_2.selectionModel().select(
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 
     def btn_down_2(self):
-        if self.row_2 < self.index_len:
-            index = self.sidebar_2.model().index(self.row + 1, 0)
+        if self.row_2 < self.index_len_2:
+            index = self.sidebar_2.model().index(self.row_2 + 1, 0)
             self.sidebar_2.selectionModel().select(
                 index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 

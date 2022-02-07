@@ -130,3 +130,5 @@ Bugs:
     fix needed for display of self.chat during webscraping. user selections are not registered if entered during this time.
 ----
     check signal filter for chat_2 vs chat
+----
+    program crashes if a row without values is selected
