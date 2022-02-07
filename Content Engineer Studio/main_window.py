@@ -93,6 +93,7 @@ class MainWindow(QMainWindow):
         self.index_len = 0
         self.index_len_2 = 0
         self.canned_states = {}
+        self.canned_states_2 = {}
         self.action_states = {} #not implemented
         self.flow_states = {} #not implemented
         self.marked_messages = []
@@ -105,7 +106,7 @@ class MainWindow(QMainWindow):
 
         # Sets the starting column number for the cell selector combo boxt
         self.cell_selector_start = 6
-        self.cell_selector_start_2 = 2
+        self.cell_selector_start_2 = 4
 
         # Load Ui file, set settings
         loadUi('main_window.ui', self)
@@ -115,10 +116,10 @@ class MainWindow(QMainWindow):
         self.history_model = QStandardItemModel()
         self.history.setModel(self.history_model)
         # Test items
-        # items = ['some tests', 'some more tests', 'you know it, more tests']
-        # for item in items:
-        #     items = QtGui.QStandardItem(item)
-        #     self.history_model.appendRow(items) 
+        items = ['some tests', 'some more tests', 'you know it, more tests']
+        for item in items:
+            items = QtGui.QStandardItem(item)
+            self.history_model.appendRow(items) 
 
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.history.installEventFilter(self)
@@ -154,6 +155,10 @@ class MainWindow(QMainWindow):
         self.send.clicked.connect(self.send_btn)
         self.new_dialog.clicked.connect(self.new_dialog_btn)
         self.next_question.clicked.connect(self.next_btn)
+        self.searchbar_2.textChanged.connect(lambda: self.search_box_2.setMinimumHeight(500))
+        self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
+        self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
+        self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
         # self.next.clicked.connect(self.next_btn)
 
         # Executed on excel.load
@@ -201,6 +206,7 @@ class MainWindow(QMainWindow):
 
         # Methods to be executed on startup
         self.populate_canned()
+        self.populate_canned_2()
         self.populate_flows(example_flows)
         self.populate_actions(example_actions)
         # self.populate_search_column_select()
@@ -656,7 +662,7 @@ class MainWindow(QMainWindow):
         # Autoscrolling to the selection on the sidebar
         self.sidebar_2.scrollToItem(self.sidebar.item(self.row, 0))
 
-        # self.populate_canned_2()
+        self.populate_canned_2()
         self.populate_analysis_2()
 
     def saveOnRowChange_2(self):
@@ -886,7 +892,7 @@ class MainWindow(QMainWindow):
         self.canned_2.setColumnCount(len(canned_questions )+1)
         self.canned_2.setRowCount(len(canned_questions))
         for idx, row in enumerate(canned_questions):
-            self.canned_2.setItem(idx,0, QTableWidgetItem(row))
+            self.canned_2.setItem(idx, 0, QTableWidgetItem(row))
             rb_group = QButtonGroup(self, objectName=f'rb_group_2_{idx}')
             oname = f'rb_group_2_{idx}'
             rb_group.idReleased.connect(self.canned_selection_2)
@@ -895,9 +901,9 @@ class MainWindow(QMainWindow):
                 combo = QRadioButton(self)
                 combo.setText(choice)
                 # combo.setId(i)
-                if self.row in self.canned_states_2:
+                if self.row_2 in self.canned_states_2:
                     if oname in self.canned_states_2[self.row]:
-                        if self.canned_states_2[self.row][oname] == choice:
+                        if self.canned_states_2[self.row_2][oname] == choice:
                             combo.setChecked(True)
                 rb_group.addButton(combo)
                 self.canned_2.setCellWidget(idx, i+1, combo)
@@ -983,10 +989,13 @@ class MainWindow(QMainWindow):
         index = self.auto_queue.selectionModel().currentIndex()
         value = index.sibling(index.row(),index.column()).data()
         self.chat_input.setText(value)
+        # Jumping to next row in line
         self.auto_queue.selectionModel().select(index, QItemSelectionModel.Deselect)
         index = index.row() + 1
         self.auto_queue.selectRow(index)
-        # self.auto_queue.selectRow(index.row() + 1)
+        print(self.auto_queue.selectedIndexes())
+        if self.auto_queue.selectedIndexes() == []:
+            self.auto_queue.selectRow(0)
 
 
     def btn_left_2(self):
