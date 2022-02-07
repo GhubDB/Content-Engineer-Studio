@@ -97,6 +97,7 @@ class MainWindow(QMainWindow):
         self.flow_states = {} #not implemented
         self.marked_messages = []
         self.marked_messages_2 = []
+        self.chat_test = []
         self.filter_proxy_model = ''
         self.wb = ''
         self.wb_2 = ''
@@ -274,7 +275,10 @@ class MainWindow(QMainWindow):
         Filters Events and calls the respective functions
         '''
         if event.type() == event.Resize:
-            QTimer.singleShot(0, self.chat.resizeRowsToContents)
+            if self.stackedWidget.currentIndex == 0:
+                QTimer.singleShot(0, self.chat.resizeRowsToContents)
+            else:
+                QTimer.singleShot(0, self.chat_2.resizeRowsToContents)
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
                 # print(source.objectName())
@@ -452,7 +456,7 @@ class MainWindow(QMainWindow):
         #   File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
-        print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
+        # print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
         self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
 
     
@@ -667,37 +671,45 @@ class MainWindow(QMainWindow):
         # self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.cell_selector_2.currentText()
     
     def populate_chat_2(self, chat):
+        # chat = [message for message in chat if '' not in message]
+        output = []
+        # print(self.chat_test)
+        [output.append(message) for message in chat if message not in self.chat_test and '' not in message]
+        print(output)
+        print(self.chat_test)
         self.chat_2.setColumnCount(1)
-        self.chat_2.setRowCount(len(chat))
-        for idx, sender, in enumerate(chat):
-            if sender[1] != '':
-                if sender[0] == 'bot':
-                    combo = TextEdit(self, objectName=f'bot_{idx}') 
-                else:
-                    combo = TextEdit(self, objectName=f'customer_{idx}') 
-                self.chat_2.setCellWidget(idx, 0, combo)
-                combo.setText(sender[1])
-                combo.setContextMenuPolicy(Qt.PreventContextMenu)
-                combo.installEventFilter(self)
-                # Bot
-                if sender[0] == 'bot':
-                    combo.setStyleSheet('font-size: 11pt;\
-                                        text-align: right; \
-                                        border-style: outset;\
-                                        border-right-width: 5px;\
-                                        border-right-color: rgb(45, 136, 45);\
-                                        padding-right: 4px;')
-                    combo.setAlignment(Qt.AlignRight)
-                # customer
-                else:
-                    combo.setStyleSheet('font-size: 11pt; \
-                                        border-style: outset; \
-                                        border-left-width: 5px; \
-                                        border-left-color: rgb(83, 43, 114); \
-                                        padding-left: 4px; \
-                                        background-color: rgb(90, 90, 90);')
-                combo.textChanged.connect(lambda idx=idx: self.chat_2.resizeRowToContents(idx))
-                combo.cursorPositionChanged.connect(self.highlight_selection_2)
+        length = len(self.chat_test)
+        self.chat_2.setRowCount(length + len(output))
+        for idx, sender, in enumerate(output, start=length):
+            print(idx, sender)
+            if sender[0] == 'bot':
+                combo = TextEdit(self, objectName=f'bot_{idx}') 
+            else:
+                combo = TextEdit(self, objectName=f'customer_{idx}') 
+            self.chat_2.setCellWidget(idx, 0, combo)
+            combo.setText(sender[1])
+            combo.setContextMenuPolicy(Qt.PreventContextMenu)
+            combo.installEventFilter(self)
+            # Bot
+            if sender[0] == 'bot':
+                combo.setStyleSheet('font-size: 11pt;\
+                                    text-align: right; \
+                                    border-style: outset;\
+                                    border-right-width: 5px;\
+                                    border-right-color: rgb(45, 136, 45);\
+                                    padding-right: 4px;')
+                combo.setAlignment(Qt.AlignRight)
+            # customer
+            else:
+                combo.setStyleSheet('font-size: 11pt; \
+                                    border-style: outset; \
+                                    border-left-width: 5px; \
+                                    border-left-color: rgb(83, 43, 114); \
+                                    padding-left: 4px; \
+                                    background-color: rgb(90, 90, 90);')
+            combo.textChanged.connect(lambda idx=idx: self.chat_2.resizeRowToContents(idx))
+            combo.cursorPositionChanged.connect(self.highlight_selection_2)
+        [self.chat_test.append(message) for message in output]
         self.chat_2.installEventFilter(self)
         self.chat_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
@@ -933,7 +945,7 @@ class MainWindow(QMainWindow):
             # print(input)
             # try:
             self.webscraper.setCleverbotLive(input)
-            time.sleep(3)
+            time.sleep(3.5)
             output = self.webscraper.getCleverbotLive()
             if output:
                 self.populate_chat_2(output)
@@ -945,8 +957,11 @@ class MainWindow(QMainWindow):
 
 
     def new_dialog_btn(self):
+        self.clearChat_2()
+        self.chat_test = []
         self.webscraper.tearDown()
         self.webscraper.setUp(url='https://www.cleverbot.com/')
+        self.webscraper.clickCleverbotAgree()
 
     def next_btn(self):
         pass

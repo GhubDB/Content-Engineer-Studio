@@ -1,9 +1,10 @@
 priorities:
 save testing output to excel
-add chat messages dynamically
+add chat messages dynamically ignore empty messages.
 implement auto queues 
 -> right click to add to qlineedit 
 -> add +1 to a property every time new dialog is pressed and use modulo on that property to set bg color
+fix tearDown issues
 fix sleep freezes
 implement search box auto expand/shrink
 implement FAQ auto search
@@ -71,18 +72,20 @@ make file searchable by questions where the bot fails to provide the correct ans
 
 once updates are made to faq's or flows retest all collected sentences against the new flows or FAQ's
 generate output that shows which of the previously tested questions do not work with the new changes.
+run selenium on server. it is infinitely scalable
+create a history of performance metrics for each FAQ/flow. automate reporting and chart generation.
+
 
 enter testing suite from the analysis suite and carry over the data. 
 save user configuration and the user's position in the excel sheet/workbook
 
 maybe allow users to add tested questions directly to variants with the necessary highlighting
 
-have FAQ search field check if this question has been tested. show green for tested and working, red for tested and not working, orange for not tested yet
+have FAQ search field check if this question has been tested. show green for untested , red for tested recently, orange for tested a long time ago
 have search field check other excel lists for questions similar to the one asked and suggest search terms to the user.
 #################################################################
-FAQ design suite
-Design a new FAQ and use the database to find questions that have been asked in the past. 
-add those questions to the variants for your new FAQ
+Future prospects
+- 
 
 
 ##################################################################

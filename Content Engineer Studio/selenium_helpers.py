@@ -49,7 +49,8 @@ class MainDriver():
 
     def tearDown(self):
         try:
-            self.driver.close()
+            # self.driver.close()
+            self.driver.quit()
         except AttributeError:
             pass
 
@@ -96,6 +97,13 @@ class MainDriver():
                 # print('user: ' + message.text)
         # print(output)
         return output
+
+    def clickCleverbotAgree(self):
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'noteb'))
+        )
+        element = self.driver.find_element(By.XPATH, './html/body/div[1]/div[2]/div[1]/div/div/form/input')
+        element.click()
 
     def setCleverbotLive(self, input):
         WebDriverWait(self.driver, 10).until(
