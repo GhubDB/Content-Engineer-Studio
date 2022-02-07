@@ -114,6 +114,12 @@ class MainWindow(QMainWindow):
         # Create model for auto_queue and history
         self.history_model = QStandardItemModel()
         self.history.setModel(self.history_model)
+        # Test items
+        # items = ['some tests', 'some more tests', 'you know it, more tests']
+        # for item in items:
+        #     items = QtGui.QStandardItem(item)
+        #     self.history_model.appendRow(items) 
+
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.history.installEventFilter(self)
 
@@ -147,6 +153,7 @@ class MainWindow(QMainWindow):
         self.chat_input.returnPressed.connect(self.send_btn)
         self.send.clicked.connect(self.send_btn)
         self.new_dialog.clicked.connect(self.new_dialog_btn)
+        self.next_question.clicked.connect(self.next_btn)
         # self.next.clicked.connect(self.next_btn)
 
         # Executed on excel.load
@@ -283,6 +290,12 @@ class MainWindow(QMainWindow):
             if event.button() == Qt.RightButton:
                 # print(source.objectName())
                 QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
+        if event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_Delete:
+                indices = self.auto_queue.selectionModel().selectedRows() 
+                for index in sorted(indices):
+                    self.auto_queue_model.removeRow(index.row()) 
+
         return super().eventFilter(source, event)
     
     def clear_selections(self):
@@ -964,7 +977,17 @@ class MainWindow(QMainWindow):
         self.webscraper.clickCleverbotAgree()
 
     def next_btn(self):
-        pass
+        # indices = self.auto_queue.selectionModel().selectedRows()
+        # print(indices.text())
+
+        index = self.auto_queue.selectionModel().currentIndex()
+        value = index.sibling(index.row(),index.column()).data()
+        self.chat_input.setText(value)
+        self.auto_queue.selectionModel().select(index, QItemSelectionModel.Deselect)
+        index = index.row() + 1
+        self.auto_queue.selectRow(index)
+        # self.auto_queue.selectRow(index.row() + 1)
+
 
     def btn_left_2(self):
         if self.cell_selector_2.currentIndex() > 0:
