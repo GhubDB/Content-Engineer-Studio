@@ -1,3 +1,15 @@
+priorities:
+save testing output to excel
+add chat messages dynamically
+implement auto queues 
+-> right click to add to qlineedit 
+-> add +1 to a property every time new dialog is pressed and use modulo on that property to set bg color
+fix sleep freezes
+implement search box auto expand/shrink
+implement FAQ auto search
+
+
+
 #################################################################
 Analysis suite
 webscraping chat sessions for customer messages

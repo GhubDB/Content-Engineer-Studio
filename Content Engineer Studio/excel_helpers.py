@@ -54,11 +54,22 @@ class Excel:
         # df.loc[(df['Transcript Link'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()), "bool_check"]=True
         return missing.isna()
 
-    def overwrite_warn(df, idx, **kwargs):
+    def overwrite_warn(self, df, idx, **kwargs):
         '''
         Checks if data is being overwritten 
         '''
 
+    def quit(self, wb):
+        '''
+        Cleans up and closes Excel session
+        '''
+        self.sheet.autofit()
+        self.saveWB(wb)
+        # Close excel if wb is the only open wb. Else close the instance.
+        if len(wb.app.books) == 1:
+            wb.app.quit()
+        else:
+            wb.close()
 
 # df.loc[(df['Price'].isnull()) | (df['Location'].isnull()),"bool_check"]=True
 

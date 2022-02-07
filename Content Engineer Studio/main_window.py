@@ -88,20 +88,16 @@ class MainWindow(QMainWindow):
         self.webscraper = MainDriver()
         self.row = 0
         self.row_2 = 0
-        self.header_len_2 = 0
         self.header_len = 0
+        self.header_len_2 = 0
         self.index_len = 0
         self.index_len_2 = 0
-        # Keeps track of the sum of df.bool_check in order to find out if row colors need to be changed.
-        self.repopulate_sidebar = 0
-        self.repopulate_sidebar_2 = 0
         self.canned_states = {}
         self.action_states = {} #not implemented
         self.flow_states = {} #not implemented
         self.marked_messages = []
         self.marked_messages_2 = []
         self.filter_proxy_model = ''
-
         self.wb = ''
         self.wb_2 = ''
         self.wb_faq = ''
@@ -110,8 +106,20 @@ class MainWindow(QMainWindow):
         self.cell_selector_start = 6
         self.cell_selector_start_2 = 2
 
+        # Load Ui file, set settings
         loadUi('main_window.ui', self)
         self.setWindowTitle('Content Engineer Studio')
+
+        # Create model for auto_queue and history
+        self.history_model = QStandardItemModel()
+        self.history.setModel(self.history_model)
+        self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.history.installEventFilter(self)
+
+        self.auto_queue_model = QStandardItemModel()
+        self.auto_queue.setModel(self.auto_queue_model)
+        self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.auto_queue.installEventFilter(self)
         
         # Connecting functions
         [self.sidebar.selectionModel().selectionChanged.connect(x) for x in 
@@ -900,6 +908,14 @@ class MainWindow(QMainWindow):
         self.sidebar_2.resizeColumnsToContents()
         self.sidebar_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
+    def populateAutoQueue(self, input):
+        for row in input:
+            self.auto_queue_model.appendRow(row)
+
+
+    def populateHistory(self, input):
+        item = QtGui.QStandardItem(input)
+        self.history_model.appendRow(item)
   
     # def populate_status_bar_2(self, row, start, end):
     #     self.status_bar_2.setText(self.df_2.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
@@ -911,6 +927,7 @@ class MainWindow(QMainWindow):
 
     def send_btn(self):
         input = self.chat_input.text()
+        self.populateHistory(input)
         self.chat_input.clear()
         if input:
             # print(input)

@@ -35,6 +35,11 @@ QTextEdit {
 	color: rgb(230, 230, 230);
     font-size: 11pt;
 }
+#analysis_2 {
+	background-color:rgb(50, 50, 50);
+	color: rgb(230, 230, 230);
+    font-size: 11pt;
+}
 /*
 #chat_bubble_customer {
     font-size: 10pt;
@@ -185,6 +190,9 @@ QLineEdit {
 	selection-background-color: rgb(187, 187, 187);
 	selection-color: rgb(60, 63, 65);
 }
+QLineEdit:focus {
+    border: 2px solid #007ce5;
+}
 QLabel {
 	color:rgb(255,255,255);	
 }
@@ -307,14 +315,14 @@ QCheckBox::indicator:checked {
 	border-style:solid;
 	border-width:1px;
 	border-color: rgb(180,180,180);
-  	background-color:qlineargradient(spread:pad, x1:0.5, y1:0.7, x2:0.5, y2:0.3, stop:0 rgba(87, 97, 106, 255), stop:1 rgba(93, 103, 113, 255));
+	background-color: #2d6594;
 }
 QCheckBox::indicator:unchecked {
 	border-radius:4px;
 	border-style:solid;
 	border-width:1px;
 	border-color: rgb(87, 97, 106);
-  	background-color:rgb(255,255,255);
+	background-color:qlineargradient(spread:pad, x1:0.5, y1:0.7, x2:0.5, y2:0.3, stop:0 rgba(87, 97, 106, 255), stop:1 rgba(93, 103, 113, 255));
 }
 QStatusBar {
 	color:rgb(240,240,240);
