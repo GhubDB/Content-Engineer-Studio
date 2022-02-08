@@ -355,21 +355,23 @@ class MainWindow(QMainWindow):
                 
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
-                # print(source.objectName())
-                QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
+                if self.stackedWidget.currentIndex() == 0:
+                    QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
+                else:
+                    QTimer.singleShot(0, lambda x=event, y=source: self.select_chat_2(x, y))
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Delete:
                 indices = self.auto_queue.selectionModel().selectedRows() 
                 for index in sorted(indices):
                     self.auto_queue_model.removeRow(index.row())
-        if source.objectName() == 'auto_queue':
-            if event.type() == 63:
-                print(event.type())
-                for row in range(0, self.auto_queue_model.rowCount()):
-                    item = self.auto_queue_model.item(row, 0)
-                    if item:
-                        item.setBackground(QtGui.QColor(70, 70, 70))
-                    return True 
+        # if source.objectName() == 'auto_queue':
+        #     if event.type() == 63:
+        #         print(event.type())
+        #         for row in range(0, self.auto_queue_model.rowCount()):
+        #             item = self.auto_queue_model.item(row, 0)
+        #             if item:
+        #                 item.setBackground(QtGui.QColor(70, 70, 70))
+        #             return True 
         if source.objectName() == 'analysis':
             if event.type() == QEvent.KeyPress:
                 if event.key() == Qt.Key_Tab:
@@ -761,15 +763,21 @@ class MainWindow(QMainWindow):
         '''
         Saves current states to Excel
         '''
+        # Saving correct FAQ
+        index = self.search_box_2.selectionModel().currentIndex()
+        value = index.sibling(index.row(),index.column()).data()
+        if value:
+            self.testing_excel.updateCells(value, self.row_2 + 2, 2)
+
+        # Saving canned_2 states
+        # print(self.canned_states_2)
+
         # Saving chat messages
-        print(self.marked_messages_2)
-        print(self.df_2.iloc[self.row_2:self.row_2+1, 
-            self.cell_selector_start_2:self.header_len_2].values, 
-            self.row_2 + 2, self.cell_selector_start_2 + 1)
+        print(len(self.marked_messages_2))
         if len(self.marked_messages_2) > 0:
-            customer, bot  = self.getChatText_2()
-            self.testing_excel.updateCells(customer, self.row_2 + 2, 4)
-            self.testing_excel.updateCells(bot, self.row_2 + 2, 5)
+            customer, bot = self.getChatText_2()
+            self.testing_excel.updateCells(customer, self.row_2 + 2, 3)
+            self.testing_excel.updateCells(bot, self.row_2 + 2, 4)
         
         # Saving analysis contents
         self.testing_excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1, 
@@ -896,7 +904,7 @@ class MainWindow(QMainWindow):
         message_cells = []
         # Isolate numbers from list of selected message object names and add the sorted output to new list
         if len(self.marked_messages_2) > 0:
-            [message_cells.append(message.split('_')) for message in self.marked_messages]
+            [message_cells.append(message.split('_')) for message in self.marked_messages_2]
             message_cells = sorted(message_cells, key = lambda x: x[1])
             # Iterate over selected chat messages
             for message, idx in message_cells:
