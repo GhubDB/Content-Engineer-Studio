@@ -14,6 +14,15 @@ from data import *
 from stylesheets import *
 from bs4 import BeautifulSoup
 
+class AutoQueueModel(QStandardItemModel):
+
+
+    def superItemData(self, itemData):
+        dicti = super().itemData(itemData)
+        print(dicti)
+        [item.remove('BackgroundRole') for item in dicti if 'BackgroundRole' in item]
+        return
+
 class FaqAutoSearch(QWidget):
     def __init__(self, parent=None):
         super(FaqAutoSearch, self).__init__(parent)
@@ -145,8 +154,12 @@ class MainWindow(QMainWindow):
 
         # Setting up Auto Queue
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.auto_queue_model = QStandardItemModel()
+        self.auto_queue_model = AutoQueueModel()
         self.auto_queue.setModel(self.auto_queue_model)
+
+        '''previous implementation'''
+        # self.auto_queue_model = QStandardItemModel()
+        # self.auto_queue.setModel(self.auto_queue_model)
         self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue.installEventFilter(self)
 
@@ -184,7 +197,7 @@ class MainWindow(QMainWindow):
         self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
-        # self.auto_queue_model.rowsInserted.connect(self.resetAutoQueueColors) 
+        self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.superItemData) 
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -317,7 +330,8 @@ class MainWindow(QMainWindow):
             self.analysis_excel.updateCells(bot, self.row + 2, 6)
         
         # Saving analysis contents
-        self.analysis_excel.updateCells(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].values, 
+        self.analysis_excel.updateCells(self.df.iloc[self.row:self.row+1, 
+            self.cell_selector_start:self.header_len].values, 
             self.row + 2, self.cell_selector_start + 1)
 
         # Saves the excel file
@@ -732,8 +746,8 @@ class MainWindow(QMainWindow):
 
         # Reloading excel sheet for test purposes
         self.df_2 = self.testing_excel.reload()
-        self.header_len_2 = len(self.df.columns)
-        self.index_len_2 = len(self.df.index)
+        self.header_len_2 = len(self.df_2.columns)
+        self.index_len_2 = len(self.df_2.index)
         self.completed_2 = self.testing_excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
         self.populate_sidebar_2()
 
@@ -748,13 +762,18 @@ class MainWindow(QMainWindow):
         Saves current states to Excel
         '''
         # Saving chat messages
+        print(self.marked_messages_2)
+        print(self.df_2.iloc[self.row_2:self.row_2+1, 
+            self.cell_selector_start_2:self.header_len_2].values, 
+            self.row_2 + 2, self.cell_selector_start_2 + 1)
         if len(self.marked_messages_2) > 0:
             customer, bot  = self.getChatText_2()
             self.testing_excel.updateCells(customer, self.row_2 + 2, 4)
             self.testing_excel.updateCells(bot, self.row_2 + 2, 5)
         
         # Saving analysis contents
-        self.testing_excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1, self.cell_selector_start_2:self.header_len_2].values, 
+        self.testing_excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1, 
+            self.cell_selector_start_2:self.header_len_2].values, 
             self.row_2 + 2, self.cell_selector_start_2 + 1)
 
         # Saves the excel file
@@ -764,8 +783,7 @@ class MainWindow(QMainWindow):
         '''
         Saves current analysis text to dataframe
         '''
-        # print(self.row_2, self.cell_selector_2.currentText(), self.cell_selector_2.currentText())
-        # self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.cell_selector_2.currentText()
+        self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.analysis_2.toPlainText()
     
     def populate_chat_2(self, chat):
         output = []
