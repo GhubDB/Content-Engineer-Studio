@@ -48,18 +48,14 @@ class MainDriver():
         self.driver.get(url)
 
     def tearDown(self):
+        ''''
+        Bugfix: Causes selenium session errors
+        '''
         try:
             self.driver.close()
             # self.driver.quit()
         except AttributeError:
             pass
-
-    # def __set__(self, obj, value):
-    #     driver = obj.driver
-    #     WebDriverWait(driver, 10).until(
-    #         lambda driver: driver.find_element_by_name(self.locator))
-    #     driver.find_element_by_name(self.locator).clear()
-    #     driver.find_element_by_name(self.locator).send_keys(value)
 
     def getCleverbotStatic(self):
         output = []
@@ -78,7 +74,6 @@ class MainDriver():
                 # print('user: ' + message.text)
         # print(output)
         return output
-
 
     def getCleverbotLive(self):
         output = []
@@ -113,16 +108,3 @@ class MainDriver():
         self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
         self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
 
-    def clickByName(self, ID):
-        element = self.driver.find_element(By.NAME, ID)
-        element.click()
-
-# class Executors(object):
-#     def __init__(self, driver):
-#         self.driver = driver
-
-
-if __name__ == '__main__':
-    cleverbot_driver = MainDriver()
-    cleverbot_driver.setUp()
-    cleverbot_driver.cleverbot()

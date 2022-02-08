@@ -32,6 +32,13 @@ class Excel:
         df = df.reset_index()
         return df, wb
 
+    def reload(self):
+        '''
+        Updates the dataframe with current excel values
+        '''
+        df = self.sheet.range('A1').options(pd.DataFrame, expand='table').value
+        df = df.reset_index()
+
 
     def updateCells(self, input, header, row):
         '''

@@ -1,11 +1,8 @@
 priorities:
 save testing output to excel
-add chat messages dynamically ignore empty messages.
-implement auto queues 
--> right click to add to qlineedit 
 -> add +1 to a property every time new dialog is pressed and use modulo on that property to set bg color
 fix tearDown issues
-fix sleep freezes
+fix sleep freezes and implement multi threading
 implement search box auto expand/shrink
 implement FAQ auto search
 
@@ -72,6 +69,7 @@ make file searchable by questions where the bot fails to provide the correct ans
 
 once updates are made to faq's or flows retest all collected sentences against the new flows or FAQ's
 generate output that shows which of the previously tested questions do not work with the new changes.
+manually test the questions that did not produce the expected output and add details.
 run selenium on server. it is infinitely scalable
 create a history of performance metrics for each FAQ/flow. automate reporting and chart generation.
 
@@ -132,3 +130,5 @@ Bugs:
     check signal filter for chat_2 vs chat
 ----
     program crashes if a row without values is selected
+----    
+    program crashes if excel file is closed during runtime

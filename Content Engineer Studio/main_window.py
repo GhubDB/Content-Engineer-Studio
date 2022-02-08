@@ -92,6 +92,7 @@ class MainWindow(QMainWindow):
         self.header_len_2 = 0
         self.index_len = 0
         self.index_len_2 = 0
+        self.dialog_num = 0
         self.canned_states = {}
         self.canned_states_2 = {}
         self.action_states = {} #not implemented
@@ -122,7 +123,6 @@ class MainWindow(QMainWindow):
             self.history_model.appendRow(items) 
 
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.history.installEventFilter(self)
 
         self.auto_queue_model = QStandardItemModel()
         self.auto_queue.setModel(self.auto_queue_model)
@@ -178,6 +178,7 @@ class MainWindow(QMainWindow):
 
         # Adding search box
         self.populate_search_column_select()
+        self.populate_search_column_select_2()
         model = QStandardItemModel(len(self.faq.index), 1)
         for idx, _ in enumerate(self.faq.iterrows()):
             item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
@@ -187,22 +188,21 @@ class MainWindow(QMainWindow):
         filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         filter_proxy_model.setFilterKeyColumn(0)
         self.search_box.setModel(filter_proxy_model)
+        self.search_box_2.setModel(filter_proxy_model)
         self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
         self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
+        self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
 
         # Adding search box_2
-        self.populate_search_column_select_2()
-        model = QStandardItemModel(len(self.faq.index), 1)
-        for idx, _ in enumerate(self.faq.iterrows()):
-            item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
-            model.setItem(idx, 0 , item)
-        filter_proxy_model = QSortFilterProxyModel()
-        filter_proxy_model.setSourceModel(model)
-        filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        filter_proxy_model.setFilterKeyColumn(0)
-        self.search_box_2.setModel(filter_proxy_model)
-        self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
-        self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
+        # model = QStandardItemModel(len(self.faq.index), 1)
+        # for idx, _ in enumerate(self.faq.iterrows()):
+        #     item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
+        #     model.setItem(idx, 0 , item)
+        # filter_proxy_model = QSortFilterProxyModel()
+        # filter_proxy_model.setSourceModel(model)
+        # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        # filter_proxy_model.setFilterKeyColumn(0)
 
         # Methods to be executed on startup
         self.populate_canned()
@@ -288,7 +288,7 @@ class MainWindow(QMainWindow):
         Filters Events and calls the respective functions
         '''
         if event.type() == event.Resize:
-            if self.stackedWidget.currentIndex == 0:
+            if self.stackedWidget.currentIndex() == 0:
                 QTimer.singleShot(0, self.chat.resizeRowsToContents)
             else:
                 QTimer.singleShot(0, self.chat_2.resizeRowsToContents)
@@ -490,17 +490,25 @@ class MainWindow(QMainWindow):
         '''
         Populates the search box with values from FAQ excel sheet
         '''
+        page = self.stackedWidget.currentIndex()
         model = QStandardItemModel(len(self.faq.index), 1)        
         for idx, _ in enumerate(self.faq.iterrows()):
-            item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
+            if page == 0:
+                item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
+            else:
+                item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
             model.setItem(idx, 0 , item)
 
         filter_proxy_model = QSortFilterProxyModel()
         filter_proxy_model.setSourceModel(model)
         filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
         filter_proxy_model.setFilterKeyColumn(0)
-        self.search_box.setModel(filter_proxy_model)
-        self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        if page == 0:
+            self.search_box.setModel(filter_proxy_model)
+            self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
+        else:
+            self.search_box_2.setModel(filter_proxy_model)
+            self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
 
         
 
@@ -620,15 +628,12 @@ class MainWindow(QMainWindow):
 
     def btn_save(self):
         self.saveOnRowChange()
-        # print(self.chat.cellWidget(0, 0).document())
 
     def switchToAnalysis(self):
         self.stackedWidget.setCurrentWidget(self.analysis_suite)
-        # self.webscraper.tearDown()
 
     def switchToTesting(self):
         self.stackedWidget.setCurrentWidget(self.testing_suite)
-        # self.webscraper.tearDown()
 
     def exportToTesting(self):
         print('!')
@@ -639,7 +644,6 @@ class MainWindow(QMainWindow):
                 item = QtGui.QStandardItem(message.lstrip())
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
-        # self.webscraper.tearDown()
 
     ################################################################################################
     '''
@@ -699,17 +703,12 @@ class MainWindow(QMainWindow):
         # self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.cell_selector_2.currentText()
     
     def populate_chat_2(self, chat):
-        # chat = [message for message in chat if '' not in message]
         output = []
-        # print(self.chat_test)
         [output.append(message) for message in chat if message not in self.chat_test and '' not in message]
-        print(output)
-        print(self.chat_test)
         self.chat_2.setColumnCount(1)
         length = len(self.chat_test)
         self.chat_2.setRowCount(length + len(output))
         for idx, sender, in enumerate(output, start=length):
-            print(idx, sender)
             if sender[0] == 'bot':
                 combo = TextEdit(self, objectName=f'bot_{idx}') 
             else:
@@ -878,21 +877,21 @@ class MainWindow(QMainWindow):
             self.search_column_select_2.addItem(item)
   
 
-    def populate_search_box_2(self):
-        '''
-        Populates the search box with values from FAQ excel sheet
-        '''
-        model = QStandardItemModel(len(self.faq.index), 1)        
-        for idx, _ in enumerate(self.faq.iterrows()):
-            item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
-            model.setItem(idx, 0 , item)
+    # def populate_search_box_2(self):
+    #     '''
+    #     Populates the search box with values from FAQ excel sheet
+    #     '''
+    #     model = QStandardItemModel(len(self.faq.index), 1)        
+    #     for idx, _ in enumerate(self.faq.iterrows()):
+    #         item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
+    #         model.setItem(idx, 0 , item)
 
-        filter_proxy_model = QSortFilterProxyModel()
-        filter_proxy_model.setSourceModel(model)
-        filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        filter_proxy_model.setFilterKeyColumn(0)
-        self.search_box_2.setModel(filter_proxy_model)
-        self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
+    #     filter_proxy_model = QSortFilterProxyModel()
+    #     filter_proxy_model.setSourceModel(model)
+    #     filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+    #     filter_proxy_model.setFilterKeyColumn(0)
+    #     self.search_box_2.setModel(filter_proxy_model)
+    #     self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
 
         
 
@@ -955,6 +954,10 @@ class MainWindow(QMainWindow):
 
     def populateHistory(self, input):
         item = QtGui.QStandardItem(input)
+        if self.dialog_num % 2 == 0:
+            item.setBackground(QColor(70, 81, 70))
+        else:
+            item.setBackground(QColor(74, 69, 78))
         self.history_model.appendRow(item)
 
 
@@ -973,21 +976,15 @@ class MainWindow(QMainWindow):
         self.populateHistory(input)
         self.chat_input.clear()
         if input:
-            # print(input)
-            # try:
             self.webscraper.setCleverbotLive(input)
             time.sleep(3.5)
             output = self.webscraper.getCleverbotLive()
             if output:
                 self.populate_chat_2(output)
-                # self.populate_chat_2(lambda: self.webscraper.getCleverbotLive())
-            # except AttributeError:
-            #     alert = CESdialog(self)
-            #     alert.exec()
-            #     # if button == QMessageBox.Ok:
 
 
     def new_dialog_btn(self):
+        self.dialog_num += 1
         self.clearChat_2()
         self.chat_test = []
         # self.webscraper.tearDown()
