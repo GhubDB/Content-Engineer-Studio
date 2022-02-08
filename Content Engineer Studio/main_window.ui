@@ -963,6 +963,46 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>switch_to_testing_suite</tabstop>
+  <tabstop>chat_2</tabstop>
+  <tabstop>left</tabstop>
+  <tabstop>right</tabstop>
+  <tabstop>analysis</tabstop>
+  <tabstop>actions</tabstop>
+  <tabstop>up</tabstop>
+  <tabstop>down</tabstop>
+  <tabstop>chat</tabstop>
+  <tabstop>sidebar</tabstop>
+  <tabstop>flows</tabstop>
+  <tabstop>save</tabstop>
+  <tabstop>canned</tabstop>
+  <tabstop>cell_selector</tabstop>
+  <tabstop>search_column_select</tabstop>
+  <tabstop>searchbar</tabstop>
+  <tabstop>search_box</tabstop>
+  <tabstop>cell_selector_2</tabstop>
+  <tabstop>up_2</tabstop>
+  <tabstop>search_box_2</tabstop>
+  <tabstop>search_column_select_2</tabstop>
+  <tabstop>save_2</tabstop>
+  <tabstop>left_2</tabstop>
+  <tabstop>send</tabstop>
+  <tabstop>chat_input</tabstop>
+  <tabstop>searchbar_2</tabstop>
+  <tabstop>auto_2</tabstop>
+  <tabstop>right_2</tabstop>
+  <tabstop>auto_queue</tabstop>
+  <tabstop>sidebar_2</tabstop>
+  <tabstop>history</tabstop>
+  <tabstop>analysis_2</tabstop>
+  <tabstop>down_2</tabstop>
+  <tabstop>next_question</tabstop>
+  <tabstop>new_dialog</tabstop>
+  <tabstop>export_to_testing_suite</tabstop>
+  <tabstop>switch_to_analysis_suite</tabstop>
+  <tabstop>canned_2</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

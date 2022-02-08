@@ -14,6 +14,26 @@ from data import *
 from stylesheets import *
 from bs4 import BeautifulSoup
 
+class FaqAutoSearch(QWidget):
+    def __init__(self, parent=None):
+        super(FaqAutoSearch, self).__init__(parent)
+        self.setWindowTitle("FAQ's")
+        table = QTableView()
+        mw = MainWindow()
+        table.setModel(mw.faq_auto_search_model)
+        faq_search = QLineEdit()
+        faq_search.textChanged.connect(mw.faq_auto_search_model.setFilterRegExp)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(table)
+        self.layout.addWidget(faq_search)
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.setLayout(self.layout)
+        self.show()
+
+    def setSearchColumn(self, column):
+        self.faq_auto_search_model.setFilterKeyColumn(column)
+
+
 class CESdialog(QDialog):
     '''
     Custom user interface dialog
@@ -31,7 +51,6 @@ class CESdialog(QDialog):
         self.layout.addWidget(message)
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
-
 
 
 class Highlighter(QSyntaxHighlighter):
@@ -165,7 +184,7 @@ class MainWindow(QMainWindow):
         self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
-        # self.next.clicked.connect(self.next_btn)
+        # self.auto_queue_model.rowsInserted.connect(self.resetAutoQueueColors) 
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -318,8 +337,8 @@ class MainWindow(QMainWindow):
             if event.type() == 82:
                 print('fired')
                 # if event.button() == Qt.RightButton:
-                faq_auto_search = FaqAutoSearch()
-                faq_auto_search.show()
+                self.faq_auto_search = FaqAutoSearch(self)
+                
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
                 # print(source.objectName())
@@ -329,6 +348,14 @@ class MainWindow(QMainWindow):
                 indices = self.auto_queue.selectionModel().selectedRows() 
                 for index in sorted(indices):
                     self.auto_queue_model.removeRow(index.row())
+        if source.objectName() == 'auto_queue':
+            if event.type() == 63:
+                print(event.type())
+                for row in range(0, self.auto_queue_model.rowCount()):
+                    item = self.auto_queue_model.item(row, 0)
+                    if item:
+                        item.setBackground(QtGui.QColor(70, 70, 70))
+                    return True 
         if source.objectName() == 'analysis':
             if event.type() == QEvent.KeyPress:
                 if event.key() == Qt.Key_Tab:
@@ -985,15 +1012,17 @@ class MainWindow(QMainWindow):
         self.sidebar_2.resizeColumnsToContents()
         self.sidebar_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def populateAutoQueue(self, input):
-        for row in input:
-            self.auto_queue_model.appendRow(row)
+    '''Unused'''
+    # def populateAutoQueue(self, input):
+    #     for row in input:
+    #         self.auto_queue_model.appendRow(row)
 
-    def resetColors(self):
-        for row in self.auto_queue.rowCount():
-            item = self.auto_queue.cellWidget(row, 0)
-            item.setBackground(QColor(70, 70, 70))
-
+    # def resetAutoQueueColors(self, index, column, row):
+    #     print(column,row, self.auto_queue_model.rowCount())
+    #     for row in range(0, self.auto_queue_model.rowCount()):
+    #         item = self.auto_queue_model.item(row, 0)
+    #         if item:
+    #             item.setBackground(QtGui.QColor(70, 70, 70))
 
     def populateHistory(self, input):
         item = QtGui.QStandardItem(input)
@@ -1074,24 +1103,6 @@ class MainWindow(QMainWindow):
     def btn_save_2(self):
         self.saveOnRowChange_2()
 
-
-class FaqAutoSearch(QWidget):
-    def __init__(self, df=None):
-        super().__init__()
-        self.setWindowTitle("FAQ's")
-        table = QTableView()
-        mw = MainWindow()
-        table.setModel(mw.faq_auto_search_model)
-        faq_search = QLineEdit()
-        faq_search.textChanged.connect(mw.faq_auto_search_model.setFilterRegExp)
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(table)
-        self.layout.addWidget(faq_search)
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.setLayout(self.layout)
-
-    def setSearchColumn(self, column):
-        self.faq_auto_search_model.setFilterKeyColumn(column)
 
         
 

@@ -1,10 +1,10 @@
 priorities:
 save testing output to excel
--> add +1 to a property every time new dialog is pressed and use modulo on that property to set bg color
 fix tearDown issues
 fix sleep freezes and implement multi threading
 implement search box auto expand/shrink
 implement FAQ auto search
+remove background color from drag & drop rows
 
 
 
@@ -107,6 +107,7 @@ Notes:
 - self.sender() will find the id of the element that fired the event
 - setContextMenuPolicy(Qt::ContextMenuPolicy policy) translates to combo.setContextMenuPolicy(Qt.PreventContextMenu)
 - self.chat.cellWidget(0, 0) will get the widget in the specified cell. Use .toplainText() to get the text contents.
+- self.auto_queue_model.item(0, 0) will get item from a QStandardItemModel
 - print(wb.sheets) will show the sheets of a workbook
 
 - df.iloc[1,0].values will give a list with the values at grid location 1,0
