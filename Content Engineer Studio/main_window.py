@@ -1,6 +1,7 @@
 import sys
 import re
 import time
+from warnings import filters
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import *
@@ -83,7 +84,9 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        self.excel = Excel()
+        self.analysis_excel = Excel()
+        self.testing_excel = Excel()
+        self.faq = Excel()
         self.highlighter = Highlighter()
         self.webscraper = MainDriver()
         self.row = 0
@@ -101,9 +104,6 @@ class MainWindow(QMainWindow):
         self.marked_messages_2 = []
         self.chat_test = []
         self.filter_proxy_model = ''
-        self.wb = ''
-        self.wb_2 = ''
-        self.wb_faq = ''
 
         # Sets the starting column number for the cell selector combo boxt
         self.cell_selector_start = 6
@@ -122,12 +122,16 @@ class MainWindow(QMainWindow):
             items = QtGui.QStandardItem(item)
             self.history_model.appendRow(items) 
 
+        # Setting up Auto Queue
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
         self.auto_queue_model = QStandardItemModel()
         self.auto_queue.setModel(self.auto_queue_model)
         self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue.installEventFilter(self)
+
+        # Installing Event filters
+        self.analysis.installEventFilter(self)
+        self.analysis_2.installEventFilter(self)
         
         # Connecting functions
         [self.sidebar.selectionModel().selectionChanged.connect(x) for x in 
@@ -162,18 +166,18 @@ class MainWindow(QMainWindow):
         # self.next.clicked.connect(self.next_btn)
 
         # Executed on excel.load
-        self.df, self.wb = self.excel.load('transcripts.xlsx', 'Sheet1')
+        self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
-        self.completed = self.excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
+        self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
-        self.faq, self.wb_faq = self.excel.load('recipes.xlsx', 'Sheet1')
+        self.faq = self.faq.load('recipes.xlsx', 'Sheet1')
         
         # Executed on excel.load
-        self.df_2, self.wb_2 = self.excel.load('testing.xlsx', 'Sheet1')
+        self.df_2 = self.testing_excel.load('testing.xlsx', 'Sheet1')
         self.header_len_2 = len(self.df_2.columns)
         self.index_len_2 = len(self.df_2.index)
-        self.completed_2 = self.excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
+        self.completed_2 = self.testing_excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
         self.populate_sidebar_2()
 
         # Adding search box
@@ -248,10 +252,10 @@ class MainWindow(QMainWindow):
             self.row = idx[0].row()
 
         # Reloading excel sheet for test purposes
-        self.df, self.wb = self.excel.load('transcripts.xlsx', 'Sheet1')
+        self.df = self.analysis_excel.reload()
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
-        self.completed = self.excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
+        self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
 
         # Loading web page, web scraping and adding results to self.chat
@@ -273,15 +277,15 @@ class MainWindow(QMainWindow):
         # Saving chat messages
         if len(self.marked_messages) > 0:
             customer, bot  = self.getChatText()
-            self.excel.updateCells(customer, self.row + 2, 5)
-            self.excel.updateCells(bot, self.row + 2, 6)
+            self.analysis_excel.updateCells(customer, self.row + 2, 5)
+            self.analysis_excel.updateCells(bot, self.row + 2, 6)
         
         # Saving analysis contents
-        self.excel.updateCells(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].values, 
+        self.analysis_excel.updateCells(self.df.iloc[self.row:self.row+1, self.cell_selector_start:self.header_len].values, 
             self.row + 2, self.cell_selector_start + 1)
 
         # Saves the excel file
-        self.excel.saveWB(self.wb)
+        self.analysis_excel.saveWB()
 
     def eventFilter(self, source, event):
         '''
@@ -300,8 +304,18 @@ class MainWindow(QMainWindow):
             if event.key() == Qt.Key_Delete:
                 indices = self.auto_queue.selectionModel().selectedRows() 
                 for index in sorted(indices):
-                    self.auto_queue_model.removeRow(index.row()) 
-
+                    self.auto_queue_model.removeRow(index.row())
+        if source.objectName() == 'analysis':
+            if event.type() == QEvent.KeyPress:
+                if event.key() == Qt.Key_Tab:
+                    self.btn_right()
+                    return True
+        if source.objectName() == 'analysis_2':
+            if event.type() == QEvent.KeyPress:
+                if event.key() == Qt.Key_Tab:
+                    self.btn_right_2()
+                    return True
+        # print(source.objectName())
         return super().eventFilter(source, event)
     
     def clear_selections(self):
@@ -611,8 +625,9 @@ class MainWindow(QMainWindow):
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
 
     def btn_right(self):
-        if self.cell_selector.currentIndex() < self.header_len - self.cell_selector_start - 1:
-            self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 1)
+        if not self.cell_selector.currentIndex() < self.header_len - self.cell_selector_start - 1:
+            self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 2)
+        self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 1)
 
     def btn_up(self):
         if self.row > 0:
@@ -666,10 +681,10 @@ class MainWindow(QMainWindow):
             self.row_2 = idx[0].row()
 
         # Reloading excel sheet for test purposes
-        self.df_2, self.wb_2 = self.excel.load('testing.xlsx', 'Sheet1')
+        self.df_2 = self.testing_excel.reload()
         self.header_len_2 = len(self.df.columns)
         self.index_len_2 = len(self.df.index)
-        self.completed_2 = self.excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
+        self.completed_2 = self.testing_excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
         self.populate_sidebar_2()
 
         # Autoscrolling to the selection on the sidebar
@@ -685,15 +700,15 @@ class MainWindow(QMainWindow):
         # Saving chat messages
         if len(self.marked_messages_2) > 0:
             customer, bot  = self.getChatText_2()
-            self.excel.updateCells(customer, self.row_2 + 2, 4)
-            self.excel.updateCells(bot, self.row_2 + 2, 5)
+            self.testing_excel.updateCells(customer, self.row_2 + 2, 4)
+            self.testing_excel.updateCells(bot, self.row_2 + 2, 5)
         
         # Saving analysis contents
-        self.excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1, self.cell_selector_start_2:self.header_len_2].values, 
+        self.testing_excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1, self.cell_selector_start_2:self.header_len_2].values, 
             self.row_2 + 2, self.cell_selector_start_2 + 1)
 
         # Saves the excel file
-        self.excel.saveWB(self.wb_2) 
+        self.testing_excel.saveWB() 
 
     def save_analysis_2(self):
         '''
@@ -1012,8 +1027,9 @@ class MainWindow(QMainWindow):
             self.cell_selector_2.setCurrentIndex(self.cell_selector_2.currentIndex() - 1)
 
     def btn_right_2(self):
-        if self.cell_selector_2.currentIndex() < self.header_len_2 - self.cell_selector_start_2 - 1:
-            self.cell_selector_2.setCurrentIndex(self.cell_selector_2.currentIndex() + 1)
+        if not self.cell_selector_2.currentIndex() < self.header_len_2 - self.cell_selector_start_2 - 1:
+            self.cell_selector_2.setCurrentIndex(self.cell_selector_2.currentIndex() + 2)
+        self.cell_selector_2.setCurrentIndex(self.cell_selector_2.currentIndex() + 1)
 
     def btn_up_2(self):
         if self.row_2 > 0:

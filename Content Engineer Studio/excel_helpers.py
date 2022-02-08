@@ -18,6 +18,7 @@ class Excel:
     '''
     def __init__(self):
         self.sheet = ''
+        self.wb = ''
 
     def load(self, filename, sheet):
         '''
@@ -26,11 +27,11 @@ class Excel:
         filename = Path(filename)
         # with xw.App() as app:
         #     wb = app.books[filename]
-        wb = xw.Book(filename)
-        self.sheet = wb.sheets[sheet]
+        self.wb = xw.Book(filename)
+        self.sheet = self.wb.sheets[sheet]
         df = self.sheet.range('A1').options(pd.DataFrame, expand='table').value
         df = df.reset_index()
-        return df, wb
+        return df
 
     def reload(self):
         '''
@@ -38,6 +39,7 @@ class Excel:
         '''
         df = self.sheet.range('A1').options(pd.DataFrame, expand='table').value
         df = df.reset_index()
+        return df
 
 
     def updateCells(self, input, header, row):
@@ -46,11 +48,11 @@ class Excel:
         '''
         self.sheet.range(header, row).value = input
     
-    def saveWB(self, wb):
+    def saveWB(self):
         '''
         Saves specified wb
         '''
-        wb.save()
+        self.wb.save()
 
     def incomplete(self, df, start, end):
         '''
