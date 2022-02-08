@@ -1,8 +1,6 @@
 priorities:
-save testing output to excel
 fix tearDown issues
 fix sleep freezes and implement multi threading
-implement search box auto expand/shrink
 implement FAQ auto search
 remove background color from drag & drop rows
 

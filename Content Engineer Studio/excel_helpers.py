@@ -42,11 +42,11 @@ class Excel:
         return df
 
 
-    def updateCells(self, input, header, row):
+    def updateCells(self, input, column, row):
         '''
         Inserts values into excel sheet
         '''
-        self.sheet.range(header, row).value = input
+        self.sheet.range(column, row).value = input
     
     def saveWB(self):
         '''
@@ -56,12 +56,14 @@ class Excel:
 
     def incomplete(self, df, start, end):
         '''
-        Adds header bool_check to df and assigns 1 to rows that have incomplete values under this header
+        Returns bool array with None values as false
         '''
         missing = df.iloc[: , start:end + 1]
-        
         # df.loc[(df['Transcript Link'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()), "bool_check"]=True
         return missing.isna()
+
+    def colorize(self, column, row):
+        self.sheet.range(column, row).color = (255,255,0)
 
     def overwrite_warn(self, df, idx, **kwargs):
         '''

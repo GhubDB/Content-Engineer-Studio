@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 class AutoQueueModel(QStandardItemModel):
 
 
-    def superItemData(self, itemData):
+    def itemData(self, itemData):
         dicti = super().itemData(itemData)
         print(dicti)
         [item.remove('BackgroundRole') for item in dicti if 'BackgroundRole' in item]
@@ -189,6 +189,8 @@ class MainWindow(QMainWindow):
         self.switch_to_analysis_suite.clicked.connect(self.switchToAnalysis)
         self.export_to_testing_suite.clicked.connect(self.exportToTesting)
         self.switch_to_testing_suite.clicked.connect(self.switchToTesting)
+        self.colorize.clicked.connect(self.btn_colorize)
+        self.colorize_2.clicked.connect(self.btn_colorize_2)
         self.chat_input.returnPressed.connect(self.send_btn)
         self.send.clicked.connect(self.send_btn)
         self.new_dialog.clicked.connect(self.new_dialog_btn)
@@ -197,7 +199,7 @@ class MainWindow(QMainWindow):
         self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
-        self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.superItemData) 
+        self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -308,10 +310,10 @@ class MainWindow(QMainWindow):
         self.populate_sidebar()
 
         # Loading web page, web scraping and adding results to self.chat
-
-        self.webscraper.setUp(url=self.df.iloc[self.row, 3])
-        chat_text = self.webscraper.getCleverbotStatic()
-        self.populate_chat(chat_text)
+        if self.open_links.checkState():
+            self.webscraper.setUp(url=self.df.iloc[self.row, 3])
+            chat_text = self.webscraper.getCleverbotStatic()
+            self.populate_chat(chat_text)
 
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
@@ -556,7 +558,6 @@ class MainWindow(QMainWindow):
 
     def populate_analysis(self):
         # '''Bugfix for number only entries on the excel sheet needed. 
-        #   File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         # print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
@@ -711,6 +712,9 @@ class MainWindow(QMainWindow):
 
     def btn_save(self):
         self.saveOnRowChange()
+
+    def btn_colorize(self):
+        self.analysis_excel.colorize(self.row + 2, self.cell_selector.currentIndex() + self.cell_selector_start + 1)
 
     def switchToAnalysis(self):
         self.stackedWidget.setCurrentWidget(self.analysis_suite)
@@ -954,7 +958,6 @@ class MainWindow(QMainWindow):
 
     def populate_analysis_2(self):
         # '''Bugfix for number only entries on the excel sheet needed. 
-        #   File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         # print(self.row_2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2)
@@ -1129,6 +1132,8 @@ class MainWindow(QMainWindow):
     def btn_save_2(self):
         self.saveOnRowChange_2()
 
+    def btn_colorize_2(self):
+        self.testing_excel.colorize(self.row_2 + 2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2 + 1)
 
         
 
