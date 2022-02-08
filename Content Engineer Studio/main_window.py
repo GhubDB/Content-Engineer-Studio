@@ -32,6 +32,8 @@ class CESdialog(QDialog):
         self.layout.addWidget(self.buttonBox)
         self.setLayout(self.layout)
 
+
+
 class Highlighter(QSyntaxHighlighter):
     '''
     For highlighting anonymized text blocks
@@ -86,7 +88,7 @@ class MainWindow(QMainWindow):
 
         self.analysis_excel = Excel()
         self.testing_excel = Excel()
-        self.faq = Excel()
+        self.faq_excel = Excel()
         self.highlighter = Highlighter()
         self.webscraper = MainDriver()
         self.row = 0
@@ -171,7 +173,6 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
-        self.faq = self.faq.load('recipes.xlsx', 'Sheet1')
         
         # Executed on excel.load
         self.df_2 = self.testing_excel.load('testing.xlsx', 'Sheet1')
@@ -180,12 +181,14 @@ class MainWindow(QMainWindow):
         self.completed_2 = self.testing_excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
         self.populate_sidebar_2()
 
+        self.faq_df = self.faq_excel.load('recipes.xlsx', 'Sheet1')
+
         # Adding search box
         self.populate_search_column_select()
         self.populate_search_column_select_2()
-        model = QStandardItemModel(len(self.faq.index), 1)
-        for idx, _ in enumerate(self.faq.iterrows()):
-            item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
+        model = QStandardItemModel(len(self.faq_df.index), 1)
+        for idx, _ in enumerate(self.faq_df.iterrows()):
+            item = QStandardItem(self.faq_df[self.search_column_select.currentText()][idx])
             model.setItem(idx, 0 , item)
         filter_proxy_model = QSortFilterProxyModel()
         filter_proxy_model.setSourceModel(model)
@@ -198,10 +201,24 @@ class MainWindow(QMainWindow):
         self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
         self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
 
+        # Initializing FAQ search window
+        model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
+        for idx, _ in self.faq_df.iterrows():
+            for i, _ in enumerate(self.faq_df.columns):
+                item = QStandardItem(self.faq_df.iloc[idx,i])
+                model.setItem(idx, i, item) # check this
+        self.faq_auto_search_model = QSortFilterProxyModel()
+        self.faq_auto_search_model.setSourceModel(model)
+        self.faq_auto_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.faq_auto_search_model.setFilterKeyColumn(-1) # add this to method 
+        self.search_box.installEventFilter(self)
+        self.search_box_2.installEventFilter(self)
+
+
         # Adding search box_2
-        # model = QStandardItemModel(len(self.faq.index), 1)
-        # for idx, _ in enumerate(self.faq.iterrows()):
-        #     item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
+        # model = QStandardItemModel(len(self.faq_df.index), 1)
+        # for idx, _ in enumerate(self.faq_df.iterrows()):
+        #     item = QStandardItem(self.faq_df[self.search_column_select_2.currentText()][idx])
         #     model.setItem(idx, 0 , item)
         # filter_proxy_model = QSortFilterProxyModel()
         # filter_proxy_model.setSourceModel(model)
@@ -296,6 +313,13 @@ class MainWindow(QMainWindow):
                 QTimer.singleShot(0, self.chat.resizeRowsToContents)
             else:
                 QTimer.singleShot(0, self.chat_2.resizeRowsToContents)
+        if source.objectName() == 'search_box' or source.objectName() == 'search_box_2':
+            # print(event.type())
+            if event.type() == 82:
+                print('fired')
+                # if event.button() == Qt.RightButton:
+                faq_auto_search = FaqAutoSearch()
+                faq_auto_search.show()
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
                 # print(source.objectName())
@@ -317,6 +341,7 @@ class MainWindow(QMainWindow):
                     return True
         # print(source.objectName())
         return super().eventFilter(source, event)
+
     
     def clear_selections(self):
         self.flows.clearSelection()
@@ -496,7 +521,7 @@ class MainWindow(QMainWindow):
 
     
     def populate_search_column_select(self):
-        for item in list(self.faq.columns.values):
+        for item in list(self.faq_df.columns.values):
             self.search_column_select.addItem(item)
   
 
@@ -505,12 +530,12 @@ class MainWindow(QMainWindow):
         Populates the search box with values from FAQ excel sheet
         '''
         page = self.stackedWidget.currentIndex()
-        model = QStandardItemModel(len(self.faq.index), 1)        
-        for idx, _ in enumerate(self.faq.iterrows()):
+        model = QStandardItemModel(len(self.faq_df.index), 1)        
+        for idx, _ in enumerate(self.faq_df.iterrows()):
             if page == 0:
-                item = QStandardItem(self.faq[self.search_column_select.currentText()][idx])
+                item = QStandardItem(self.faq_df[self.search_column_select.currentText()][idx])
             else:
-                item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
+                item = QStandardItem(self.faq_df[self.search_column_select_2.currentText()][idx])
             model.setItem(idx, 0 , item)
 
         filter_proxy_model = QSortFilterProxyModel()
@@ -651,11 +676,9 @@ class MainWindow(QMainWindow):
         self.stackedWidget.setCurrentWidget(self.testing_suite)
 
     def exportToTesting(self):
-        print('!')
         customer= self.getChatText(export=1)
         if customer:
             for message in customer:
-                print(message)
                 item = QtGui.QStandardItem(message.lstrip())
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
@@ -888,7 +911,7 @@ class MainWindow(QMainWindow):
 
     
     def populate_search_column_select_2(self):
-        for item in list(self.faq.columns.values):
+        for item in list(self.faq_df.columns.values):
             self.search_column_select_2.addItem(item)
   
 
@@ -896,9 +919,9 @@ class MainWindow(QMainWindow):
     #     '''
     #     Populates the search box with values from FAQ excel sheet
     #     '''
-    #     model = QStandardItemModel(len(self.faq.index), 1)        
-    #     for idx, _ in enumerate(self.faq.iterrows()):
-    #         item = QStandardItem(self.faq[self.search_column_select_2.currentText()][idx])
+    #     model = QStandardItemModel(len(self.faq_df.index), 1)        
+    #     for idx, _ in enumerate(self.faq_df.iterrows()):
+    #         item = QStandardItem(self.faq_df[self.search_column_select_2.currentText()][idx])
     #         model.setItem(idx, 0 , item)
 
     #     filter_proxy_model = QSortFilterProxyModel()
@@ -965,6 +988,11 @@ class MainWindow(QMainWindow):
     def populateAutoQueue(self, input):
         for row in input:
             self.auto_queue_model.appendRow(row)
+
+    def resetColors(self):
+        for row in self.auto_queue.rowCount():
+            item = self.auto_queue.cellWidget(row, 0)
+            item.setBackground(QColor(70, 70, 70))
 
 
     def populateHistory(self, input):
@@ -1045,6 +1073,25 @@ class MainWindow(QMainWindow):
 
     def btn_save_2(self):
         self.saveOnRowChange_2()
+
+
+class FaqAutoSearch(QWidget):
+    def __init__(self, df=None):
+        super().__init__()
+        self.setWindowTitle("FAQ's")
+        table = QTableView()
+        mw = MainWindow()
+        table.setModel(mw.faq_auto_search_model)
+        faq_search = QLineEdit()
+        faq_search.textChanged.connect(mw.faq_auto_search_model.setFilterRegExp)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(table)
+        self.layout.addWidget(faq_search)
+        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.setLayout(self.layout)
+
+    def setSearchColumn(self, column):
+        self.faq_auto_search_model.setFilterKeyColumn(column)
 
         
 
