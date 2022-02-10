@@ -15,7 +15,10 @@ from bs4 import BeautifulSoup
 
 class MainDriver():
     def __init__(self):
-        pass
+        self.width = None
+        self.height = None
+        self.x = None
+        self.y = None
 
 
     def setUp(self, url=None, filepath=None, size=None): #https://www.cleverbot.com/conv/202202041647/WYDS891QFL_Hello-who-are-you
@@ -29,10 +32,14 @@ class MainDriver():
         if size:
             options.add_argument(size)
         else:
-            options.add_argument("window-size=1000,1420")
-        options.add_argument("window-position=0,0")
+            options.add_argument("window-size=950,1420")
+        options.add_argument("window-position=-10,0")
         self.driver = webdriver.Chrome(
             executable_path="C:\Program Files (x86)\chromedriver.exe", chrome_options=options)
+        if self.width and self.height:
+            self.driver.set_window_size(self.width, self.height)
+        if self.x and self.y:
+            self.driver.set_window_position(self.x, self.y, windowHandle='current')
 
         # Experimental cleverbot block bypassing options
         self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
@@ -46,6 +53,19 @@ class MainDriver():
         self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36'})
         
         self.driver.get(url)
+
+    def fixPos(self):
+        self.width = self.driver.get_window_size().get("width")
+        self.height = self.driver.get_window_size().get("height")
+        self.x = self.driver.get_window_position(windowHandle ='current').get('x')
+        self.y = self.driver.get_window_position(windowHandle ='current').get('y')
+        print(
+        self.width,
+        self.height,
+        self.x,
+        self.y,
+        )
+
 
     def tearDown(self):
         ''''

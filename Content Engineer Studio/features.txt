@@ -5,7 +5,11 @@ implement FAQ auto search
 remove background color from drag & drop rows
 
 
+#################################################################
+New features after revision 1
 
+Database for already analyzed cases by session ID
+excel like table for drag and drop copying of values
 #################################################################
 Analysis suite
 webscraping chat sessions for customer messages

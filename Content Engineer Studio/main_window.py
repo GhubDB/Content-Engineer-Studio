@@ -24,19 +24,32 @@ class AutoQueueModel(QStandardItemModel):
         return
 
 class FaqAutoSearch(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, value=None):
         super(FaqAutoSearch, self).__init__(parent)
+        self.setWindowFlags(self.windowFlags() | Qt.Window)
         self.setWindowTitle("FAQ's")
-        table = QTableView()
+        self.setStyleSheet('background-color: rgb(70, 70, 70);')
+        table = QTableView(objectName='faq_table')
         mw = MainWindow()
         table.setModel(mw.faq_auto_search_model)
+        table.setMinimumHeight(500)
+        table.setMinimumWidth(1400)
+        table.horizontalHeader().hide()
+        table.verticalHeader().hide()
+        table.setStyleSheet('background-color: rgb(50, 50, 50);')
         faq_search = QLineEdit()
         faq_search.textChanged.connect(mw.faq_auto_search_model.setFilterRegExp)
+        faq_search.setText(value)
+        faq_search.setStyleSheet('background-color: rgb(50, 50, 50);')
         self.layout = QVBoxLayout()
         self.layout.addWidget(table)
         self.layout.addWidget(faq_search)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        table.horizontalHeader().setStretchLastSection(True)
+        table.verticalScrollBar().hide()
+        table.horizontalScrollBar().hide()
         self.setLayout(self.layout)
+        self.setStyleSheet(elegantdark)
         self.show()
 
     def setSearchColumn(self, column):
@@ -70,7 +83,7 @@ class Highlighter(QSyntaxHighlighter):
         super().__init__(parent)
         self._mapping = {}
 
-    def add__mapping(self, pattern, pattern_format):
+    def add_mapping(self, pattern, pattern_format):
         self._mapping[pattern] = pattern_format
 
     def highlightBlock(self, text_block):
@@ -142,24 +155,24 @@ class MainWindow(QMainWindow):
         # Load Ui file, set settings
         loadUi('main_window.ui', self)
         self.setWindowTitle('Content Engineer Studio')
+        self.setContentsMargins(0, 0, 0, 0)
+
+        # Initialize auto highlighter
+        self.highlight()
 
         # Create model for auto_queue and history
         self.history_model = QStandardItemModel()
         self.history.setModel(self.history_model)
+        self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # Test items
-        items = ['some tests', 'some more tests', 'you know it, more tests']
-        for item in items:
-            items = QtGui.QStandardItem(item)
-            self.history_model.appendRow(items) 
+        # items = ['some tests', 'some more tests', 'you know it, more tests']
+        # for item in items:
+        #     items = QtGui.QStandardItem(item)
+        #     self.history_model.appendRow(items) 
 
         # Setting up Auto Queue
-        self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue_model = AutoQueueModel()
         self.auto_queue.setModel(self.auto_queue_model)
-
-        '''previous implementation'''
-        # self.auto_queue_model = QStandardItemModel()
-        # self.auto_queue.setModel(self.auto_queue_model)
         self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue.installEventFilter(self)
 
@@ -200,6 +213,7 @@ class MainWindow(QMainWindow):
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
         self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
+        self.lock_browser.clicked.connect(self.webscraper.fixPos)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -343,29 +357,39 @@ class MainWindow(QMainWindow):
         '''
         Filters Events and calls the respective functions
         '''
+        # Resizing chat message textedits
         if event.type() == event.Resize:
             if self.stackedWidget.currentIndex() == 0:
                 QTimer.singleShot(0, self.chat.resizeRowsToContents)
             else:
                 QTimer.singleShot(0, self.chat_2.resizeRowsToContents)
+
+        # Show FAQ search table
         if source.objectName() == 'search_box' or source.objectName() == 'search_box_2':
             # print(event.type())
             if event.type() == 82:
-                print('fired')
-                # if event.button() == Qt.RightButton:
-                self.faq_auto_search = FaqAutoSearch(self)
-                
+                if self.stackedWidget.currentIndex() == 0:
+                    index = self.search_box.selectionModel().currentIndex()
+                    value = index.sibling(index.row(),index.column()).data()
+                else:
+                    index = self.search_box_2.selectionModel().currentIndex()
+                    value = index.sibling(index.row(),index.column()).data()
+                self.faq_auto_search = FaqAutoSearch(self, value=value)
+
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
                 if self.stackedWidget.currentIndex() == 0:
                     QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
                 else:
                     QTimer.singleShot(0, lambda x=event, y=source: self.select_chat_2(x, y))
+
+        # Delete items from Auto Queue
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Delete:
                 indices = self.auto_queue.selectionModel().selectedRows() 
                 for index in sorted(indices):
                     self.auto_queue_model.removeRow(index.row())
+
         # if source.objectName() == 'auto_queue':
         #     if event.type() == 63:
         #         print(event.type())
@@ -374,17 +398,21 @@ class MainWindow(QMainWindow):
         #             if item:
         #                 item.setBackground(QtGui.QColor(70, 70, 70))
         #             return True 
+
+        # Tab analysis editor
         if source.objectName() == 'analysis':
             if event.type() == QEvent.KeyPress:
                 if event.key() == Qt.Key_Tab:
                     self.btn_right()
                     return True
+
+        # Tab analysis editor 2     
         if source.objectName() == 'analysis_2':
             if event.type() == QEvent.KeyPress:
                 if event.key() == Qt.Key_Tab:
                     self.btn_right_2()
                     return True
-        # print(source.objectName())
+
         return super().eventFilter(source, event)
 
     
@@ -546,10 +574,12 @@ class MainWindow(QMainWindow):
         class_format = QTextCharFormat()
         class_format.setBackground(Qt.red)
         class_format.setFontWeight(QFont.Bold)
-        # pattern = INSERT REGEX PATTERN HERE
-        self.highlighter.add_mapping(class_format)
+        pattern = r'/(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/'
+        # /(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/
         # class_format.setTextColor(QColor(120, 135, 171))
-
+        self.highlighter.add_mapping(pattern, class_format)
+        self.highlighter.setDocument(self.analysis.document())
+        
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
