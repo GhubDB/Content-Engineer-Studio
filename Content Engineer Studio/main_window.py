@@ -93,7 +93,7 @@ class Highlighter(QSyntaxHighlighter):
                 self.setFormat(start, end-start, fmt)
 
 
-class TextEdit(QTextEdit):
+class TextEdit(QPlainTextEdit):
     '''
     For auto resizing text edits in tables
     '''
@@ -571,15 +571,23 @@ class MainWindow(QMainWindow):
         '''
         Highlights predefined patterns in the chat log
         '''
+        # Phone numbers
         class_format = QTextCharFormat()
         class_format.setBackground(Qt.red)
-        class_format.setFontWeight(QFont.Bold)
-        pattern = r'/(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/'
-        # /(\b(0041|0)|\B\+41)(\s?\(0\))?(\s)?[1-9]{2}(\s)?[0-9]{3}(\s)?[0-9]{2}(\s)?[0-9]{2}\b/
+        class_format.setFontWeight(QFont.Bold)        
+        pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
         # class_format.setTextColor(QColor(120, 135, 171))
         self.highlighter.add_mapping(pattern, class_format)
-        self.highlighter.setDocument(self.analysis.document())
         
+        
+        # Email addresses
+        class_format = QTextCharFormat()
+        class_format.setBackground(Qt.red)
+        class_format.setFontWeight(QFont.Bold)  
+        pattern = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
+        self.highlighter.add_mapping(pattern, class_format)
+
+        self.highlighter.setDocument(self.analysis.document())
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
@@ -591,7 +599,7 @@ class MainWindow(QMainWindow):
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         # print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
-        self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+        self.analysis.setPlainText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
 
     
     def populate_search_column_select(self):

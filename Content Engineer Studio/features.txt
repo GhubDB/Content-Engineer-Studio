@@ -10,6 +10,8 @@ New features after revision 1
 
 Database for already analyzed cases by session ID
 excel like table for drag and drop copying of values
+
+anonymize names, addresses, email addresses and phone numbers
 #################################################################
 Analysis suite
 webscraping chat sessions for customer messages
