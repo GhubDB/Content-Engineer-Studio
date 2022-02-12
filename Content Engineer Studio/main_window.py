@@ -1,7 +1,4 @@
-import sys
-import re
-import time
-import asyncio
+import sys, re, time, asyncio, traceback
 from threading import Thread
 from warnings import filters
 from PyQt5.uic import loadUi
@@ -15,6 +12,54 @@ from selenium_helpers import *
 from data import *
 from stylesheets import *
 from bs4 import BeautifulSoup
+
+class Worker(QRunnable):
+    '''
+    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
+    :param callback: The function callback to run on this worker thread. Supplied args and
+    kwargs will be passed through to the runner.
+    :type callback: function
+    :param args: Arguments to pass to the callback function
+    :param kwargs: Keywords to pass to the callback function
+    '''
+    def __init__(self, fn, *args, **kwargs):
+        super(Worker, self).__init__()
+        self.fn =fn
+        self.args = args
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+
+        # Add the callback to our kwargs
+        # self.kwargs['progress_callback'] = self.signals.progress
+
+        self.kwargs['output'] = self.signals.output
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info() [:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)
+        finally:
+            self.signals.finished.emit()
+
+class WorkerSignals(QObject):
+    '''
+    Defines the signals available from a running worker thread.
+    Supported signals are:
+    finished - No data
+    error - tuple (exctype, value, traceback.format_exc() )
+    result - object data returned from processing, anything
+    '''
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(object)
+    output = pyqtSignal(object)
+    progress = pyqtSignal(int)
 
 class AutoQueueModel(QStandardItemModel):
     def itemData(self, itemData):
@@ -127,6 +172,7 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        self.threadpool = QThreadPool()
         self.analysis_excel = Excel()
         self.testing_excel = Excel()
         self.faq_excel = Excel()
@@ -524,16 +570,6 @@ class MainWindow(QMainWindow):
                                     padding-left: 4px; \
                                     background-color: rgb(90, 90, 90);')
 
-    def chatEventLoop(self):
-        '''
-        Continuously fetches new messages from the chat page
-        '''
-        while True:
-            print('looped')
-            output = self.webscraper.getCleverbotLive()
-            if output:
-                self.populate_chat_2(output)
-            time.sleep(4)
 
     def getChatText(self, export=None):
         '''
@@ -790,7 +826,7 @@ class MainWindow(QMainWindow):
         '''
         # Save and clean up before next row is loaded
         self.saveOnRowChange_2()
-        self.clearChat_2()
+        self.chat_2.setRowCount(0)
         self.marked_messages_2 = []
 
         # Updates the self.row property
@@ -845,6 +881,17 @@ class MainWindow(QMainWindow):
         '''
         self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.analysis_2.toPlainText()
     
+
+    def chatWebscrapingLoop(self, output):
+        '''
+        Continuously fetches new messages from the chat page
+        '''
+        while True:
+            chats = self.webscraper.getCleverbotLive()
+            output.emit(chats)
+            time.sleep(4)
+
+
     def populate_chat_2(self, chat):
         output = []
         [output.append(message) for message in chat if message not in self.chat_test and '' not in message]
@@ -882,11 +929,7 @@ class MainWindow(QMainWindow):
         [self.chat_test.append(message) for message in output]
         self.chat_2.installEventFilter(self)
         self.chat_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-    def clearChat_2(self):
-        # self.chat.clear()
-        self.chat_2.setRowCount(0)
-
+        
 
     def select_chat_2(self, event, source):
         '''
@@ -1125,24 +1168,28 @@ class MainWindow(QMainWindow):
         Sends chat messages
         '''
         input = self.chat_input.text()
-        if self.webscraper.setCleverbotLive(input):
-            self.populateHistory(input)
-        self.chat_input.clear()
+        if input:
+            if self.webscraper.setCleverbotLive(input):
+                self.populateHistory(input)
+            self.chat_input.clear()
 
     def new_dialog_btn(self):
         '''
         Sets up webscraper clears dialog and opens new dialog
         '''
         self.dialog_num += 1
-        self.clearChat_2()
+        self.chat_2.setRowCount(0)
         self.chat_test = []
         # self.webscraper.tearDown()
         self.webscraper.setUp(url='https://www.cleverbot.com/')
         self.webscraper.clickCleverbotAgree()
 
-        # Start webscraping event loop
-        t = Thread(target=chatEventLoop)
-        t.start()
+        # Pass the function to execute
+        live_webscraper = Worker(self.chatWebscrapingLoop)
+        # Catch signal of new chat messages
+        live_webscraper.signals.output.connect(self.populate_chat_2)
+        # Execute
+        self.threadpool.start(live_webscraper)
         
 
     def next_btn(self):
