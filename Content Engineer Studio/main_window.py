@@ -29,10 +29,10 @@ class Worker(QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
-        # Add the callback to our kwargs
-        # self.kwargs['progress_callback'] = self.signals.progress
-
-        self.kwargs['output'] = self.signals.output
+        # Add callback to kwargs where necessary.
+        if 'activate_output' in args:
+            self.kwargs['output'] = self.signals.output
+            self.args = self.args[:-2]
 
     @pyqtSlot()
     def run(self):
@@ -62,11 +62,12 @@ class WorkerSignals(QObject):
     progress = pyqtSignal(int)
 
 class AutoQueueModel(QStandardItemModel):
-    def itemData(self, itemData):
-        dicti = super().itemData(itemData)
-        print(dicti)
-        [item.remove('BackgroundRole') for item in dicti if 'BackgroundRole' in item]
-        return
+    pass
+    # def itemData(self, itemData):
+    #     dicti = super().itemData(itemData)
+    #     print(dicti)
+    #     [item.remove('BackgroundRole') for item in dicti if 'BackgroundRole' in item]
+    #     return
 
 class FaqAutoSearch(QWidget):
     def __init__(self, parent=None, value=None):
@@ -173,6 +174,8 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         self.threadpool = QThreadPool()
+        # turn chatWebscrapingLoop on/off
+        self.is_webscraping = False
         self.analysis_excel = Excel()
         self.testing_excel = Excel()
         self.faq_excel = Excel()
@@ -194,6 +197,9 @@ class MainWindow(QMainWindow):
         self.chat_test = []
         self.filter_proxy_model = ''
 
+        # URLs
+        self.livechat_url = 'https://www.cleverbot.com/'
+
         # Sets the starting column number for the cell selector combo boxt
         self.cell_selector_start = 6
         self.cell_selector_start_2 = 4
@@ -211,10 +217,10 @@ class MainWindow(QMainWindow):
         self.history.setModel(self.history_model)
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # Test items
-        # items = ['some tests', 'some more tests', 'you know it, more tests']
-        # for item in items:
-        #     items = QtGui.QStandardItem(item)
-        #     self.history_model.appendRow(items) 
+        items = ['some tests', 'some more tests', 'you know it, more tests']
+        for item in items:
+            items = QtGui.QStandardItem(item)
+            self.history_model.appendRow(items) 
 
         # Setting up Auto Queue
         self.auto_queue_model = AutoQueueModel()
@@ -881,12 +887,31 @@ class MainWindow(QMainWindow):
         '''
         self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.analysis_2.toPlainText()
     
+    def setUpNewDialog(self):
+        print('setting up new dialog')
+        self.webscraper.setUp(url=self.livechat_url)
+        self.webscraper.clickCleverbotAgree()
+        return
+
+    def initializeWebscraping(self):
+        '''
+        Start new webscraping thread
+        '''
+        # Check if there is a running webscraping thread
+        if not self.is_webscraping:
+            self.is_webscraping = True
+            # Pass the function to execute
+            live_webscraper = Worker(self.chatWebscrapingLoop, 'activate_output')
+            # Catch signal of new chat messages
+            live_webscraper.signals.output.connect(self.populate_chat_2)
+            # Execute
+            self.threadpool.start(live_webscraper)
 
     def chatWebscrapingLoop(self, output):
         '''
         Continuously fetches new messages from the chat page
         '''
-        while True:
+        while self.is_webscraping:
             chats = self.webscraper.getCleverbotLive()
             output.emit(chats)
             time.sleep(4)
@@ -1160,7 +1185,7 @@ class MainWindow(QMainWindow):
 
 
     ################################################################################################
-    # Buttons
+    # Buttons_2
     ################################################################################################
 
     def send_btn(self):
@@ -1169,41 +1194,41 @@ class MainWindow(QMainWindow):
         '''
         input = self.chat_input.text()
         if input:
-            if self.webscraper.setCleverbotLive(input):
-                self.populateHistory(input)
+            self.webscraper.setCleverbotLive(input)
+            self.populateHistory(input)
             self.chat_input.clear()
 
     def new_dialog_btn(self):
         '''
-        Sets up webscraper clears dialog and opens new dialog
+        Sets up webscraper, clears dialog and opens new dialog
         '''
         self.dialog_num += 1
+        self.chat_2.clear()
         self.chat_2.setRowCount(0)
         self.chat_test = []
-        # self.webscraper.tearDown()
-        self.webscraper.setUp(url='https://www.cleverbot.com/')
-        self.webscraper.clickCleverbotAgree()
 
-        # Pass the function to execute
-        live_webscraper = Worker(self.chatWebscrapingLoop)
-        # Catch signal of new chat messages
-        live_webscraper.signals.output.connect(self.populate_chat_2)
-        # Execute
-        self.threadpool.start(live_webscraper)
-        
+        # Start Thread for webdriver setup
+        setup = Worker(self.setUpNewDialog)
+        # Once setup is complete, start webscraping the chat log
+        setup.signals.finished.connect(self.initializeWebscraping)
+        self.threadpool.start(setup)
+
 
     def next_btn(self):
-        # indices = self.auto_queue.selectionModel().selectedRows()
-        # print(indices.text())
-
+        '''
+        Loads the next message in the auto_queue into the input box
+        '''
+        # Get value of the currently selected item in the auto_queue
         index = self.auto_queue.selectionModel().currentIndex()
         value = index.sibling(index.row(),index.column()).data()
         self.chat_input.setText(value)
+
         # Jumping to next row in line
         self.auto_queue.selectionModel().select(index, QItemSelectionModel.Deselect)
         index = index.row() + 1
         self.auto_queue.selectRow(index)
-        print(self.auto_queue.selectedIndexes())
+
+        # Jump back to the beginning
         if self.auto_queue.selectedIndexes() == []:
             self.auto_queue.selectRow(0)
 

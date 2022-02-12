@@ -30,7 +30,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -591,7 +591,7 @@
            <enum>Qt::CopyAction</enum>
           </property>
           <property name="selectionMode">
-           <enum>QAbstractItemView::MultiSelection</enum>
+           <enum>QAbstractItemView::ExtendedSelection</enum>
           </property>
           <property name="gridStyle">
            <enum>Qt::SolidLine</enum>
@@ -823,7 +823,7 @@
            <enum>QAbstractItemView::DragOnly</enum>
           </property>
           <property name="selectionMode">
-           <enum>QAbstractItemView::MultiSelection</enum>
+           <enum>QAbstractItemView::ExtendedSelection</enum>
           </property>
           <property name="gridStyle">
            <enum>Qt::SolidLine</enum>
