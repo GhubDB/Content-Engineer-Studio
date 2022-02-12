@@ -106,10 +106,10 @@ class MainDriver():
             # print(message.get_attribute('class'))
             if message.get_attribute('class') == 'bot':
                 output.append(['bot', message.text])
-                # print('bot: ' + message.text)
+                print('bot: ' + message.text)
             elif message.get_attribute('class') == 'user':
                 output.append(['customer', message.text])
-                # print('user: ' + message.text)
+                print('user: ' + message.text)
         # print(output)
         return output
 

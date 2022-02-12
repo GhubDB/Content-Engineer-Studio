@@ -1,6 +1,8 @@
 import sys
 import re
 import time
+import asyncio
+from threading import Thread
 from warnings import filters
 from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -15,8 +17,6 @@ from stylesheets import *
 from bs4 import BeautifulSoup
 
 class AutoQueueModel(QStandardItemModel):
-
-
     def itemData(self, itemData):
         dicti = super().itemData(itemData)
         print(dicti)
@@ -93,7 +93,7 @@ class Highlighter(QSyntaxHighlighter):
                 self.setFormat(start, end-start, fmt)
 
 
-class TextEdit(QPlainTextEdit):
+class TextEdit(QTextEdit):
     '''
     For auto resizing text edits in tables
     '''
@@ -523,7 +523,17 @@ class MainWindow(QMainWindow):
                                     border-left-color: rgb(83, 43, 114); \
                                     padding-left: 4px; \
                                     background-color: rgb(90, 90, 90);')
-    
+
+    def chatEventLoop(self):
+        '''
+        Continuously fetches new messages from the chat page
+        '''
+        while True:
+            print('looped')
+            output = self.webscraper.getCleverbotLive()
+            if output:
+                self.populate_chat_2(output)
+            time.sleep(4)
 
     def getChatText(self, export=None):
         '''
@@ -1111,24 +1121,29 @@ class MainWindow(QMainWindow):
     ################################################################################################
 
     def send_btn(self):
+        '''
+        Sends chat messages
+        '''
         input = self.chat_input.text()
-        self.populateHistory(input)
+        if self.webscraper.setCleverbotLive(input):
+            self.populateHistory(input)
         self.chat_input.clear()
-        if input:
-            self.webscraper.setCleverbotLive(input)
-            time.sleep(3.5)
-            output = self.webscraper.getCleverbotLive()
-            if output:
-                self.populate_chat_2(output)
-
 
     def new_dialog_btn(self):
+        '''
+        Sets up webscraper clears dialog and opens new dialog
+        '''
         self.dialog_num += 1
         self.clearChat_2()
         self.chat_test = []
         # self.webscraper.tearDown()
         self.webscraper.setUp(url='https://www.cleverbot.com/')
         self.webscraper.clickCleverbotAgree()
+
+        # Start webscraping event loop
+        t = Thread(target=chatEventLoop)
+        t.start()
+        
 
     def next_btn(self):
         # indices = self.auto_queue.selectionModel().selectedRows()
@@ -1171,6 +1186,9 @@ class MainWindow(QMainWindow):
         self.saveOnRowChange_2()
 
     def btn_colorize_2(self):
+        '''
+        Gives new dialogs a different color in the history table view
+        '''
         self.testing_excel.colorize(self.row_2 + 2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2 + 1)
 
         
