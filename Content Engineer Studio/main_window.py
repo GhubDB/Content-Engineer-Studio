@@ -906,15 +906,10 @@ class MainWindow(QMainWindow):
         self.browsers[self.current_browser].clickCleverbotAgree()
         return
 
-    def setUpNewAutoDialog(self):
-        if self.current_browser >= self.buffer_len:
-            self.current_browser = 0
-        else:
-            self.current_browser = self.current_browser + 1
-        print(self.current_browser)
-        self.browsers[self.current_browser].setUp(url=self.livechat_url)
-        self.browsers[self.current_browser].clickCleverbotAgree()
-        self.browsers[self.current_browser].prebufferAutoTab(self.questions)
+    def setUpNewAutoDialog(self, i):
+        self.browsers[i].setUp(url=self.livechat_url)
+        self.browsers[i].clickCleverbotAgree()
+        self.browsers[i].prebufferAutoTab(self.questions)
 
     def initializeWebscraping(self):
         '''
@@ -1231,16 +1226,19 @@ class MainWindow(QMainWindow):
         '''
         Sets up webscraper, clears dialog and opens new dialog
         '''
-        self.dialog_num += 1
-        self.chat_2.clear()
-        self.chat_2.setRowCount(0)
-        self.chat_test = []
+        if self.auto_2.checkState():
+            self.current_browser = self.current_browser + 1
+        else:
+            self.dialog_num += 1
+            self.chat_2.clear()
+            self.chat_2.setRowCount(0)
+            self.chat_test = []
 
-        # Start Thread for webdriver setup
-        setup = Worker(self.setUpNewDialog)
-        # Once setup is complete, start webscraping the chat log
-        setup.signals.finished.connect(self.initializeWebscraping)
-        self.threadpool.start(setup)
+            # Start Thread for webdriver setup
+            setup = Worker(self.setUpNewDialog)
+            # Once setup is complete, start webscraping the chat log
+            setup.signals.finished.connect(self.initializeWebscraping)
+            self.threadpool.start(setup)
 
     def auto_2_btn(self, signal):
         '''
@@ -1264,11 +1262,9 @@ class MainWindow(QMainWindow):
             if self.questions != []:
                 # Set up three new browser windows and ask the questions in the auto_queue
                 for i in range(0, self.buffer_len):
-                    setup = Worker(self.setUpNewAutoDialog)
-                    # Launch questions once setup is complete
-                    # setup.signals.finished.connect(lambda: self.prepareAutoTab(i))
+                    setup = Worker(lambda: self.setUpNewAutoDialog(i))
                     self.threadpool.start(setup)
-                    # print(f'setting up {i}')
+                    print(f'setting up {i}')
             print('setup done')
 
         if signal == 0:
