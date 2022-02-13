@@ -140,7 +140,7 @@ class Browser():
 
     def clickCleverbotAgree(self):
         try:
-            WebDriverWait(self.driver, 10).until(
+            WebDriverWait(self.driver, 15).until(
                 # EC.element_to_be_clickable((By.ID, 'noteb'))
                 EC.element_to_be_clickable((By.ID, 'noteb'))
             )

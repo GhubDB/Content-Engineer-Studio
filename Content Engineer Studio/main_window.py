@@ -950,9 +950,14 @@ class MainWindow(QMainWindow):
         Continuously fetches new messages from the chat page
         '''
         while self.is_webscraping:
-            chats = self.browsers[self.current_browser].getCleverbotLive()
-            output.emit(chats)
-            time.sleep(3)
+            print('scraping')
+            try:
+                chats = self.browsers[self.current_browser].getCleverbotLive()
+                output.emit(chats)
+                time.sleep(3)
+            except:
+                time.sleep(3)
+                continue
 
     def populate_chat_2(self, chat):
         output = []
@@ -1254,7 +1259,7 @@ class MainWindow(QMainWindow):
             self.chat_test = []
             # start webscraping current browser window
             if not self.is_webscraping:
-                self.initializeWebscraping
+                self.initializeWebscraping()
         else:
             # Start Thread for webdriver setup
             setup = Worker(self.setUpNewDialog)
@@ -1289,6 +1294,8 @@ class MainWindow(QMainWindow):
                     self.threadpool.start(setup)
                     print(f'setting up {i}')
             print('setup done')
+            if not self.is_webscraping:
+                self.initializeWebscraping()
 
         if signal == 0:
             # If auto is disabled, close browser windows
