@@ -24,7 +24,7 @@ class Worker(QRunnable):
     '''
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
-        self.fn =fn
+        self.fn = fn
         self.args = args
         self.kwargs = kwargs
         self.signals = WorkerSignals()
@@ -180,7 +180,17 @@ class MainWindow(QMainWindow):
         self.testing_excel = Excel()
         self.faq_excel = Excel()
         self.highlighter = Highlighter()
-        self.webscraper = MainDriver()
+
+        # Sets the number of prebuffered windows for auto mode
+        self.buffer_len = 4
+        # Breaks the buffering loop
+        self.buffering = False
+        # Instanciating Selenium browser obj
+        self.browser = Browser()
+        self.browsers = [Browser() for i in range(0, self.buffer_len)]
+        self.current_browser = 0
+        self.questions = []
+
         self.row = 0
         self.row_2 = 0
         self.header_len = 0
@@ -217,7 +227,7 @@ class MainWindow(QMainWindow):
         self.history.setModel(self.history_model)
         self.history.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         # Test items
-        items = ['some tests', 'some more tests', 'you know it, more tests']
+        items = ['Hello there.', 'How are you today?', 'What are you doing today?']
         for item in items:
             items = QtGui.QStandardItem(item)
             self.history_model.appendRow(items) 
@@ -265,7 +275,8 @@ class MainWindow(QMainWindow):
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
         self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
-        self.lock_browser.clicked.connect(self.webscraper.fixPos)
+        self.lock_browser.clicked.connect(self.browsers[self.current_browser].fixPos)
+        self.auto_2.stateChanged.connect(self.auto_2_btn)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -377,8 +388,9 @@ class MainWindow(QMainWindow):
 
         # Loading web page, web scraping and adding results to self.chat
         if self.open_links.checkState():
-            self.webscraper.setUp(url=self.df.iloc[self.row, 3])
-            chat_text = self.webscraper.getCleverbotStatic()
+            # if self.browser.driver 
+            self.browser.setUp(url=self.df.iloc[self.row, 3])
+            chat_text = self.browser.getCleverbotStatic()
             self.populate_chat(chat_text)
 
         # Autoscrolling to the selection on the sidebar
@@ -729,6 +741,7 @@ class MainWindow(QMainWindow):
         pass
 
     def populate_sidebar(self):
+        
         self.sidebar.setColumnCount(1)
         self.sidebar.setRowCount(self.index_len)
         [self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 2))) for idx in range(0, self.index_len)]
@@ -807,6 +820,7 @@ class MainWindow(QMainWindow):
         self.analysis_excel.colorize(self.row + 2, self.cell_selector.currentIndex() + self.cell_selector_start + 1)
 
     def switchToAnalysis(self):
+        self.is_webscraping = False
         self.stackedWidget.setCurrentWidget(self.analysis_suite)
 
     def switchToTesting(self):
@@ -887,11 +901,20 @@ class MainWindow(QMainWindow):
         '''
         self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.analysis_2.toPlainText()
     
-    def setUpNewDialog(self):
-        print('setting up new dialog')
-        self.webscraper.setUp(url=self.livechat_url)
-        self.webscraper.clickCleverbotAgree()
+    def setUpNewDialog(self, browser_num = None):
+        self.browsers[self.current_browser].setUp(url=self.livechat_url)
+        self.browsers[self.current_browser].clickCleverbotAgree()
         return
+
+    def setUpNewAutoDialog(self):
+        if self.current_browser >= self.buffer_len:
+            self.current_browser = 0
+        else:
+            self.current_browser = self.current_browser + 1
+        print(self.current_browser)
+        self.browsers[self.current_browser].setUp(url=self.livechat_url)
+        self.browsers[self.current_browser].clickCleverbotAgree()
+        self.browsers[self.current_browser].prebufferAutoTab(self.questions)
 
     def initializeWebscraping(self):
         '''
@@ -912,10 +935,16 @@ class MainWindow(QMainWindow):
         Continuously fetches new messages from the chat page
         '''
         while self.is_webscraping:
-            chats = self.webscraper.getCleverbotLive()
+            chats = self.browsers[self.current_browser].getCleverbotLive()
             output.emit(chats)
             time.sleep(4)
 
+    # def prepareAutoTab(self, i):
+    #     '''
+    #     Adds the setup and messaging of a new browser window to the threadpool
+    #     '''
+    #     buffer_tab = Worker(self.browsers[i].prebufferAutoTab(self.questions))
+    #     self.threadpool.start(buffer_tab)
 
     def populate_chat_2(self, chat):
         output = []
@@ -1194,7 +1223,7 @@ class MainWindow(QMainWindow):
         '''
         input = self.chat_input.text()
         if input:
-            self.webscraper.setCleverbotLive(input)
+            self.browsers[self.current_browser].setCleverbotLive(input)
             self.populateHistory(input)
             self.chat_input.clear()
 
@@ -1212,6 +1241,43 @@ class MainWindow(QMainWindow):
         # Once setup is complete, start webscraping the chat log
         setup.signals.finished.connect(self.initializeWebscraping)
         self.threadpool.start(setup)
+
+    def auto_2_btn(self, signal):
+        '''
+        Turns on auto prebuffering of tabs
+        '''
+        # If auto is on
+        if signal == 2:
+            self.is_webscraping = False
+            # self.buffering = True
+            self.questions = []
+
+            try:
+            # Get current questions in auto_queue
+                for i in range(0, self.auto_queue_model.rowCount()):
+                    index = self.auto_queue_model.index(i, 0)
+                    self.questions.append(index.sibling(index.row(),index.column()).data())
+            except:
+                traceback.print_exc()
+                return
+
+            if self.questions != []:
+                # Set up three new browser windows and ask the questions in the auto_queue
+                for i in range(0, self.buffer_len):
+                    setup = Worker(self.setUpNewAutoDialog)
+                    # Launch questions once setup is complete
+                    # setup.signals.finished.connect(lambda: self.prepareAutoTab(i))
+                    self.threadpool.start(setup)
+                    # print(f'setting up {i}')
+            print('setup done')
+
+        if signal == 0:
+            # If auto is disabled, close browser windows
+            # self.buffering = False
+            self.is_webscraping = False
+            for i in range(0, self.buffer_len):
+                self.browsers[i].tearDown()
+
 
 
     def next_btn(self):

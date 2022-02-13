@@ -1,3 +1,4 @@
+import time, traceback
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -13,13 +14,13 @@ from urllib.parse import urlencode
 from bs4 import BeautifulSoup
 
 
-class MainDriver():
+class Browser():
     def __init__(self):
         self.width = None
         self.height = None
         self.x = None
         self.y = None
-
+        self.driver = None
 
     def setUp(self, url=None, filepath=None, size=None): #https://www.cleverbot.com/conv/202202041647/WYDS891QFL_Hello-who-are-you
         options = webdriver.ChromeOptions()
@@ -54,26 +55,41 @@ class MainDriver():
         
         self.driver.get(url)
 
+    def getURL(self, url):
+        self.driver.get(url)
+
+    def exposeURL(self):
+        return self.driver.current_url
+
+    def refresh(self):
+        self.driver.refresh()
+
+    def back(self):
+        self.driver.back()
+
+    def forward(self):
+        self.driver.forward()
+
+    def tabNum(self):
+        return len(self.driver.window_handles)
+    
+    def switchTabs(self, tab):
+        self.driver.switch_to.window(self.driver.window_handles[tab])
+
     def fixPos(self):
-        self.width = self.driver.get_window_size().get("width")
-        self.height = self.driver.get_window_size().get("height")
+        self.width, self.height  = self.driver.get_window_size().values()
         self.x = self.driver.get_window_position(windowHandle ='current').get('x')
         self.y = self.driver.get_window_position(windowHandle ='current').get('y')
-        print(
-        self.width,
-        self.height,
-        self.x,
-        self.y,
-        )
-
+        # print(self.width, self.height, self.x, self.y,)
 
     def tearDown(self):
         ''''
         Bugfix: Causes selenium session errors
         '''
         try:
-            self.driver.close()
-            # self.driver.quit()
+            # self.driver.execute_script('window.close("")') # close specific tab
+            # self.driver.close() # close current tab
+            self.driver.quit() # close browser
         except AttributeError:
             pass
 
@@ -114,17 +130,39 @@ class MainDriver():
         return output
 
     def clickCleverbotAgree(self):
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'noteb'))
-        )
-        element = self.driver.find_element(By.XPATH, './html/body/div[1]/div[2]/div[1]/div/div/form/input')
-        element.click()
+        try:
+            element = WebDriverWait(self.driver, 10).until(
+                # EC.element_to_be_clickable((By.ID, 'noteb'))
+                EC.element_to_be_clickable((By.ID, 'noteb'))
+            )
+            # element = self.driver.find_element(By.XPATH, '//*[@id="noteb"]/form/input')
+            element.click()
+        except:
+            traceback.print_exc()
 
     def setCleverbotLive(self, input):
-        WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.NAME, 'stimulus'))
+        element = WebDriverWait(self.driver, 10).until(
+            # EC.presence_of_element_located((By.NAME, 'stimulus'))
+            EC.element_to_be_clickable((By.NAME, 'stimulus'))
         )
-        self.driver.find_element(By.NAME, 'stimulus').clear()
-        self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
-        self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
+        # self.driver.find_element(By.NAME, 'stimulus').clear()
+        element.send_keys(input)
+        element.send_keys(u'\ue007')
+        # self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
+        # self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
+
+    def prebufferAutoTab(self, questions):
+        # self.driver.execute_script('window.open("https://www.cleverbot.com/")')
+        for question in questions:
+            self.setCleverbotLive(question)
+            checking = True
+            while checking:
+                output = self.getCleverbotLive()
+                if output[-1] != question:
+                    checking = False
+                    # print('checking')
+                    time.sleep(2)
+
+    def autoCleverbotLive(self, questions):
+        pass
 
