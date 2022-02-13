@@ -388,10 +388,10 @@ class MainWindow(QMainWindow):
 
         # Loading web page, web scraping and adding results to self.chat
         if self.open_links.checkState():
-            # if self.browser.driver 
-            self.browser.setUp(url=self.df.iloc[self.row, 3])
-            chat_text = self.browser.getCleverbotStatic()
-            self.populate_chat(chat_text)
+            # Start a new thread to load the chat log
+            setup = Worker(self.getChatlog, 'activate_output')
+            setup.signals.output.connect(self.populate_chat)
+            self.threadpool.start(setup)
 
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
@@ -491,6 +491,15 @@ class MainWindow(QMainWindow):
         '''
         self.df.loc[self.row][self.cell_selector.currentText()] = self.analysis.toPlainText()
     
+    def getChatlog(self, output):
+        if self.browsers[0].isAlive():
+            self.browsers[0].setUp(url=self.df.iloc[self.row, 3])
+        else:
+            self.browsers[0].getURL(url=self.df.iloc[self.row, 3])
+        chat_text = self.browsers[self.current_browser].getCleverbotStatic()
+        output.emit(chat_text)
+        # self.populate_chat(chat_text)
+
     def populate_chat(self, chat):
         self.chat.setColumnCount(1)
         self.chat.setRowCount(len(chat))
@@ -902,11 +911,22 @@ class MainWindow(QMainWindow):
         self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.analysis_2.toPlainText()
     
     def setUpNewDialog(self, browser_num = None):
+        '''
+        Sets up (singular) new chat session
+        '''
         self.browsers[self.current_browser].setUp(url=self.livechat_url)
         self.browsers[self.current_browser].clickCleverbotAgree()
+        # clear chat
+        self.dialog_num += 1
+        self.chat_2.clear()
+        self.chat_2.setRowCount(0)
+        self.chat_test = []
         return
 
     def setUpNewAutoDialog(self, i):
+        '''
+        Prebuffers browser windows and asks auto_queue questions
+        '''
         self.browsers[i].setUp(url=self.livechat_url)
         self.browsers[i].clickCleverbotAgree()
         self.browsers[i].prebufferAutoTab(self.questions)
@@ -932,14 +952,7 @@ class MainWindow(QMainWindow):
         while self.is_webscraping:
             chats = self.browsers[self.current_browser].getCleverbotLive()
             output.emit(chats)
-            time.sleep(4)
-
-    # def prepareAutoTab(self, i):
-    #     '''
-    #     Adds the setup and messaging of a new browser window to the threadpool
-    #     '''
-    #     buffer_tab = Worker(self.browsers[i].prebufferAutoTab(self.questions))
-    #     self.threadpool.start(buffer_tab)
+            time.sleep(3)
 
     def populate_chat_2(self, chat):
         output = []
@@ -1227,18 +1240,28 @@ class MainWindow(QMainWindow):
         Sets up webscraper, clears dialog and opens new dialog
         '''
         if self.auto_2.checkState():
-            self.current_browser = self.current_browser + 1
-        else:
-            self.dialog_num += 1
+            if self.current_browser >= self.buffer_len:
+                self.current_browser = 0
+            else:
+                self.current_browser = self.current_browser + 1
+            self.browsers[self.current_browser].bringToFront()
+            # Start prebuffering previous window 
+            setup = Worker(lambda: self.setUpNewAutoDialog(self.current_browser - 1))
+            self.threadpool.start(setup)
+            # clear chat
             self.chat_2.clear()
             self.chat_2.setRowCount(0)
             self.chat_test = []
-
+            # start webscraping current browser window
+            if not self.is_webscraping:
+                self.initializeWebscraping
+        else:
             # Start Thread for webdriver setup
             setup = Worker(self.setUpNewDialog)
             # Once setup is complete, start webscraping the chat log
             setup.signals.finished.connect(self.initializeWebscraping)
             self.threadpool.start(setup)
+
 
     def auto_2_btn(self, signal):
         '''

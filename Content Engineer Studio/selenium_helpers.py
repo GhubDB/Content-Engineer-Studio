@@ -10,6 +10,7 @@ from selenium.common.exceptions import NoSuchElementException, ElementNotVisible
 from selenium.webdriver.common.alert import Alert
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.common.exceptions import WebDriverException
 from urllib.parse import urlencode
 from bs4 import BeautifulSoup
 
@@ -60,6 +61,11 @@ class Browser():
 
     def exposeURL(self):
         return self.driver.current_url
+    
+    def isAlive(self):
+        # driver_process = psutil.Process(self.driver.service.process.pid)
+        # return driver_process.is_running()
+        return self.driver is None
 
     def refresh(self):
         self.driver.refresh()
@@ -75,6 +81,9 @@ class Browser():
     
     def switchTabs(self, tab):
         self.driver.switch_to.window(self.driver.window_handles[tab])
+
+    def bringToFront(self):
+        self.driver.switch_to.window(self.driver.current_window_handle)
 
     def fixPos(self):
         self.width, self.height  = self.driver.get_window_size().values()
@@ -131,25 +140,23 @@ class Browser():
 
     def clickCleverbotAgree(self):
         try:
-            element = WebDriverWait(self.driver, 10).until(
+            WebDriverWait(self.driver, 10).until(
                 # EC.element_to_be_clickable((By.ID, 'noteb'))
                 EC.element_to_be_clickable((By.ID, 'noteb'))
             )
-            # element = self.driver.find_element(By.XPATH, '//*[@id="noteb"]/form/input')
+            element = self.driver.find_element(By.XPATH, '//*[@id="noteb"]/form/input')
             element.click()
         except:
             traceback.print_exc()
 
     def setCleverbotLive(self, input):
-        element = WebDriverWait(self.driver, 10).until(
+        WebDriverWait(self.driver, 10).until(
             # EC.presence_of_element_located((By.NAME, 'stimulus'))
             EC.element_to_be_clickable((By.NAME, 'stimulus'))
         )
         # self.driver.find_element(By.NAME, 'stimulus').clear()
-        element.send_keys(input)
-        element.send_keys(u'\ue007')
-        # self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
-        # self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
+        self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
+        self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
 
     def prebufferAutoTab(self, questions):
         # self.driver.execute_script('window.open("https://www.cleverbot.com/")')
