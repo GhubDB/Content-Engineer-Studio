@@ -173,8 +173,7 @@ class Highlighter(QSyntaxHighlighter):
         for pattern, fmt in self._mapping.items():
             for match in re.finditer(pattern, text_block):
                 start, end = match.span()
-                cursor = self.name.textCursor()
-                win.auto_anonymized.append([cursor, self.name, start, end])
+                win.auto_anonymized.append([self.name, start, end])
                 
                 # self.setFormat(start, end-start, fmt) # Original implementation
 
@@ -311,7 +310,7 @@ class MainWindow(QMainWindow):
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
         self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
         self.lock_browser.clicked.connect(self.browsers[self.current_browser].fixPos)
-        self.test.clicked.connect(lambda: self.anynomyzify())
+        # self.test.clicked.connect(lambda: self.anynomyzify())
         self.auto_2.stateChanged.connect(self.auto_2_btn)
 
         # Executed on excel.load
@@ -547,7 +546,8 @@ class MainWindow(QMainWindow):
             combo.cursorPositionChanged.connect(self.highlight_selection)
         self.chat.installEventFilter(self)
         self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
+        self.anynomyzify()
+        
     def clearChat(self):
         # self.chat.clear()
         self.chat.setRowCount(0)
@@ -658,11 +658,11 @@ class MainWindow(QMainWindow):
         # cursor.setPosition(2)
         # cursor.setPosition(10, QTextCursor.KeepAnchor)
         # self.analysis.setTextCursor(cursor)
-        for cursor, name, start, end in self.auto_anonymized:
+        for name, start, end in self.auto_anonymized:
+            cursor = name.textCursor()
             cursor.setPosition(start)
             cursor.setPosition(end, QTextCursor.KeepAnchor)
             name.setTextCursor(cursor)
-            break
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
