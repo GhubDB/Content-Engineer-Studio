@@ -130,11 +130,32 @@ class CESdialog(QDialog):
 
 class Highlighter(QSyntaxHighlighter):
     '''
-    For highlighting anonymized text blocks
+    Highlights predefined patterns in the chat log
     '''
-    def __init__(self, parent=None):
+    def __init__(self, document, parent=None):
         super().__init__(parent)
         self._mapping = {}
+        
+        # Email addresses
+        class_format = QTextCharFormat()
+        class_format.setBackground(QColor(68, 126, 237))
+        class_format.setFontWeight(QFont.Bold)  
+        pattern = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" # Working changes
+        # pattern = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" #original
+        # pattern = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+        # pattern = r"[a-zA-Z0-9_.+-]"
+        # pattern = r"[.]"
+        self.add_mapping(pattern, class_format)
+        
+        # Phone numbers
+        class_format = QTextCharFormat()
+        class_format.setBackground(QColor(68, 126, 237))
+        class_format.setFontWeight(QFont.Bold)        
+        pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
+        # class_format.setTextColor(QColor(120, 135, 171))
+        self.add_mapping(pattern, class_format)
+        
+        self.setDocument(document)
 
     def add_mapping(self, pattern, pattern_format):
         self._mapping[pattern] = pattern_format
@@ -144,7 +165,6 @@ class Highlighter(QSyntaxHighlighter):
             for match in re.finditer(pattern, text_block):
                 start, end = match.span()
                 self.setFormat(start, end-start, fmt)
-
 
 class TextEdit(QTextEdit):
     '''
@@ -198,11 +218,10 @@ class MainWindow(QMainWindow):
         # Breaks the buffering loop
         self.buffering = False
         # Instanciating Selenium browser obj
-        self.browser = Browser()
         self.browsers = [Browser() for i in range(0, self.buffer_len)]
         self.current_browser = 0
         self.questions = []
-        self.highlighters = []
+        self.highlighters = {}
         self.row = 0
         self.row_2 = 0
         self.header_len = 0
@@ -223,10 +242,6 @@ class MainWindow(QMainWindow):
         loadUi('main_window.ui', self)
         self.setWindowTitle('Content Engineer Studio')
         self.setContentsMargins(0, 0, 0, 0)
-
-        # Initialize auto highlighter
-        self.highlighter = Highlighter()
-        self.highlight()
 
         # Create model for auto_queue and history
         self.history_model = QStandardItemModel()
@@ -488,6 +503,9 @@ class MainWindow(QMainWindow):
             else:
                 combo = TextEdit(self, objectName=f'customer_{idx}') 
             self.chat.setCellWidget(idx, 0, combo)
+            # Add auto highlighting
+            if sender[0] == 'customer':
+                self.highlighters[idx] = Highlighter(document=combo.document())
             combo.setText(sender[1])
             combo.setContextMenuPolicy(Qt.PreventContextMenu)
             combo.installEventFilter(self)
@@ -619,28 +637,6 @@ class MainWindow(QMainWindow):
             format.clearBackground()
         cursor.setCharFormat(format)
 
-    def highlight(self):
-        '''
-        Highlights predefined patterns in the chat log
-        '''
-        # Phone numbers
-        class_format = QTextCharFormat()
-        class_format.setBackground(QColor(68, 126, 237))
-        # class_format.setFontWeight(QFont.Bold)        
-        pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
-        # class_format.setTextColor(QColor(120, 135, 171))
-        self.highlighter.add_mapping(pattern, class_format)
-        
-        
-        # Email addresses
-        class_format = QTextCharFormat()
-        class_format.setBackground(QColor(68, 126, 237))
-        # class_format.setFontWeight(QFont.Bold)  
-        pattern = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
-        self.highlighter.add_mapping(pattern, class_format)
-
-        # self.highlighter.setDocument(self.analysis.document())
-
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
             self.cell_selector.addItem(item)
@@ -651,7 +647,8 @@ class MainWindow(QMainWindow):
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         # print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
-        self.analysis.setPlainText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+        self.analysis.setPlainText(self.df.loc[self.row][self.cell_selector.currentIndex() \
+            + self.cell_selector_start])
 
     
     def populate_search_column_select(self):
