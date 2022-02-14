@@ -76,19 +76,24 @@ class FaqAutoSearch(QWidget):
         self.setWindowTitle("FAQ's")
         self.setStyleSheet('background-color: rgb(70, 70, 70);')
         table = QTableView(objectName='faq_table')
-        mw = MainWindow()
-        table.setModel(mw.faq_auto_search_model)
+        # mw = MainWindow()
+        table.setModel(win.faq_auto_search_model)
         table.setMinimumHeight(500)
         table.setMinimumWidth(1400)
         table.horizontalHeader().hide()
         table.verticalHeader().hide()
         table.setStyleSheet('background-color: rgb(50, 50, 50);')
         faq_search = QLineEdit()
-        faq_search.textChanged.connect(mw.faq_auto_search_model.setFilterRegExp)
+        faq_search.textChanged.connect(win.faq_auto_search_model.setFilterRegExp)
         faq_search.setText(value)
         faq_search.setStyleSheet('background-color: rgb(50, 50, 50);')
+        self.faq_selector = QComboBox()
+        for item in list(win.faq_df.columns.values):
+            self.faq_selector.addItem(item)
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(table)
+        self.layout.addWidget(self.faq_selector)
         self.layout.addWidget(faq_search)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table.horizontalHeader().setStretchLastSection(True)
@@ -97,9 +102,11 @@ class FaqAutoSearch(QWidget):
         self.setLayout(self.layout)
         self.setStyleSheet(elegantdark)
         self.show()
+        self.faq_selector.currentIndexChanged.connect(self.setSearchColumn)
 
-    def setSearchColumn(self, column):
-        self.faq_auto_search_model.setFilterKeyColumn(column)
+    def setSearchColumn(self):
+        idx = self.faq_selector.currentIndex()
+        win.faq_auto_search_model.setFilterKeyColumn(idx)
 
 
 class CESdialog(QDialog):
@@ -260,7 +267,7 @@ class MainWindow(QMainWindow):
         self.up_2.clicked.connect(self.btn_up_2)
         self.save.clicked.connect(self.btn_save)
         self.save_2.clicked.connect(self.btn_save_2)
-        self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
+        # self.flows.itemSelectionChanged.connect(self.flows_selection) # not implemented
         self.switch_to_analysis_suite.clicked.connect(self.switchToAnalysis)
         self.export_to_testing_suite.clicked.connect(self.exportToTesting)
         self.switch_to_testing_suite.clicked.connect(self.switchToTesting)
@@ -293,25 +300,7 @@ class MainWindow(QMainWindow):
         self.populate_sidebar_2()
 
         self.faq_df = self.faq_excel.load('recipes.xlsx', 'Sheet1')
-
-        # Adding search box
-        self.populate_search_column_select()
-        self.populate_search_column_select_2()
-        model = QStandardItemModel(len(self.faq_df.index), 1)
-        for idx, _ in enumerate(self.faq_df.iterrows()):
-            item = QStandardItem(self.faq_df[self.search_column_select.currentText()][idx])
-            model.setItem(idx, 0 , item)
-        filter_proxy_model = QSortFilterProxyModel()
-        filter_proxy_model.setSourceModel(model)
-        filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        filter_proxy_model.setFilterKeyColumn(0)
-        self.search_box.setModel(filter_proxy_model)
-        self.search_box_2.setModel(filter_proxy_model)
-        self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
-        self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
-        self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
-        self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
-
+        
         # Initializing FAQ search window
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
         for idx, _ in self.faq_df.iterrows():
@@ -325,23 +314,22 @@ class MainWindow(QMainWindow):
         self.search_box.installEventFilter(self)
         self.search_box_2.installEventFilter(self)
 
-
-        # Adding search box_2
-        # model = QStandardItemModel(len(self.faq_df.index), 1)
-        # for idx, _ in enumerate(self.faq_df.iterrows()):
-        #     item = QStandardItem(self.faq_df[self.search_column_select_2.currentText()][idx])
-        #     model.setItem(idx, 0 , item)
-        # filter_proxy_model = QSortFilterProxyModel()
-        # filter_proxy_model.setSourceModel(model)
-        # filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        # filter_proxy_model.setFilterKeyColumn(0)
+        # Adding search box
+        self.populate_search_column_select()
+        self.populate_search_column_select_2()
+        self.search_box.setModel(self.faq_auto_search_model)
+        self.search_box_2.setModel(self.faq_auto_search_model)
+        self.searchbar.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
+        self.searchbar_2.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
+        self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
+        self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
+        self.populate_search_box()
 
         # Methods to be executed on startup
         self.populate_canned()
         self.populate_canned_2()
         self.populate_flows(example_flows)
         self.populate_actions(example_actions)
-        # self.populate_search_column_select()
 
         '''Sets sidebar to first item selected on startup'''
         # index = self.sidebar.model().index(0, 0)
@@ -685,30 +673,27 @@ class MainWindow(QMainWindow):
         Populates the search box with values from FAQ excel sheet
         '''
         page = self.stackedWidget.currentIndex()
-        model = QStandardItemModel(len(self.faq_df.index), 1)        
-        for idx, _ in enumerate(self.faq_df.iterrows()):
-            if page == 0:
-                item = QStandardItem(self.faq_df[self.search_column_select.currentText()][idx])
-            else:
-                item = QStandardItem(self.faq_df[self.search_column_select_2.currentText()][idx])
-            model.setItem(idx, 0 , item)
-
-        filter_proxy_model = QSortFilterProxyModel()
-        filter_proxy_model.setSourceModel(model)
-        filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        filter_proxy_model.setFilterKeyColumn(0)
         if page == 0:
-            self.search_box.setModel(filter_proxy_model)
-            self.searchbar.textChanged.connect(filter_proxy_model.setFilterRegExp)
+            index = self.search_column_select.currentIndex()
         else:
-            self.search_box_2.setModel(filter_proxy_model)
-            self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
+            index = self.search_column_select_2.currentIndex()
+        # Set table column to filter by
+        self.faq_auto_search_model.setFilterKeyColumn(index)
+        # Show/hide columns according to current selection
+        for i in range(0, len(self.faq_df.index)):
+            if i != index:
+                self.search_box.hideColumn(i) if page == 0 else self.search_box_2.hideColumn(i)
+            else:
+                self.search_box.showColumn(i) if page == 0 else self.search_box_2.showColumn(i)
+                    
 
         
 
     def populate_canned(self):
-        # Radiobuttons
-        self.canned.setColumnCount(len(canned_questions )+1)
+        '''
+        Radiobuttons
+        '''
+        self.canned.setColumnCount(len(canned_questions) + 1)
         self.canned.setRowCount(len(canned_questions))
         for idx, row in enumerate(canned_questions):
             self.canned.setItem(idx,0, QTableWidgetItem(row))
@@ -770,24 +755,6 @@ class MainWindow(QMainWindow):
             self.flows.setItem(idx,0, QTableWidgetItem(row))
         self.flows.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-
-    def flows_selection(self):
-        cells = self.sender()
-
-        # self.flows.setSelected()
-
-        # self.flow_states[self.row] = cells.selectedItems()
-        # print(self.flow_states)
-
-
-        # print(cells.selectedItems())
-        # if self.row not in self.flow_states:
-        #     self.canned_states[self.row] = {btn.objectName():btn.checkedButton().text()}
-        #     print('not')
-        # else:
-        #     self.canned_states[self.row][btn.objectName()] = btn.checkedButton().text()
-        #     print ('in')
-
     def populate_actions(self, actions):
         self.actions.setColumnCount(1)
         self.actions.setRowCount(len(actions))
@@ -831,9 +798,11 @@ class MainWindow(QMainWindow):
     def switchToAnalysis(self):
         self.is_webscraping = False
         self.stackedWidget.setCurrentWidget(self.analysis_suite)
+        self.populate_search_box()
 
     def switchToTesting(self):
         self.stackedWidget.setCurrentWidget(self.testing_suite)
+        self.populate_search_box()
 
     def exportToTesting(self):
         customer= self.getChatText(export=1)
@@ -842,6 +811,7 @@ class MainWindow(QMainWindow):
                 item = QtGui.QStandardItem(message.lstrip())
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
+        self.populate_search_box()
 
     ################################################################################################
     '''
@@ -1126,25 +1096,6 @@ class MainWindow(QMainWindow):
     def populate_search_column_select_2(self):
         for item in list(self.faq_df.columns.values):
             self.search_column_select_2.addItem(item)
-  
-
-    # def populate_search_box_2(self):
-    #     '''
-    #     Populates the search box with values from FAQ excel sheet
-    #     '''
-    #     model = QStandardItemModel(len(self.faq_df.index), 1)        
-    #     for idx, _ in enumerate(self.faq_df.iterrows()):
-    #         item = QStandardItem(self.faq_df[self.search_column_select_2.currentText()][idx])
-    #         model.setItem(idx, 0 , item)
-
-    #     filter_proxy_model = QSortFilterProxyModel()
-    #     filter_proxy_model.setSourceModel(model)
-    #     filter_proxy_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-    #     filter_proxy_model.setFilterKeyColumn(0)
-    #     self.search_box_2.setModel(filter_proxy_model)
-    #     self.searchbar_2.textChanged.connect(filter_proxy_model.setFilterRegExp)
-
-        
 
     def populate_canned_2(self):
         # Radiobuttons
