@@ -92,51 +92,56 @@ class Browser():
         # print(self.width, self.height, self.x, self.y,)
 
     def tearDown(self):
-        ''''
-        Bugfix: Causes selenium session errors
-        '''
         try:
             # self.driver.execute_script('window.close("")') # close specific tab
             # self.driver.close() # close current tab
             self.driver.quit() # close browser
         except AttributeError:
-            pass
+            traceback.print_exc()
 
     def getCleverbotStatic(self):
         output = []
-        content = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'content'))
-        )
-        content = content.find_elements(By.TAG_NAME, 'span')
+        try:
+            content = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, 'content'))
+            )
+            content = content.find_elements(By.TAG_NAME, 'span')
 
-        for message in content:
-            # print(message.get_attribute('class'))
-            if message.get_attribute('class') == 'bot':
-                output.append(['bot', message.text])
-                # print('bot: ' + message.text)
-            elif message.get_attribute('class') == 'user':
-                output.append(['customer', message.text])
-                # print('user: ' + message.text)
-        # print(output)
-        return output
+            for message in content:
+                # print(message.get_attribute('class'))
+                if message.get_attribute('class') == 'bot':
+                    output.append(['bot', message.text])
+                    # print('bot: ' + message.text)
+                elif message.get_attribute('class') == 'user':
+                    output.append(['customer', message.text])
+                    # print('user: ' + message.text)
+            # print(output)
+        except:
+            traceback.print_exc()
+        else:
+            return output
 
     def getCleverbotLive(self):
         output = []
-        content = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'conversationcontainer'))
-        )
-        content = content.find_elements(By.TAG_NAME, 'span')
+        try:
+            content = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.ID, 'conversationcontainer'))
+            )
+            content = content.find_elements(By.TAG_NAME, 'span')
 
-        for message in content:
-            # print(message.get_attribute('class'))
-            if message.get_attribute('class') == 'bot':
-                output.append(['bot', message.text])
-                # print('bot: ' + message.text)
-            elif message.get_attribute('class') == 'user':
-                output.append(['customer', message.text])
-                # print('user: ' + message.text)
-        # print(output)
-        return output
+            for message in content:
+                # print(message.get_attribute('class'))
+                if message.get_attribute('class') == 'bot':
+                    output.append(['bot', message.text])
+                    # print('bot: ' + message.text)
+                elif message.get_attribute('class') == 'user':
+                    output.append(['customer', message.text])
+                    # print('user: ' + message.text)
+            # print(output)
+        except:
+            traceback.print_exc()
+        else:
+            return output
 
     def clickCleverbotAgree(self):
         try:
@@ -150,13 +155,16 @@ class Browser():
             traceback.print_exc()
 
     def setCleverbotLive(self, input):
-        WebDriverWait(self.driver, 10).until(
-            # EC.presence_of_element_located((By.NAME, 'stimulus'))
-            EC.element_to_be_clickable((By.NAME, 'stimulus'))
-        )
-        # self.driver.find_element(By.NAME, 'stimulus').clear()
-        self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
-        self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
+        try:
+            WebDriverWait(self.driver, 10).until(
+                # EC.presence_of_element_located((By.NAME, 'stimulus'))
+                EC.element_to_be_clickable((By.NAME, 'stimulus'))
+            )
+            # self.driver.find_element(By.NAME, 'stimulus').clear()
+            self.driver.find_element(By.NAME, 'stimulus').send_keys(input)
+            self.driver.find_element(By.NAME, 'stimulus').send_keys(u'\ue007')
+        except:
+            traceback.print_exc()
 
     def prebufferAutoTab(self, questions):
         # self.driver.execute_script('window.open("https://www.cleverbot.com/")')
@@ -170,6 +178,4 @@ class Browser():
                     # print('checking')
                     time.sleep(2)
 
-    def autoCleverbotLive(self, questions):
-        pass
 

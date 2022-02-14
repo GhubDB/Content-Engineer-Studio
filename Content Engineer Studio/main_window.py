@@ -173,16 +173,23 @@ class MainWindow(QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
+        # URLs
+        self.livechat_url = 'https://www.cleverbot.com/'
+
+        # Sets the starting column number for the cell selector combo boxt
+        self.cell_selector_start = 6
+        self.cell_selector_start_2 = 4
+
+        # Sets the number of prebuffered windows for auto mode
+        self.buffer_len = 2
+
         self.threadpool = QThreadPool()
-        # turn chatWebscrapingLoop on/off
         self.is_webscraping = False
         self.analysis_excel = Excel()
         self.testing_excel = Excel()
         self.faq_excel = Excel()
         self.highlighter = Highlighter()
 
-        # Sets the number of prebuffered windows for auto mode
-        self.buffer_len = 4
         # Breaks the buffering loop
         self.buffering = False
         # Instanciating Selenium browser obj
@@ -206,13 +213,6 @@ class MainWindow(QMainWindow):
         self.marked_messages_2 = []
         self.chat_test = []
         self.filter_proxy_model = ''
-
-        # URLs
-        self.livechat_url = 'https://www.cleverbot.com/'
-
-        # Sets the starting column number for the cell selector combo boxt
-        self.cell_selector_start = 6
-        self.cell_selector_start_2 = 4
 
         # Load Ui file, set settings
         loadUi('main_window.ui', self)
@@ -950,7 +950,6 @@ class MainWindow(QMainWindow):
         Continuously fetches new messages from the chat page
         '''
         while self.is_webscraping:
-            print('scraping')
             try:
                 chats = self.browsers[self.current_browser].getCleverbotLive()
                 output.emit(chats)
@@ -1245,13 +1244,14 @@ class MainWindow(QMainWindow):
         Sets up webscraper, clears dialog and opens new dialog
         '''
         if self.auto_2.checkState():
+            current = self.current_browser
             if self.current_browser >= self.buffer_len:
                 self.current_browser = 0
             else:
                 self.current_browser = self.current_browser + 1
             self.browsers[self.current_browser].bringToFront()
             # Start prebuffering previous window 
-            setup = Worker(lambda: self.setUpNewAutoDialog(self.current_browser - 1))
+            setup = Worker(lambda: self.setUpNewAutoDialog(current))
             self.threadpool.start(setup)
             # clear chat
             self.chat_2.clear()
