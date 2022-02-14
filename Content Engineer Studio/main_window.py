@@ -1,8 +1,8 @@
-import sys, re, time, asyncio, traceback
+import sys, re, time, traceback
 from threading import Thread
 from warnings import filters
 from PyQt5.uic import loadUi
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import * 
@@ -153,7 +153,6 @@ class TextEdit(QTextEdit):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.textChanged.connect(self.updateGeometry) 
-        
 
     def sizeHint(self):
         hint = super().sizeHint()
@@ -195,7 +194,6 @@ class MainWindow(QMainWindow):
         self.analysis_excel = Excel()
         self.testing_excel = Excel()
         self.faq_excel = Excel()
-        self.highlighter = Highlighter()
 
         # Breaks the buffering loop
         self.buffering = False
@@ -204,7 +202,7 @@ class MainWindow(QMainWindow):
         self.browsers = [Browser() for i in range(0, self.buffer_len)]
         self.current_browser = 0
         self.questions = []
-
+        self.highlighters = []
         self.row = 0
         self.row_2 = 0
         self.header_len = 0
@@ -227,6 +225,7 @@ class MainWindow(QMainWindow):
         self.setContentsMargins(0, 0, 0, 0)
 
         # Initialize auto highlighter
+        self.highlighter = Highlighter()
         self.highlight()
 
         # Create model for auto_queue and history
@@ -428,6 +427,7 @@ class MainWindow(QMainWindow):
                     value = index.sibling(index.row(),index.column()).data()
                 self.faq_auto_search = FaqAutoSearch(self, value=value)
 
+        # Right click to select chat messages
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.RightButton:
                 if self.stackedWidget.currentIndex() == 0:
@@ -441,15 +441,6 @@ class MainWindow(QMainWindow):
                 indices = self.auto_queue.selectionModel().selectedRows() 
                 for index in sorted(indices):
                     self.auto_queue_model.removeRow(index.row())
-
-        # if source.objectName() == 'auto_queue':
-        #     if event.type() == 63:
-        #         print(event.type())
-        #         for row in range(0, self.auto_queue_model.rowCount()):
-        #             item = self.auto_queue_model.item(row, 0)
-        #             if item:
-        #                 item.setBackground(QtGui.QColor(70, 70, 70))
-        #             return True 
 
         # Tab analysis editor
         if source.objectName() == 'analysis':
@@ -634,8 +625,8 @@ class MainWindow(QMainWindow):
         '''
         # Phone numbers
         class_format = QTextCharFormat()
-        class_format.setBackground(Qt.red)
-        class_format.setFontWeight(QFont.Bold)        
+        class_format.setBackground(QColor(68, 126, 237))
+        # class_format.setFontWeight(QFont.Bold)        
         pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
         # class_format.setTextColor(QColor(120, 135, 171))
         self.highlighter.add_mapping(pattern, class_format)
@@ -643,12 +634,12 @@ class MainWindow(QMainWindow):
         
         # Email addresses
         class_format = QTextCharFormat()
-        class_format.setBackground(Qt.red)
-        class_format.setFontWeight(QFont.Bold)  
+        class_format.setBackground(QColor(68, 126, 237))
+        # class_format.setFontWeight(QFont.Bold)  
         pattern = r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)'
         self.highlighter.add_mapping(pattern, class_format)
 
-        self.highlighter.setDocument(self.analysis.document())
+        # self.highlighter.setDocument(self.analysis.document())
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
@@ -1065,17 +1056,6 @@ class MainWindow(QMainWindow):
         else:
             format.clearBackground()
         cursor.setCharFormat(format)
-
-    def highlight_2(self):
-        '''
-        Highlights predefined patterns in the chat log
-        '''
-        class_format = QTextCharFormat()
-        class_format.setBackground(Qt.red)
-        class_format.setFontWeight(QFont.Bold)
-        # pattern = INSERT REGEX PATTERN HERE
-        self.highlighter.add_mapping(class_format)
-        # class_format.setTextColor(QColor(120, 135, 171))
 
 
     def populate_cell_selector_2(self, start, end):
