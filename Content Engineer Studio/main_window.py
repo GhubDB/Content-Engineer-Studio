@@ -243,6 +243,7 @@ class MainWindow(QMainWindow):
         self.highlighters = {}
         self.row = 0
         self.row_2 = 0
+        self.workingViewNum = 0
         self.header_len = 0
         self.header_len_2 = 0
         self.index_len = 0
@@ -312,11 +313,14 @@ class MainWindow(QMainWindow):
         self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
-        self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
         self.lock_browser.clicked.connect(self.browsers[self.current_browser].fixPos)
-        # self.test.clicked.connect(lambda: self.anynomyzify())
         self.auto_2.stateChanged.connect(self.auto_2_btn)
         self.clear.clicked.connect(lambda: self.auto_queue_model.clear())
+        self.stackedWidget.currentChanged.connect(self.workingView)
+        self.close_faq.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum))
+        self.close_settings.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum))
+        # self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
+        # self.test.clicked.connect(lambda: self.anynomyzify())
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -345,16 +349,20 @@ class MainWindow(QMainWindow):
         self.faq_auto_search_model.setFilterKeyColumn(-1) # add this to method 
         self.search_box.installEventFilter(self)
         self.search_box_2.installEventFilter(self)
+        self.search_box_3.installEventFilter(self)
 
         # Adding search box
         self.populate_search_column_select()
-        self.populate_search_column_select_2()
         self.search_box.setModel(self.faq_auto_search_model)
         self.search_box_2.setModel(self.faq_auto_search_model)
+        self.search_box_3.setModel(self.faq_auto_search_model)
+        self.search_box_3.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.searchbar.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
         self.searchbar_2.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
+        self.searchbar_3.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
         self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
         self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
+        self.search_column_select_3.currentIndexChanged.connect(self.setFilterKeyColumn)
         self.populate_search_box()
 
         # Methods to be executed on startup
@@ -456,7 +464,8 @@ class MainWindow(QMainWindow):
                 else:
                     index = self.search_box_2.selectionModel().currentIndex()
                     value = index.sibling(index.row(),index.column()).data()
-                self.faq_auto_search = FaqAutoSearch(self, value=value)
+                self.stackedWidget.setCurrentWidget(self.faq)
+                self.searchbar_3.setText(value)
 
         # Right click to select chat messages
         if event.type() == QEvent.MouseButtonPress:
@@ -687,6 +696,9 @@ class MainWindow(QMainWindow):
     def populate_search_column_select(self):
         for item in list(self.faq_df.columns.values):
             self.search_column_select.addItem(item)
+            self.search_column_select_2.addItem(item)
+            self.search_column_select_3.addItem(item)
+        self.search_column_select_3.addItem('Search in all columns')
   
 
     def populate_search_box(self):
@@ -707,7 +719,12 @@ class MainWindow(QMainWindow):
             else:
                 self.search_box.showColumn(i) if page == 0 else self.search_box_2.showColumn(i)
                     
-
+    def setFilterKeyColumn(self):
+        if self.search_column_select_3.currentText() == 'Search in all columns':
+            self.faq_auto_search_model.setFilterKeyColumn(-1)
+            return
+        idx = self.search_column_select_3.currentIndex()
+        self.faq_auto_search_model.setFilterKeyColumn(idx)
         
 
     def populate_canned(self):
@@ -833,6 +850,11 @@ class MainWindow(QMainWindow):
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
         self.populate_search_box()
+        
+    def workingView(self, idx):
+        if idx == 0 | idx == 1:
+            self.workingViewNum = idx
+
         
     def btn_test(self):
         pass
@@ -1106,11 +1128,6 @@ class MainWindow(QMainWindow):
         # print(self.df.head)
         # self.analysis_2.setText(self.df_2.loc[1][3])
         self.analysis_2.setText(self.df_2.loc[self.row_2][self.cell_selector_2.currentIndex() + self.cell_selector_start_2])
-
-    
-    def populate_search_column_select_2(self):
-        for item in list(self.faq_df.columns.values):
-            self.search_column_select_2.addItem(item)
 
     def populate_canned_2(self):
         # Radiobuttons
