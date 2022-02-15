@@ -1,8 +1,5 @@
 priorities:
 turn sidebar from tablewidget into tableview
-fix tearDown issues
-fix sleep freezes and implement multi threading
-implement FAQ auto search
 remove background color from drag & drop rows
 
 

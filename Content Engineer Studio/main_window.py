@@ -64,11 +64,13 @@ class WorkerSignals(QObject):
 
 class AutoQueueModel(QStandardItemModel):
     pass
+        
     # def itemData(self, itemData):
     #     dicti = super().itemData(itemData)
     #     print(dicti)
     #     [item.remove('BackgroundRole') for item in dicti if 'BackgroundRole' in item]
     #     return
+
 
 class FaqAutoSearch(QWidget):
     '''
@@ -93,12 +95,16 @@ class FaqAutoSearch(QWidget):
         
         # Search key column selector
         self.faq_selector = QComboBox()
+        self.faq_selector.setStyleSheet(
+            'color: rgb(255, 255, 255); \
+            font-size: 10pt;'
+            )
         for item in list(win.faq_df.columns.values):
             self.faq_selector.addItem(item)
             
         self.layout = QVBoxLayout()
-        self.layout.addWidget(table)
         self.layout.addWidget(self.faq_selector)
+        self.layout.addWidget(table)
         self.layout.addWidget(faq_search)
         table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         table.horizontalHeader().setStretchLastSection(True)
@@ -174,9 +180,7 @@ class Highlighter(QSyntaxHighlighter):
             for match in re.finditer(pattern, text_block):
                 start, end = match.span()
                 win.auto_anonymized.append([self.name, start, end])
-                
                 # self.setFormat(start, end-start, fmt) # Original implementation
-
 class TextEdit(QTextEdit):
     '''
     For auto resizing text edits in tables
@@ -312,6 +316,7 @@ class MainWindow(QMainWindow):
         self.lock_browser.clicked.connect(self.browsers[self.current_browser].fixPos)
         # self.test.clicked.connect(lambda: self.anynomyzify())
         self.auto_2.stateChanged.connect(self.auto_2_btn)
+        self.clear.clicked.connect(lambda: self.auto_queue_model.clear())
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -654,15 +659,17 @@ class MainWindow(QMainWindow):
         cursor.setCharFormat(format)
         
     def anynomyzify(self):
-        # cursor = self.analysis.textCursor()
-        # cursor.setPosition(2)
-        # cursor.setPosition(10, QTextCursor.KeepAnchor)
-        # self.analysis.setTextCursor(cursor)
+        '''
+        Receives starting and ending positions 
+        of words to select from the Highlighter subclass and selects them
+        '''
         for name, start, end in self.auto_anonymized:
             cursor = name.textCursor()
             cursor.setPosition(start)
             cursor.setPosition(end, QTextCursor.KeepAnchor)
             name.setTextCursor(cursor)
+            # cursor.clearSelection()
+        self.auto_anonymized = []
 
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
@@ -830,6 +837,7 @@ class MainWindow(QMainWindow):
     def btn_test(self):
         pass
 
+
     ################################################################################################
     '''
     Test Suite
@@ -939,7 +947,8 @@ class MainWindow(QMainWindow):
         while self.is_webscraping:
             try:
                 chats = self.browsers[self.current_browser].getCleverbotLive()
-                output.emit(chats)
+                if chats:
+                    output.emit(chats)
                 time.sleep(3)
             except:
                 time.sleep(3)
