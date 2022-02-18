@@ -7,14 +7,15 @@ Last updated: 17/04/2018
 Available at: https://github.com/GTRONICK/QSS/blob/master/ElegantDark.qss
 */
 QMainWindow {
-	background-color: rgb(70, 70, 70);
+	background-color: rgb(50, 50, 50);
+}
+QWidget {
+	background-color: rgb(50, 50, 50);
 }
 QTableView {
-    background-color:rgb(50, 50, 50);
+    background-color:rgb(40, 40, 40);
     color: rgb(230, 230, 230);
-    
     selection-color: rgb(255, 255, 255);
-    
     selection-background-color: rgb(55, 92, 123);
   
 }
@@ -27,41 +28,19 @@ QTableView {
 }
 */
 QTextEdit {
-	background-color:rgb(60, 60, 60);
+	background-color:rgb(40, 40, 40);
 	color: rgb(230, 230, 230);
 }
 #analysis {
-	background-color:rgb(50, 50, 50);
+	background-color:rgb(40, 40, 40);
 	color: rgb(230, 230, 230);
     font-size: 11pt;
 }
 #analysis_2 {
-	background-color:rgb(50, 50, 50);
+	background-color:rgb(40, 40, 40);
 	color: rgb(230, 230, 230);
     font-size: 11pt;
 }
-/*
-#chat_bubble_customer {
-    font-size: 10pt;
-    border-style: outset;
-    border-left-width: 5px;
-    border-left-color: rgb(83, 43, 114);
-    padding-left: 4px;
-    background-color: rgb(90, 90, 90);
-}
-#chat_bubble_bot {
-    font-size: 10pt;
-    text-align: right;
-    border-style: outset;
-    border-right-width: 5px;
-    border-right-color: rgb(45, 136, 45);
-    padding-right: 4px;
-    
-    read-only
-    margin-right: 4px;
-    text-decoration: line-through;
-}
-*/
 #canned::item {
     /*
     border: 0px;

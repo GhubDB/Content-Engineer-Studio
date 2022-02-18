@@ -1,4 +1,4 @@
-import time, traceback
+import time, traceback, psutil
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -57,16 +57,25 @@ class Browser():
         self.driver.get(url)
 
     def getURL(self, url):
-        self.driver.get(url)
+        try:
+            self.driver.get(url)
+            return True
+        except:
+            traceback.print_exc()
+            return False
 
     def exposeURL(self):
         return self.driver.current_url
     
     def isAlive(self):
-        # driver_process = psutil.Process(self.driver.service.process.pid)
-        # return driver_process.is_running()
-        return self.driver is None
-
+        try:
+            assert self.driver.current_url
+        except:
+            traceback.print_exc()
+            return False
+        else:
+            return True
+        
     def refresh(self):
         self.driver.refresh()
 

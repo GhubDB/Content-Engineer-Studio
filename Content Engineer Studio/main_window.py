@@ -12,7 +12,7 @@ from excel_helpers import *
 from selenium_helpers import *
 from data import *
 from stylesheets import *
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup        
 
 class Worker(QRunnable):
     '''
@@ -62,66 +62,18 @@ class WorkerSignals(QObject):
     output = pyqtSignal(object)
     progress = pyqtSignal(int)
 
-class AutoQueueModel(QStandardItemModel):
-    pass
-        
-    # def itemData(self, itemData):
-    #     dicti = super().itemData(itemData)
-    #     print(dicti)
-    #     [item.remove('BackgroundRole') for item in dicti if 'BackgroundRole' in item]
-    #     return
-
-
-class FaqAutoSearch(QWidget):
-    '''
-    Implements a window that allows the user to search for FAQ's
-    '''
-    def __init__(self, parent=None, value=None):
-        super(FaqAutoSearch, self).__init__(parent)
-        self.setWindowFlags(self.windowFlags() | Qt.Window)
-        self.setWindowTitle("FAQ's")
-        self.setStyleSheet('background-color: rgb(70, 70, 70);')
-        table = QTableView(objectName='faq_table')
-        table.setModel(win.faq_auto_search_model)
-        table.setMinimumHeight(500)
-        table.setMinimumWidth(1400)
-        table.horizontalHeader().hide()
-        table.verticalHeader().hide()
-        table.setStyleSheet('background-color: rgb(50, 50, 50);')
-        faq_search = QLineEdit()
-        faq_search.textChanged.connect(win.faq_auto_search_model.setFilterRegExp)
-        faq_search.setText(value)
-        faq_search.setStyleSheet('background-color: rgb(50, 50, 50);')
-        
-        # Search key column selector
-        self.faq_selector = QComboBox()
-        self.faq_selector.setStyleSheet(
-            'color: rgb(255, 255, 255); \
-            font-size: 10pt;'
-            )
-        for item in list(win.faq_df.columns.values):
-            self.faq_selector.addItem(item)
-            
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.faq_selector)
-        self.layout.addWidget(table)
-        self.layout.addWidget(faq_search)
-        table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        table.horizontalHeader().setStretchLastSection(True)
-        table.verticalScrollBar().hide()
-        table.horizontalScrollBar().hide()
-        self.setLayout(self.layout)
-        self.setStyleSheet(elegantdark)
-        self.show()
-        self.faq_selector.currentIndexChanged.connect(self.setSearchColumn)
-
-    def setSearchColumn(self):
-        '''
-        This enables selecting the column to search in
-        '''
-        idx = self.faq_selector.currentIndex()
-        win.faq_auto_search_model.setFilterKeyColumn(idx)
-
+class BackgroundRemover(QStandardItemModel):
+    def __init__(self):
+        super().__init__()
+        self.itemChanged.connect(self.itemData)
+    
+    def itemData(self, item):
+        # print(item.index())
+        roles = super().itemData(item.index())
+        if 8 in roles:
+            del roles[8]
+            return roles
+            print(roles)
 
 class CESdialog(QDialog):
     '''
@@ -205,7 +157,29 @@ class TextEdit(QTextEdit):
         hint.setHeight(height)
         return hint
 
-
+class AddVariant(QWidget):
+    def __init__(self, parent=None, text_input=None):
+        super(AddVariant, self).__init__(parent)
+        self.setWindowFlags(self.windowFlags() | Qt.Window)
+        self.setWindowTitle("Add Variant")
+        # self.setStyleSheet('background-color: rgb(50, 50, 50);')
+        
+        self.variant = QTextEdit(objectName='variant_text')
+        self.variant.setText(text_input)
+        self.variant.installEventFilter(self)
+        self.variant.setMinimumWidth(700)
+        
+        add_variant = QPushButton(text='Add Variant', objectName='add_variant')        
+        cancel_variant = QPushButton(text='Cancel', objectName='cancel_add_variant')        
+        
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.variant, 0, 0, 1, 2)
+        self.layout.addWidget(add_variant, 1, 0, 1, 1)
+        self.layout.addWidget(cancel_variant, 1, 1, 1, 1)
+        self.setLayout(self.layout)
+        self.setStyleSheet(elegantdark)
+        self.show()
+        
 
 ########################################################################################
 # Main
@@ -273,7 +247,7 @@ class MainWindow(QMainWindow):
             self.history_model.appendRow(items) 
 
         # Setting up Auto Queue
-        self.auto_queue_model = AutoQueueModel()
+        self.auto_queue_model = BackgroundRemover()
         self.auto_queue.setModel(self.auto_queue_model)
         self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue.installEventFilter(self)
@@ -319,8 +293,13 @@ class MainWindow(QMainWindow):
         self.stackedWidget.currentChanged.connect(self.workingView)
         self.close_faq.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum))
         self.close_settings.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum))
+        self.close_excel.clicked.connect(lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum))
+        self.analysis_menu.triggered.connect(self.switchToAnalysis)
+        self.testing_menu.triggered.connect(self.switchToTesting)
+        self.faq_menu.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(3))
+        self.settings_menu_2.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(2))
         # self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
-        # self.test.clicked.connect(lambda: self.anynomyzify())
+        self.test.clicked.connect(self.btn_test)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load('transcripts.xlsx', 'Sheet1')
@@ -449,10 +428,12 @@ class MainWindow(QMainWindow):
         '''
         # Resizing chat message textedits
         if event.type() == event.Resize:
-            if self.stackedWidget.currentIndex() == 0:
+            page = self.stackedWidget.currentIndex()
+            if page == 0:
                 QTimer.singleShot(0, self.chat.resizeRowsToContents)
-            else:
+            elif page == 1:
                 QTimer.singleShot(0, self.chat_2.resizeRowsToContents)
+
 
         # Show FAQ search table
         if source.objectName() == 'search_box' or source.objectName() == 'search_box_2':
@@ -467,13 +448,18 @@ class MainWindow(QMainWindow):
                 self.stackedWidget.setCurrentWidget(self.faq)
                 self.searchbar_3.setText(value)
 
-        # Right click to select chat messages
-        if event.type() == QEvent.MouseButtonPress:
-            if event.button() == Qt.RightButton:
-                if self.stackedWidget.currentIndex() == 0:
-                    QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
-                else:
-                    QTimer.singleShot(0, lambda x=event, y=source: self.select_chat_2(x, y))
+        # Right click to select chat messages | middle click to add Variants
+        if 'bot_' in source.objectName() or 'customer_' in source.objectName():
+            if event.type() == QEvent.MouseButtonPress:
+                if event.button() == Qt.RightButton:
+                    if self.stackedWidget.currentIndex() == 0:
+                        QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
+                    else:
+                        QTimer.singleShot(0, lambda x=event, y=source: self.select_chat_2(x, y))
+                # Variants
+                if event.button() == Qt.MiddleButton and 'customer' in source.objectName():
+                    text = source.toPlainText()
+                    self.new_variant = AddVariant(text_input=text)
 
         # Delete items from Auto Queue
         if event.type() == QEvent.KeyPress:
@@ -511,10 +497,11 @@ class MainWindow(QMainWindow):
         self.df.loc[self.row][self.cell_selector.currentText()] = self.analysis.toPlainText()
     
     def getChatlog(self, output):
-        if self.browsers[0].isAlive():
+        '''
+        Accesses URL and downloads chat log
+        '''
+        if not self.browsers[0].getURL(url=self.df.iloc[self.row, 3]):
             self.browsers[0].setUp(url=self.df.iloc[self.row, 3])
-        else:
-            self.browsers[0].getURL(url=self.df.iloc[self.row, 3])
         chat_text = self.browsers[self.current_browser].getCleverbotStatic()
         output.emit(chat_text)
         # self.populate_chat(chat_text)
@@ -544,8 +531,8 @@ class MainWindow(QMainWindow):
                                     border-style: outset;\
                                     border-right-width: 5px;\
                                     border-right-color: rgb(45, 136, 45);\
-                                    padding-right: 4px;')
-                combo.setAlignment(Qt.AlignRight)
+                                    padding-left: 4px;')
+                # combo.setAlignment(Qt.AlignRight)
                 
             # customer
             else:
@@ -573,56 +560,62 @@ class MainWindow(QMainWindow):
         if 'bot' in source.objectName():
             if source.objectName() not in self.marked_messages:
                 self.marked_messages.append(source.objectName())
-                source.setStyleSheet('font-size: 11pt;\
-                                    font-weight: bold; \
-                                    text-align: right; \
-                                    border-style: outset;\
-                                    border-right-width: 10px;\
-                                    border-right-color: rgb(45, 136, 45);\
-                                    border-left-width: 2px;\
-                                    border-left-color: rgb(45, 136, 45);\
-                                    border-top-width: 2px;\
-                                    border-top-color: rgb(45, 136, 45);\
-                                    border-bottom-width: 2px;\
-                                    border-bottom-color: rgb(45, 136, 45);\
-                                    background-color: rgb(70, 81, 70); \
-                                    padding-right: 4px;')
-                source.setAlignment(Qt.AlignRight)  
+                source.setStyleSheet(
+                    'font-size: 11pt;\
+                    font-weight: bold; \
+                    text-align: right; \
+                    border-style: outset;\
+                    border-right-width: 10px;\
+                    border-right-color: rgb(45, 136, 45);\
+                    border-left-width: 2px;\
+                    border-left-color: rgb(45, 136, 45);\
+                    border-top-width: 2px;\
+                    border-top-color: rgb(45, 136, 45);\
+                    border-bottom-width: 2px;\
+                    border-bottom-color: rgb(45, 136, 45);\
+                    background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(40, 40, 40, 255), stop:1 rgba(57, 57, 57, 255));\                    padding-right: 4px;\
+                    ')
+                # background-color: rgb(70, 81, 70); \
+                # source.setAlignment(Qt.AlignRight)  
             else:
                 self.marked_messages.remove(source.objectName())
-                source.setStyleSheet('font-size: 11pt;\
-                                    text-align: right; \
-                                    border-style: outset;\
-                                    border-right-width: 5px;\
-                                    border-right-color: rgb(45, 136, 45);\
-                                    background-color: rgb(70, 70, 70); \
-                                    padding-right: 4px;')
-                source.setAlignment(Qt.AlignRight)
+                source.setStyleSheet(
+                    'font-size: 11pt;\
+                    text-align: right; \
+                    border-style: outset;\
+                    border-right-width: 5px;\
+                    border-right-color: rgb(45, 136, 45);\
+                    padding-right: 4px;')
+                # source.setAlignment(Qt.AlignRight)
 
         else:
             if source.objectName() not in self.marked_messages:
                 self.marked_messages.append(source.objectName())
-                source.setStyleSheet('font-size: 11pt; \
-                                    font-weight: bold; \
-                                    border-style: outset; \
-                                    border-left-width: 10px; \
-                                    border-left-color: rgb(83, 43, 114); \
-                                    border-right-width: 2px; \
-                                    border-right-color: rgb(83, 43, 114); \
-                                    border-top-width: 2px; \
-                                    border-top-color: rgb(83, 43, 114); \
-                                    border-bottom-width: 2px; \
-                                    border-bottom-color: rgb(83, 43, 114); \
-                                    padding-left: 4px; \
-                                    background-color: rgb(74, 69, 78);')
-            else:
+                source.setStyleSheet(
+                    'font-size: 11pt; \
+                    font-weight: bold; \
+                    border-style: outset; \
+                    border-left-width: 10px; \
+                    border-left-color: rgb(83, 43, 114); \
+                    border-right-width: 2px; \
+                    border-right-color: rgb(83, 43, 114); \
+                    border-top-width: 2px; \
+                    border-top-color: rgb(83, 43, 114); \
+                    border-bottom-width: 2px; \
+                    border-bottom-color: rgb(83, 43, 114); \
+                    padding-left: 4px; \
+                    background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));\
+                    ')
+                    # background-color: rgb(74, 69, 78);
+            else:                   
                 self.marked_messages.remove(source.objectName())
-                source.setStyleSheet('font-size: 11pt; \
-                                    border-style: outset; \
-                                    border-left-width: 5px; \
-                                    border-left-color: rgb(83, 43, 114); \
-                                    padding-left: 4px; \
-                                    background-color: rgb(90, 90, 90);')
+                source.setStyleSheet(
+                    'font-size: 11pt; \
+                    border-style: outset; \
+                    border-left-width: 5px; \
+                    border-left-color: rgb(83, 43, 114); \
+                    padding-left: 4px; \
+                    background-color: rgb(90, 90, 90);')
 
 
     def getChatText(self, export=None):
@@ -777,7 +770,7 @@ class MainWindow(QMainWindow):
         self.sidebar.setColumnCount(1)
         self.sidebar.setRowCount(self.index_len)
         [self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 2))) for idx in range(0, self.index_len)]
-        [self.sidebar.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120)) 
+        [self.sidebar.item(idx, 0).setBackground(QtGui.QColor(100, 100, 100)) 
             for idx, row in self.completed.iterrows() if row.all()]
         self.sidebar.resizeColumnsToContents()
         self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -857,7 +850,9 @@ class MainWindow(QMainWindow):
 
         
     def btn_test(self):
-        pass
+        index = self.history_model.index(3, 0)
+        # print(index)
+        print(self.history_model.itemData(index))
 
 
     ################################################################################################
@@ -1338,7 +1333,6 @@ class MainWindow(QMainWindow):
         '''
         self.testing_excel.colorize(self.row_2 + 2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2 + 1)
 
-        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

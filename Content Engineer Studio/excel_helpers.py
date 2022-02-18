@@ -63,7 +63,7 @@ class Excel:
         return missing.isna()
 
     def colorize(self, column, row):
-        self.sheet.range(column, row).color = (255,255,0)
+        self.sheet.range(column, row).color = (255,255,0) # Yellow
 
     def overwrite_warn(self, df, idx, **kwargs):
         '''
@@ -81,6 +81,9 @@ class Excel:
             wb.app.quit()
         else:
             wb.close()
+            
+    def getOpenBooks(self):
+        xw.books.active.name
 
 # df.loc[(df['Price'].isnull()) | (df['Location'].isnull()),"bool_check"]=True
 

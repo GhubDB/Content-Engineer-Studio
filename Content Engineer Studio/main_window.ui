@@ -30,7 +30,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -1107,8 +1107,8 @@
        <widget class="QGroupBox" name="groupBox">
         <property name="geometry">
          <rect>
-          <x>730</x>
-          <y>50</y>
+          <x>640</x>
+          <y>20</y>
           <width>411</width>
           <height>361</height>
          </rect>
@@ -1127,8 +1127,8 @@
          <rect>
           <x>20</x>
           <y>20</y>
-          <width>651</width>
-          <height>271</height>
+          <width>591</width>
+          <height>131</height>
          </rect>
         </property>
         <property name="title">
@@ -1228,10 +1228,10 @@
        <widget class="QGroupBox" name="groupBox_3">
         <property name="geometry">
          <rect>
-          <x>20</x>
-          <y>340</y>
+          <x>30</x>
+          <y>160</y>
           <width>551</width>
-          <height>161</height>
+          <height>101</height>
          </rect>
         </property>
         <property name="title">
@@ -1366,6 +1366,9 @@
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
           </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
           <attribute name="horizontalHeaderVisible">
            <bool>false</bool>
           </attribute>
@@ -1378,6 +1381,54 @@
          </widget>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="openExcel">
+       <widget class="QGroupBox" name="groupBox_4">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>821</width>
+          <height>511</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>Open Excel files</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="1" column="1">
+          <widget class="QPushButton" name="open_in_excel">
+           <property name="text">
+            <string>Open in Testing</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="4">
+          <widget class="QTreeView" name="excel_files"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="open_in_analysis">
+           <property name="text">
+            <string>Open in Analysis</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="refresh_excel">
+           <property name="text">
+            <string>Refresh</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QPushButton" name="close_excel">
+           <property name="text">
+            <string>Close</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -1396,23 +1447,20 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="separator"/>
     <addaction name="select_open"/>
     <addaction name="open_from_disk"/>
    </widget>
-   <widget class="QMenu" name="menuSettings">
+   <widget class="QMenu" name="menuSwitch_View">
     <property name="title">
-     <string>Settings</string>
+     <string>Switch View</string>
     </property>
-   </widget>
-   <widget class="QMenu" name="menuSheet">
-    <property name="title">
-     <string>Sheet</string>
-    </property>
+    <addaction name="analysis_menu"/>
+    <addaction name="testing_menu"/>
+    <addaction name="faq_menu"/>
+    <addaction name="settings_menu_2"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuSettings"/>
-   <addaction name="menuSheet"/>
+   <addaction name="menuSwitch_View"/>
   </widget>
   <action name="open">
    <property name="text">
@@ -1435,6 +1483,51 @@
   <action name="open_from_disk">
    <property name="text">
     <string>Open Excel file on disk...</string>
+   </property>
+  </action>
+  <action name="actionAnalysis">
+   <property name="text">
+    <string>Analysis</string>
+   </property>
+  </action>
+  <action name="actionTesting">
+   <property name="text">
+    <string>Testing</string>
+   </property>
+  </action>
+  <action name="actionFAQ">
+   <property name="text">
+    <string>FAQ</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="analysis_menu">
+   <property name="text">
+    <string>Analysis</string>
+   </property>
+  </action>
+  <action name="testing_menu">
+   <property name="text">
+    <string>Testing</string>
+   </property>
+  </action>
+  <action name="faq_menu">
+   <property name="text">
+    <string>FAQ</string>
+   </property>
+  </action>
+  <action name="settings_menu">
+   <property name="text">
+    <string>Open Settings Page</string>
+   </property>
+  </action>
+  <action name="settings_menu_2">
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>
