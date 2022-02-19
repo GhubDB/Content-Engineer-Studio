@@ -1,6 +1,8 @@
 priorities:
 turn sidebar from tablewidget into tableview
 remove background color from drag & drop rows
+add logging
+add unittests
 
 #################################################################
 Bugs:
@@ -29,6 +31,10 @@ excel like table for drag and drop copying of values
 add complete flow data!
 
 anonymize names, addresses, email addresses and phone numbers
+
+refer to https://www.reddit.com/r/learnpython/comments/dzmakx/connecting_to_excel_workbooks_located_on/ for sharepoint details
+
+sharepoint API: https://stackoverflow.com/questions/48424045/how-to-read-sharepoint-online-office365-excel-files-in-python-with-work-or-sch
 #################################################################
 Analysis suite
 webscraping chat sessions for customer messages

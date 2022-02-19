@@ -162,24 +162,56 @@ class AddVariant(QWidget):
         super(AddVariant, self).__init__(parent)
         self.setWindowFlags(self.windowFlags() | Qt.Window)
         self.setWindowTitle("Add Variant")
-        # self.setStyleSheet('background-color: rgb(50, 50, 50);')
+        self.setAttribute(Qt.WA_DeleteOnClose)
         
         self.variant = QTextEdit(objectName='variant_text')
         self.variant.setText(text_input)
+        self.variant.setStyleSheet(
+                    'font-size: 11pt; \
+                    border-style: outset; \
+                    border-left-width: 5px; \
+                    border-left-color: rgb(83, 43, 114); \
+                    padding-left: 4px; \
+                    background-color: rgb(90, 90, 90);')
         self.variant.installEventFilter(self)
         self.variant.setMinimumWidth(700)
         
         add_variant = QPushButton(text='Add Variant', objectName='add_variant')        
-        cancel_variant = QPushButton(text='Cancel', objectName='cancel_add_variant')        
+        # add_variant.clicked.connect()
+        self.cancel_variant = QPushButton(text='Cancel', objectName='cancel_add_variant')        
+        self.cancel_variant.clicked.connect(self.close)
         
         self.layout = QGridLayout()
         self.layout.addWidget(self.variant, 0, 0, 1, 2)
         self.layout.addWidget(add_variant, 1, 0, 1, 1)
-        self.layout.addWidget(cancel_variant, 1, 1, 1, 1)
+        self.layout.addWidget(self.cancel_variant, 1, 1, 1, 1)
         self.setLayout(self.layout)
         self.setStyleSheet(elegantdark)
         self.show()
         
+        
+class DataFrameViewer(QTableWidget):
+    def __init__(self, df):
+        super().__init__()
+        self.df = df
+        
+        nRows, nColumns = self.df.shape
+        self.setRowCount(nRows)
+        self.setColumnCount(nColumns)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        
+        # self.setHorizontalHeaderLabel((''))
+        
+        for i in range(nRows):
+            for j in range(nColumns):
+                self.setItem(i, j, QTableWidgetItem(str(self.df.iloc[i, j])))
+                
+        self.cellChanged[int, int].connect(self.updateDF)
+                
+    def updateDF(self, row, column):
+        text = self.item(row, column).text()
+        self.df.iloc[row, column] = text
 
 ########################################################################################
 # Main
@@ -217,6 +249,7 @@ class MainWindow(QMainWindow):
         self.highlighters = {}
         self.row = 0
         self.row_2 = 0
+        # Stores what view the user has worked in last
         self.workingViewNum = 0
         self.header_len = 0
         self.header_len_2 = 0
@@ -315,6 +348,10 @@ class MainWindow(QMainWindow):
         self.populate_sidebar_2()
 
         self.faq_df = self.faq_excel.load('recipes.xlsx', 'Sheet1')
+        
+        self.df_viewer = DataFrameViewer(self.df)
+        self.verticalLayout_2.addWidget(self.df_viewer)
+        # self.stackedWidget.data_frame_viewer.layout.addWidget(self.df_viewer)
         
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
@@ -460,6 +497,7 @@ class MainWindow(QMainWindow):
                 if event.button() == Qt.MiddleButton and 'customer' in source.objectName():
                     text = source.toPlainText()
                     self.new_variant = AddVariant(text_input=text)
+                    
 
         # Delete items from Auto Queue
         if event.type() == QEvent.KeyPress:
