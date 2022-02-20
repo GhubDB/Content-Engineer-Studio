@@ -30,7 +30,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -276,7 +276,19 @@
          </widget>
         </item>
         <item row="0" column="9" colspan="3">
-         <widget class="QLineEdit" name="searchbar"/>
+         <widget class="QLineEdit" name="searchbar">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
         <item row="4" column="11">
          <widget class="QPushButton" name="left">
@@ -390,7 +402,7 @@
           <property name="maximumSize">
            <size>
             <width>16777215</width>
-            <height>15</height>
+            <height>20</height>
            </size>
           </property>
           <property name="text">
@@ -580,7 +592,19 @@
          </widget>
         </item>
         <item row="0" column="34" colspan="3">
-         <widget class="QLineEdit" name="searchbar_2"/>
+         <widget class="QLineEdit" name="searchbar_2">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
         <item row="9" column="34" colspan="2">
          <widget class="QTableView" name="auto_queue">
@@ -714,7 +738,7 @@
           <property name="maximumSize">
            <size>
             <width>16777215</width>
-            <height>15</height>
+            <height>20</height>
            </size>
           </property>
           <property name="text">
@@ -895,7 +919,19 @@
          </widget>
         </item>
         <item row="10" column="3" colspan="5">
-         <widget class="QLineEdit" name="chat_input"/>
+         <widget class="QLineEdit" name="chat_input">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
         <item row="10" column="2">
          <widget class="QCheckBox" name="auto_2">
@@ -1353,7 +1389,19 @@
          <number>0</number>
         </property>
         <item row="0" column="0">
-         <widget class="QLineEdit" name="searchbar_3"/>
+         <widget class="QLineEdit" name="searchbar_3">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+         </widget>
         </item>
         <item row="0" column="1">
          <widget class="QComboBox" name="search_column_select_3">

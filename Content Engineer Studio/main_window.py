@@ -10,9 +10,11 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem, \
     QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
 from excel_helpers import * 
 from selenium_helpers import *
-from data import *
+from data_variables import *
 from stylesheets import *
-from bs4 import BeautifulSoup        
+from bs4 import BeautifulSoup  
+from pandasgui import show
+import qtstylish
 
 class Worker(QRunnable):
     '''
@@ -190,7 +192,7 @@ class AddVariant(QWidget):
         self.show()
         
         
-class DataFrameViewer(QTableWidget):
+class CustomDataFrameViewer(QTableWidget):
     def __init__(self, df):
         super().__init__()
         self.df = df
@@ -269,6 +271,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Content Engineer Studio')
         self.setContentsMargins(0, 0, 0, 0)
 
+        # Apply custom stylesheets
+        self.setStyleSheet(style_custom_dark)
+        # self.colorize_2.setStyleSheet(style_colorize_2)
+        # self.setStyleSheet(style_QLineEdit)
+                    
         # Create model for auto_queue and history
         self.history_model = QStandardItemModel()
         self.history.setModel(self.history_model)
@@ -341,17 +348,22 @@ class MainWindow(QMainWindow):
         self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
         
+        # gui = show(self.df)
+        
         self.df_2 = self.testing_excel.load('testing.xlsx', 'Sheet1')
         self.header_len_2 = len(self.df_2.columns)
         self.index_len_2 = len(self.df_2.index)
-        self.completed_2 = self.testing_excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
+        self.completed_2 = self.testing_excel.incomplete(
+            self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
         self.populate_sidebar_2()
 
         self.faq_df = self.faq_excel.load('recipes.xlsx', 'Sheet1')
         
-        self.df_viewer = DataFrameViewer(self.df)
-        self.verticalLayout_2.addWidget(self.df_viewer)
-        # self.stackedWidget.data_frame_viewer.layout.addWidget(self.df_viewer)
+        # self.df_viewer = data.dataframe_viewer.DataFrameViewer(self.df)
+        # self.verticalLayout_2.addWidget(self.df_viewer)
+        
+        # self.df_viewer = DataFrameViewer(self.df)
+        # self.verticalLayout_2.addWidget(self.df_viewer)
         
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
@@ -378,7 +390,7 @@ class MainWindow(QMainWindow):
         self.searchbar_3.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
         self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
         self.search_column_select_2.currentIndexChanged.connect(self.populate_search_box)
-        self.search_column_select_3.currentIndexChanged.connect(self.setFilterKeyColumn)
+        self.search_column_select_3.currentIndexChanged.connect(self.populate_search_box)
         self.populate_search_box()
 
         # Methods to be executed on startup
@@ -425,7 +437,8 @@ class MainWindow(QMainWindow):
         self.df = self.analysis_excel.reload()
         self.header_len = len(self.df.columns)
         self.index_len = len(self.df.index)
-        self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
+        self.completed = self.analysis_excel.incomplete(
+            self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
 
         # Loading web page, web scraping and adding results to self.chat
@@ -564,22 +577,12 @@ class MainWindow(QMainWindow):
             
             # Bot
             if sender[0] == 'bot':
-                combo.setStyleSheet('font-size: 11pt;\
-                                    text-align: right; \
-                                    border-style: outset;\
-                                    border-right-width: 5px;\
-                                    border-right-color: rgb(45, 136, 45);\
-                                    padding-left: 4px;')
+                combo.setStyleSheet(style_bot)
                 # combo.setAlignment(Qt.AlignRight)
                 
             # customer
             else:
-                combo.setStyleSheet('font-size: 11pt; \
-                                    border-style: outset; \
-                                    border-left-width: 5px; \
-                                    border-left-color: rgb(83, 43, 114); \
-                                    padding-left: 4px; \
-                                    background-color: rgb(90, 90, 90);')
+                combo.setStyleSheet(style_customer)
                 
             combo.textChanged.connect(lambda idx=idx: self.chat.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection)
@@ -598,62 +601,22 @@ class MainWindow(QMainWindow):
         if 'bot' in source.objectName():
             if source.objectName() not in self.marked_messages:
                 self.marked_messages.append(source.objectName())
-                source.setStyleSheet(
-                    'font-size: 11pt;\
-                    font-weight: bold; \
-                    text-align: right; \
-                    border-style: outset;\
-                    border-right-width: 10px;\
-                    border-right-color: rgb(45, 136, 45);\
-                    border-left-width: 2px;\
-                    border-left-color: rgb(45, 136, 45);\
-                    border-top-width: 2px;\
-                    border-top-color: rgb(45, 136, 45);\
-                    border-bottom-width: 2px;\
-                    border-bottom-color: rgb(45, 136, 45);\
-                    background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(40, 40, 40, 255), stop:1 rgba(57, 57, 57, 255));\                    padding-right: 4px;\
-                    ')
+                source.setStyleSheet(style_bot_selected)
                 # background-color: rgb(70, 81, 70); \
                 # source.setAlignment(Qt.AlignRight)  
             else:
                 self.marked_messages.remove(source.objectName())
-                source.setStyleSheet(
-                    'font-size: 11pt;\
-                    text-align: right; \
-                    border-style: outset;\
-                    border-right-width: 5px;\
-                    border-right-color: rgb(45, 136, 45);\
-                    padding-right: 4px;')
+                source.setStyleSheet(style_bot)
                 # source.setAlignment(Qt.AlignRight)
 
         else:
             if source.objectName() not in self.marked_messages:
                 self.marked_messages.append(source.objectName())
-                source.setStyleSheet(
-                    'font-size: 11pt; \
-                    font-weight: bold; \
-                    border-style: outset; \
-                    border-left-width: 10px; \
-                    border-left-color: rgb(83, 43, 114); \
-                    border-right-width: 2px; \
-                    border-right-color: rgb(83, 43, 114); \
-                    border-top-width: 2px; \
-                    border-top-color: rgb(83, 43, 114); \
-                    border-bottom-width: 2px; \
-                    border-bottom-color: rgb(83, 43, 114); \
-                    padding-left: 4px; \
-                    background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));\
-                    ')
+                source.setStyleSheet(style_customer_selected)
                     # background-color: rgb(74, 69, 78);
             else:                   
                 self.marked_messages.remove(source.objectName())
-                source.setStyleSheet(
-                    'font-size: 11pt; \
-                    border-style: outset; \
-                    border-left-width: 5px; \
-                    border-left-color: rgb(83, 43, 114); \
-                    padding-left: 4px; \
-                    background-color: rgb(90, 90, 90);')
+                source.setStyleSheet(style_customer)
 
 
     def getChatText(self, export=None):
@@ -725,37 +688,54 @@ class MainWindow(QMainWindow):
 
     
     def populate_search_column_select(self):
-        for item in list(self.faq_df.columns.values):
-            self.search_column_select.addItem(item)
-            self.search_column_select_2.addItem(item)
-            self.search_column_select_3.addItem(item)
-        self.search_column_select_3.addItem('Search in all columns')
+        '''
+        Set model for FAQ search selector
+        '''
+        model = QStandardItemModel(len(self.faq_df.columns), 0)
+        for idx, item in enumerate(list(self.faq_df.columns.values)):
+            item = QStandardItem(item)
+            model.setItem(idx, 0, item)
+        # For searching all columns
+        item = QStandardItem('Search in all columns')
+        model.setItem(len(self.faq_df.columns), 0, item)
+        self.search_column_select.setModel(model)
+        self.search_column_select_2.setModel(model)
+        self.search_column_select_3.setModel(model)
   
 
     def populate_search_box(self):
         '''
         Populates the search box with values from FAQ excel sheet
         '''
+        # Synchronize selectors
         page = self.stackedWidget.currentIndex()
         if page == 0:
             index = self.search_column_select.currentIndex()
-        else:
+            self.search_column_select_2.setCurrentIndex(index)
+            self.search_column_select_3.setCurrentIndex(index)
+        elif page == 1:
             index = self.search_column_select_2.currentIndex()
+            self.search_column_select.setCurrentIndex(index)
+            self.search_column_select_3.setCurrentIndex(index)
+        elif page == 3:
+            index = self.search_column_select_3.currentIndex()
+            self.search_column_select.setCurrentIndex(index)
+            self.search_column_select_2.setCurrentIndex(index)
+            
         # Set table column to filter by
-        self.faq_auto_search_model.setFilterKeyColumn(index)
-        # Show/hide columns according to current selection
-        for i in range(0, len(self.faq_df.index)):
-            if i != index:
-                self.search_box.hideColumn(i) if page == 0 else self.search_box_2.hideColumn(i)
-            else:
-                self.search_box.showColumn(i) if page == 0 else self.search_box_2.showColumn(i)
-                    
-    def setFilterKeyColumn(self):
-        if self.search_column_select_3.currentText() == 'Search in all columns':
+        if index == len(self.faq_df.columns):
+            # Set to filter by all columns
             self.faq_auto_search_model.setFilterKeyColumn(-1)
-            return
-        idx = self.search_column_select_3.currentIndex()
-        self.faq_auto_search_model.setFilterKeyColumn(idx)
+        else:
+            self.faq_auto_search_model.setFilterKeyColumn(index)
+            
+        # Show/hide columns according to current selection
+        if page == 0 or page == 1 and index != len(self.faq_df.columns):
+            for i in range(0, len(self.faq_df.index)):
+                if i != index:
+                    self.search_box.hideColumn(i) if page == 0 else self.search_box_2.hideColumn(i)
+                else:
+                    self.search_box.showColumn(i) if page == 0 else self.search_box_2.showColumn(i)
         
 
     def populate_canned(self):
@@ -1026,21 +1006,11 @@ class MainWindow(QMainWindow):
             combo.installEventFilter(self)
             # Bot
             if sender[0] == 'bot':
-                combo.setStyleSheet('font-size: 11pt;\
-                                    text-align: right; \
-                                    border-style: outset;\
-                                    border-right-width: 5px;\
-                                    border-right-color: rgb(45, 136, 45);\
-                                    padding-right: 4px;')
+                combo.setStyleSheet(style_bot)
                 combo.setAlignment(Qt.AlignRight)
             # customer
             else:
-                combo.setStyleSheet('font-size: 11pt; \
-                                    border-style: outset; \
-                                    border-left-width: 5px; \
-                                    border-left-color: rgb(83, 43, 114); \
-                                    padding-left: 4px; \
-                                    background-color: rgb(90, 90, 90);')
+                combo.setStyleSheet(style_customer)
             combo.textChanged.connect(lambda idx=idx: self.chat_2.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection_2)
         [self.chat_test.append(message) for message in output]
@@ -1055,56 +1025,20 @@ class MainWindow(QMainWindow):
         if 'bot' in source.objectName():
             if source.objectName() not in self.marked_messages_2:
                 self.marked_messages_2.append(source.objectName())
-                source.setStyleSheet('font-size: 11pt;\
-                                    font-weight: bold; \
-                                    text-align: right; \
-                                    border-style: outset;\
-                                    border-right-width: 10px;\
-                                    border-right-color: rgb(45, 136, 45);\
-                                    border-left-width: 2px;\
-                                    border-left-color: rgb(45, 136, 45);\
-                                    border-top-width: 2px;\
-                                    border-top-color: rgb(45, 136, 45);\
-                                    border-bottom-width: 2px;\
-                                    border-bottom-color: rgb(45, 136, 45);\
-                                    background-color: rgb(70, 81, 70); \
-                                    padding-right: 4px;')
+                source.setStyleSheet(style_bot_selected)
                 source.setAlignment(Qt.AlignRight)  
             else:
                 self.marked_messages_2.remove(source.objectName())
-                source.setStyleSheet('font-size: 11pt;\
-                                    text-align: right; \
-                                    border-style: outset;\
-                                    border-right-width: 5px;\
-                                    border-right-color: rgb(45, 136, 45);\
-                                    background-color: rgb(70, 70, 70); \
-                                    padding-right: 4px;')
+                source.setStyleSheet(style_bot)
                 source.setAlignment(Qt.AlignRight)
 
         else:
             if source.objectName() not in self.marked_messages_2:
                 self.marked_messages_2.append(source.objectName())
-                source.setStyleSheet('font-size: 11pt; \
-                                    font-weight: bold; \
-                                    border-style: outset; \
-                                    border-left-width: 10px; \
-                                    border-left-color: rgb(83, 43, 114); \
-                                    border-right-width: 2px; \
-                                    border-right-color: rgb(83, 43, 114); \
-                                    border-top-width: 2px; \
-                                    border-top-color: rgb(83, 43, 114); \
-                                    border-bottom-width: 2px; \
-                                    border-bottom-color: rgb(83, 43, 114); \
-                                    padding-left: 4px; \
-                                    background-color: rgb(74, 69, 78);')
+                source.setStyleSheet(style_customer_selected)
             else:
                 self.marked_messages_2.remove(source.objectName())
-                source.setStyleSheet('font-size: 11pt; \
-                                    border-style: outset; \
-                                    border-left-width: 5px; \
-                                    border-left-color: rgb(83, 43, 114); \
-                                    padding-left: 4px; \
-                                    background-color: rgb(90, 90, 90);')
+                source.setStyleSheet(style_customer)
     
 
     def getChatText_2(self):
@@ -1233,13 +1167,6 @@ class MainWindow(QMainWindow):
         else:
             item.setBackground(QColor(74, 69, 78))
         self.history_model.appendRow(item)
-
-
-
-  
-    # def populate_status_bar_2(self, row, start, end):
-    #     self.status_bar_2.setText(self.df_2.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
-
 
     ################################################################################################
     # Buttons_2
@@ -1374,7 +1301,8 @@ class MainWindow(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setStyleSheet(elegantdark)
+    app.setStyleSheet(qtstylish.dark())
+    # app.setStyleSheet(elegantdark)
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())

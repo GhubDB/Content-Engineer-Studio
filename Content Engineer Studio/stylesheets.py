@@ -1,3 +1,101 @@
+style_bot = 'font-size: 11pt;\
+		text-align: right; \
+		border-style: outset;\
+		border-right-width: 5px;\
+		border-right-color: rgb(45, 136, 45);\
+		padding-left: 4px;'
+  
+style_customer = 'font-size: 11pt; \
+		border-style: outset; \
+		border-left-width: 5px; \
+		border-left-color: rgb(83, 43, 114); \
+		padding-left: 4px; \
+		background-color: rgb(90, 90, 90);'
+  
+style_bot_selected = '''font-size: 11pt; 
+		font-weight: bold; 
+		text-align: right; 
+		border-style: outset;
+		border-right-width: 10px;
+		border-right-color: rgb(45, 136, 45);
+		border-left-width: 2px;
+		border-left-color: rgb(45, 136, 45);
+		border-top-width: 2px;
+		border-top-color: rgb(45, 136, 45);
+		border-bottom-width: 2px;
+		border-bottom-color: rgb(45, 136, 45);
+		background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(40, 40, 40, 255), stop:1 rgba(57, 57, 57, 255));
+		padding-right: 4px;'''
+                    
+style_customer_selected = 'font-size: 11pt; \
+		font-weight: bold; \
+		border-style: outset; \
+		border-left-width: 10px; \
+		border-left-color: rgb(83, 43, 114); \
+		border-right-width: 2px; \
+		border-right-color: rgb(83, 43, 114); \
+		border-top-width: 2px; \
+		border-top-color: rgb(83, 43, 114); \
+		border-bottom-width: 2px; \
+		border-bottom-color: rgb(83, 43, 114); \
+		padding-left: 4px; \
+		background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));\
+		'
+
+style_custom_dark = '''
+		QTableView {
+			selection-color: rgb(255, 255, 255);
+			selection-background-color: rgb(55, 92, 123);
+		}
+		#colorize {
+			background-color: rgba(255, 255, 40, 170);
+			border-style: inset;
+			border-width: 2px;
+			border-style: solid;
+			padding: 2px;
+			border-top-color: rgb(200, 200, 20);
+			border-right-color: rgb(200, 200, 20);
+			border-left-color: rgb(200, 200, 20);
+			border-bottom-color: rgb(200, 200, 20);
+		}
+		#colorize:hover {
+			background-color: rgba(255, 255, 40, 230);
+			border-style: inset;
+			border-width: 2px;
+			border-style: solid;
+			padding: 2px;
+			border-top-color: rgb(200, 200, 20);
+			border-right-color: rgb(200, 200, 20);
+			border-left-color: rgb(200, 200, 20);
+			border-bottom-color: rgb(200, 200, 20);
+		}
+		#colorize_2 {
+			background-color: rgba(255, 255, 40, 170);
+			border-style: inset;
+			border-width: 2px;
+			border-style: solid;
+			padding: 2px;
+			border-top-color: rgb(200, 200, 20);
+			border-right-color: rgb(200, 200, 20);
+			border-left-color: rgb(200, 200, 20);
+			border-bottom-color: rgb(200, 200, 20);
+		}
+		#colorize_2:hover {
+			background-color: rgba(255, 255, 40, 230);
+			border-style: inset;
+			border-width: 2px;
+			border-style: solid;
+			padding: 2px;
+			border-top-color: rgb(200, 200, 20);
+			border-right-color: rgb(200, 200, 20);
+			border-left-color: rgb(200, 200, 20);
+			border-bottom-color: rgb(200, 200, 20);
+		}
+		QLineEdit:focus {
+			border: 2px solid #007ce5;
+		}'''
+
+
 elegantdark = '''
 /*
 ElegantDark Style Sheet for QT Applications
