@@ -8,17 +8,35 @@ from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, \
     QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
-from excel_helpers import * 
-from selenium_helpers import *
+from excel_helpers import Excel 
+from selenium_helpers import Browser
 from data_variables import *
 from stylesheets import *
 from bs4 import BeautifulSoup  
 import qtstylish
 
+# PandasGUI imports
+import inspect
+import os
+import pprint
+from typing import Callable, Union
+from dataclasses import dataclass
+import pandas as pd
+import pkg_resources
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 
-from data.pandasgui.gui import *
-# from data.pandasgui.gui import PandasGui, show
-# from pandasgui import show
+import pandasgui
+from pandasgui.store import PandasGuiStore
+from pandasgui.utility import as_dict, fix_ipython, get_figure_type, resize_widget
+from pandasgui.widgets.find_toolbar import FindToolbar
+from pandasgui.widgets.json_viewer import JsonViewer
+from pandasgui.widgets.navigator import Navigator
+from pandasgui.widgets.figure_viewer import FigureViewer
+from pandasgui.widgets.settings_editor import SettingsEditor
+from pandasgui.widgets.python_highlighter import PythonHighlighter
+from IPython.core.magic import register_line_magic
+import logging
 
 
 class Worker(QRunnable):
@@ -165,6 +183,9 @@ class TextEdit(QTextEdit):
         return hint
 
 class AddVariant(QWidget):
+    '''
+    Adds FAQ variant questions to the FAQ database
+    '''
     def __init__(self, parent=None, text_input=None):
         super(AddVariant, self).__init__(parent)
         self.setWindowFlags(self.windowFlags() | Qt.Window)
@@ -183,9 +204,10 @@ class AddVariant(QWidget):
         self.variant.installEventFilter(self)
         self.variant.setMinimumWidth(700)
         
-        add_variant = QPushButton(text='Add Variant', objectName='add_variant')        
-        # add_variant.clicked.connect()
-        self.cancel_variant = QPushButton(text='Cancel', objectName='cancel_add_variant')        
+        add_variant = QPushButton(
+            text='Add Variant', objectName='add_variant')        
+        self.cancel_variant = QPushButton(
+            text='Cancel', objectName='cancel_add_variant')        
         self.cancel_variant.clicked.connect(self.close)
         
         self.layout = QGridLayout()
@@ -195,30 +217,7 @@ class AddVariant(QWidget):
         self.setLayout(self.layout)
         self.setStyleSheet(elegantdark)
         self.show()
-        
-        
-class CustomDataFrameViewer(QTableWidget):
-    def __init__(self, df):
-        super().__init__()
-        self.df = df
-        
-        nRows, nColumns = self.df.shape
-        self.setRowCount(nRows)
-        self.setColumnCount(nColumns)
-        self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        
-        # self.setHorizontalHeaderLabel((''))
-        
-        for i in range(nRows):
-            for j in range(nColumns):
-                self.setItem(i, j, QTableWidgetItem(str(self.df.iloc[i, j])))
-                
-        self.cellChanged[int, int].connect(self.updateDF)
-                
-    def updateDF(self, row, column):
-        text = self.item(row, column).text()
-        self.df.iloc[row, column] = text
+
 
 ########################################################################################
 # Main
@@ -277,8 +276,8 @@ class MainWindow(QMainWindow):
         self.setContentsMargins(0, 0, 0, 0)
         
         # Set analysis and testing splitter stretch
-        self.splitter_5.setStretchFactor(0, 15)
-        self.splitter_3.setStretchFactor(0, 15)
+        self.splitter_5.setStretchFactor(0, 50)
+        self.splitter_2.setStretchFactor(0, 15)
 
         # Apply custom stylesheets
         self.setStyleSheet(style_custom_dark)
@@ -1019,10 +1018,10 @@ class MainWindow(QMainWindow):
         '''
         bot = []
         customer = []
-        message_cells = []
+        # message_cells = []
         # Isolate numbers from list of selected message object names and add the sorted output to new list
         if len(self.marked_messages) > 0:
-            [message_cells.append(message.split('_')) for message in self.marked_messages]
+            message_cells = [message.split('_') for message in self.marked_messages]
             message_cells = sorted(message_cells, key = lambda x: x[1])
             # Iterate over selected chat messages
             for message, idx in message_cells:
@@ -1033,12 +1032,12 @@ class MainWindow(QMainWindow):
                 for tag in tags:
                     tag.string = '***'
                 if 'bot' in message:
-                    bot.append(message_html.get_text())
+                    bot.append(message_html.get_text().strip())
                 else:
-                    customer.append(message_html.get_text())
+                    customer.append(message_html.get_text().strip())
             if export:
                 return customer
-            return ''.join(customer), ''.join(bot)
+            return '\n'.join(customer), '\n'.join(bot)
 
 
     def highlight_selection(self):
@@ -1405,7 +1404,6 @@ class MainWindow(QMainWindow):
             # Bot
             if sender[0] == 'bot':
                 combo.setStyleSheet(style_bot)
-                combo.setAlignment(Qt.AlignRight)
             # customer
             else:
                 combo.setStyleSheet(style_customer)
@@ -1459,10 +1457,10 @@ class MainWindow(QMainWindow):
                 for tag in tags:
                     tag.string = '***'
                 if 'bot' in message:
-                    bot.append(message_html.get_text())
+                    bot.append(message_html.get_text().strip())
                 else:
-                    customer.append(message_html.get_text())
-            return ''.join(customer), ''.join(bot)
+                    customer.append(message_html.get_text().strip())
+            return '\n'.join(customer), '\n'.join(bot)
 
 
     def highlight_selection_2(self):
