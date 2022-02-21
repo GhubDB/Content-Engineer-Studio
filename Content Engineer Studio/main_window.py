@@ -1177,9 +1177,6 @@ class MainWindow(QMainWindow):
             self.canned_states[self.row][btn.objectName()] = btn.checkedButton().text()
 
 
-    def getCanned(self):
-        pass
-
     def populate_sidebar(self):
         
         self.sidebar.setColumnCount(1)
