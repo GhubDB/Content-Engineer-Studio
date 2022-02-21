@@ -37,24 +37,36 @@ class Browser():
             options.add_argument("window-size=950,1420")
         options.add_argument("window-position=-10,0")
         self.driver = webdriver.Chrome(
-            executable_path="C:\Program Files (x86)\chromedriver.exe", chrome_options=options)
+            executable_path="C:\Program Files (x86)\chromedriver.exe", 
+            chrome_options=options
+            )
         if self.width and self.height:
             self.driver.set_window_size(self.width, self.height)
         if self.x and self.y:
-            self.driver.set_window_position(self.x, self.y, windowHandle='current')
+            self.driver.set_window_position(
+                self.x, self.y, windowHandle='current')
 
         # Experimental cleverbot block bypassing options
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-        "source": """
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
             Object.defineProperty(navigator, 'webdriver', {
             get: () => undefined
             })
-        """
-        })
+            """
+            })
         self.driver.execute_cdp_cmd("Network.enable", {})
-        self.driver.execute_cdp_cmd('Network.setUserAgentOverride', {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36'})
+        self.driver.execute_cdp_cmd(
+            'Network.setUserAgentOverride', 
+            {"userAgent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.53 Safari/537.36'
+             })
         
-        self.driver.get(url)
+        try:
+            self.driver.get(url)
+            return True
+        except:
+            traceback.print_exc()
+            return False
 
     def getURL(self, url):
         try:
@@ -132,25 +144,27 @@ class Browser():
 
     def getCleverbotLive(self):
         output = []
-        try:
-            content = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.ID, 'conversationcontainer'))
-            )
-            content = content.find_elements(By.TAG_NAME, 'span')
+        if self.driver is not None:
+            try:
+                content = WebDriverWait(self.driver, 10).until(
+                    EC.presence_of_element_located((By.ID, 'conversationcontainer'))
+                )
+                content = content.find_elements(By.TAG_NAME, 'span')
 
-            for message in content:
-                # print(message.get_attribute('class'))
-                if message.get_attribute('class') == 'bot':
-                    output.append(['bot', message.text])
-                    # print('bot: ' + message.text)
-                elif message.get_attribute('class') == 'user':
-                    output.append(['customer', message.text])
-                    # print('user: ' + message.text)
-            # print(output)
-        except:
-            traceback.print_exc()
-        else:
-            return output
+                for message in content:
+                    # print(message.get_attribute('class'))
+                    if message.get_attribute('class') == 'bot':
+                        output.append(['bot', message.text])
+                        # print('bot: ' + message.text)
+                    elif message.get_attribute('class') == 'user':
+                        output.append(['customer', message.text])
+                        # print('user: ' + message.text)
+                # print(output)
+            except:
+                traceback.print_exc()
+                time.sleep(1)
+            else:
+                return output
 
     def clickCleverbotAgree(self):
         try:
@@ -178,13 +192,18 @@ class Browser():
     def prebufferAutoTab(self, questions):
         # self.driver.execute_script('window.open("https://www.cleverbot.com/")')
         for question in questions:
+            if self.driver is None:
+                return False
+            # Ask Question
             self.setCleverbotLive(question)
+            time.sleep(0.05)
             checking = True
             while checking:
                 output = self.getCleverbotLive()
+                # If bot has responded, sleep and ask next question
                 if output[-1] != question:
                     checking = False
                     # print('checking')
-                    time.sleep(2)
+                    time.sleep(5)
 
 

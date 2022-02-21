@@ -237,7 +237,7 @@ class MainWindow(QMainWindow):
         self.cell_selector_start_2 = 4
 
         # Sets the number of prebuffered windows for auto mode
-        self.buffer_len = 2
+        self.buffer_len = 3
 
         # Instantiating classes
         self.threadpool = QThreadPool()
@@ -245,7 +245,7 @@ class MainWindow(QMainWindow):
         self.analysis_excel = Excel()
         self.testing_excel = Excel()
         self.faq_excel = Excel()
-        self.browsers = [Browser() for i in range(0, self.buffer_len)]
+        self.browsers = [Browser() for i in range(0, self.buffer_len + 1)]
 
         # Breaks the buffering loop
         self.buffering = False
@@ -276,8 +276,9 @@ class MainWindow(QMainWindow):
         self.setContentsMargins(0, 0, 0, 0)
         
         # Set analysis and testing splitter stretch
-        self.splitter_5.setStretchFactor(0, 50)
-        self.splitter_2.setStretchFactor(0, 15)
+        sizes = [99999, 1]
+        self.splitter_5.setSizes(sizes)
+        self.splitter_2.setSizes(sizes)
 
         # Apply custom stylesheets
         self.setStyleSheet(style_custom_dark)
@@ -392,23 +393,25 @@ class MainWindow(QMainWindow):
         settings = {}
         
         # Register IPython magic
-        try:
-            @register_line_magic
-            def pg(line):
-                pandas_gui.store.eval_magic(line)
-                return line
+        # try:
+        #     @register_line_magic
+        #     def pg(line):
+        #         pandas_gui.store.eval_magic(line)
+        #         return line
 
-        except Exception as e:
-            # Let this silently fail if no IPython console exists
-            if e.args[0] == 'Decorator can only run in context where `get_ipython` exists':
-                pass
-            else:
-                raise e
+        # except Exception as e:
+        #     # Let this silently fail if no IPython console exists
+        #     if e.args[0] == 'Decorator can only run in context where `get_ipython` exists':
+        #         pass
+        #     else:
+        #         raise e
         
         '''Start viewer init'''
         self.navigator = None
         self.splitter = None
         self.find_bar = None
+        
+        refs.append(self)
         
         self.store = PandasGuiStore()
         self.store.gui = self
@@ -1351,9 +1354,11 @@ class MainWindow(QMainWindow):
         '''
         Prebuffers browser windows and asks auto_queue questions
         '''
-        self.browsers[i].setUp(url=self.livechat_url)
-        self.browsers[i].clickCleverbotAgree()
-        self.browsers[i].prebufferAutoTab(self.questions)
+        # self.browsers[i].tearDown()
+        if self.browsers[i].setUp(url=self.livechat_url):
+            self.browsers[i].clickCleverbotAgree()
+            self.browsers[i].prebufferAutoTab(self.questions)
+        return
 
     def initializeWebscraping(self):
         '''
@@ -1585,22 +1590,24 @@ class MainWindow(QMainWindow):
                 self.current_browser = 0
             else:
                 self.current_browser = self.current_browser + 1
+            if self.browsers[self.current_browser] is None:
+                self.browsers[self.current_browser] = Browser()
             self.browsers[self.current_browser].bringToFront()
             # Start prebuffering previous window 
             setup = Worker(lambda: self.setUpNewAutoDialog(current))
+            if not self.is_webscraping:
+                setup.signals.finished.connect(self.initializeWebscraping)
             self.threadpool.start(setup)
             # clear chat
             self.chat_2.clear()
             self.chat_2.setRowCount(0)
             self.chat_test = []
-            # start webscraping current browser window
-            if not self.is_webscraping:
-                self.initializeWebscraping()
         else:
             # Start Thread for webdriver setup
             setup = Worker(self.setUpNewDialog)
             # Once setup is complete, start webscraping the chat log
-            setup.signals.finished.connect(self.initializeWebscraping)
+            if not self.is_webscraping:
+                setup.signals.finished.connect(self.initializeWebscraping)
             self.threadpool.start(setup)
 
 
@@ -1610,8 +1617,6 @@ class MainWindow(QMainWindow):
         '''
         # If auto is on
         if signal == 2:
-            self.is_webscraping = False
-            # self.buffering = True
             self.questions = []
 
             try:
@@ -1624,21 +1629,23 @@ class MainWindow(QMainWindow):
                 return
 
             if self.questions != []:
-                # Set up three new browser windows and ask the questions in the auto_queue
+                
+                # Set up self.buffer_len new browser windows and ask the questions in the auto_queue
                 for i in range(0, self.buffer_len):
                     setup = Worker(lambda: self.setUpNewAutoDialog(i))
+                    if not self.is_webscraping and i == 0:
+                        setup.signals.finished.connect(self.initializeWebscraping)
                     self.threadpool.start(setup)
                     print(f'setting up {i}')
             print('setup done')
-            if not self.is_webscraping:
-                self.initializeWebscraping()
 
         if signal == 0:
             # If auto is disabled, close browser windows
-            # self.buffering = False
             self.is_webscraping = False
             for i in range(0, self.buffer_len):
-                self.browsers[i].tearDown()
+                setup = Worker(lambda: self.browsers[i].tearDown())
+                self.threadpool.start(setup)
+                
 
 
 
