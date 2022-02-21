@@ -275,6 +275,10 @@ class MainWindow(QMainWindow):
         loadUi('main_window.ui', self)
         self.setWindowTitle('Content Engineer Studio')
         self.setContentsMargins(0, 0, 0, 0)
+        
+        # Set analysis and testing splitter stretch
+        self.splitter_5.setStretchFactor(0, 15)
+        self.splitter_3.setStretchFactor(0, 15)
 
         # Apply custom stylesheets
         self.setStyleSheet(style_custom_dark)
@@ -328,10 +332,10 @@ class MainWindow(QMainWindow):
         self.send.clicked.connect(self.send_btn)
         self.new_dialog.clicked.connect(self.new_dialog_btn)
         self.next_question.clicked.connect(self.next_btn)
-        self.searchbar_2.textChanged.connect(lambda: self.search_box_2.setMinimumHeight(500))
-        self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
         self.searchbar.textChanged.connect(lambda: self.search_box.setMinimumHeight(500))
         self.searchbar.editingFinished.connect(lambda: self.search_box.setMinimumHeight(100))
+        self.searchbar_2.textChanged.connect(lambda: self.search_box_2.setMinimumHeight(500))
+        self.searchbar_2.editingFinished.connect(lambda: self.search_box_2.setMinimumHeight(100))
         self.lock_browser.clicked.connect(self.browsers[self.current_browser].fixPos)
         self.auto_2.stateChanged.connect(self.auto_2_btn)
         self.clear.clicked.connect(lambda: self.auto_queue_model.clear())
@@ -885,6 +889,8 @@ class MainWindow(QMainWindow):
                 self.searchbar.setText(value) if self.workingViewNum == 0 else self.searchbar_2.setText(value)
                 self.stackedWidget.setCurrentIndex(self.workingViewNum)
                 self.populate_search_box()
+                self.search_box.setMinimumHeight(100)
+                self.search_box_2.setMinimumHeight(100)
                 
         # Right click to select chat messages | middle click to add Variants
         if 'bot_' in source.objectName() or 'customer_' in source.objectName():
