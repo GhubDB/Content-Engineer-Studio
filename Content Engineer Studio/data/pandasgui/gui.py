@@ -158,7 +158,7 @@ class PandasGui(QtWidgets.QMainWindow):
         # Create a copy of the settings in case the SettingsStore reference has
         # been discarded by Qt prematurely
         # https://stackoverflow.com/a/17935694/10342097
-        self.store.settings = self.store.settings.copy()
+        # self.store.settings = self.store.settings.copy()
 
         # Signals
         self.store.settings.settingsChanged.connect(self.apply_settings)

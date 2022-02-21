@@ -30,7 +30,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -1533,7 +1533,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
+  <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -1557,6 +1557,7 @@
     <addaction name="testing_menu"/>
     <addaction name="faq_menu"/>
     <addaction name="settings_menu_2"/>
+    <addaction name="data_frame_viewer_menu"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSwitch_View"/>
@@ -1627,6 +1628,11 @@
   <action name="settings_menu_2">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="data_frame_viewer_menu">
+   <property name="text">
+    <string>Dataframe Viewer</string>
    </property>
   </action>
  </widget>

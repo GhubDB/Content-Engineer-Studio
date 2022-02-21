@@ -13,8 +13,13 @@ from selenium_helpers import *
 from data_variables import *
 from stylesheets import *
 from bs4 import BeautifulSoup  
-from pandasgui import show
 import qtstylish
+
+
+from data.pandasgui.gui import *
+# from data.pandasgui.gui import PandasGui, show
+# from pandasgui import show
+
 
 class Worker(QRunnable):
     '''
@@ -338,6 +343,7 @@ class MainWindow(QMainWindow):
         self.testing_menu.triggered.connect(self.switchToTesting)
         self.faq_menu.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(3))
         self.settings_menu_2.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(2))
+        self.data_frame_viewer_menu.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(5))
         # self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
         self.test.clicked.connect(self.btn_test)
 
@@ -348,7 +354,7 @@ class MainWindow(QMainWindow):
         self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
         
-        # gui = show(self.df)
+
         
         self.df_2 = self.testing_excel.load('testing.xlsx', 'Sheet1')
         self.header_len_2 = len(self.df_2.columns)
@@ -359,11 +365,188 @@ class MainWindow(QMainWindow):
 
         self.faq_df = self.faq_excel.load('recipes.xlsx', 'Sheet1')
         
+        # Adding PandasGUI
+        '''
+        Start PandasGUI init
+        Provides a viewer and editor for dataframes
+        https://github.com/adrotog/PandasGUI
+        '''
+        logger = logging.getLogger(__name__)
+
+        def except_hook(cls, exception, traceback):
+            sys.__excepthook__(cls, exception, traceback)
+        
+        # Set the exception hook to our wrapping function
+        sys.excepthook = except_hook
+
+        # Enables PyQt event loop in IPython
+        fix_ipython()
+
+        # Keep a list of widgets so they don't get garbage collected
+        refs = []       
+        
+        '''Start show'''
+        settings = {}
+        
+        # Register IPython magic
+        try:
+            @register_line_magic
+            def pg(line):
+                pandas_gui.store.eval_magic(line)
+                return line
+
+        except Exception as e:
+            # Let this silently fail if no IPython console exists
+            if e.args[0] == 'Decorator can only run in context where `get_ipython` exists':
+                pass
+            else:
+                raise e
+        
+        '''Start viewer init'''
+        self.navigator = None
+        self.splitter = None
+        self.find_bar = None
+        
+        self.store = PandasGuiStore()
+        self.store.gui = self
+        
+        # Add user provided settings to data store
+        for key, value in settings.items():
+            setting = self.store.settings[key]
+            setting.value = value
+
+        self.code_history_viewer = None
+        
+        '''Create all widgets'''
+        # Hide the question mark on dialogs
+        # self.app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
+        
+        # Accept drops, for importing files. See methods below: dropEvent, dragEnterEvent, dragMoveEvent
+        self.setAcceptDrops(True)
+
+        # This holds the DataFrameExplorer for each DataFrame
+        self.stacked_widget = QtWidgets.QStackedWidget()
+        
+        # Make the navigation bar
+        self.navigator = Navigator(self.store)
+
+        # Make splitter to hold nav and DataFrameExplorers
+        self.splitter = QtWidgets.QSplitter(Qt.Horizontal)
+        self.splitter.addWidget(self.navigator)
+        self.splitter.addWidget(self.stacked_widget)
+
+        self.splitter.setCollapsible(0, False)
+        self.splitter.setCollapsible(1, False)
+        self.splitter.setStretchFactor(0, 0)
+        self.splitter.setStretchFactor(1, 1)
+        
+        '''Addin to main_window'''
+        self.verticalLayout_2.addWidget(self.splitter)
+
+        # makes the find toolbar
+        self.find_bar = FindToolbar(self)
+        self.addToolBar(self.find_bar)
+        
+        # Create a copy of the settings in case the SettingsStore reference has
+        # been discarded by Qt prematurely
+        # https://stackoverflow.com/a/17935694/10342097
+        # self.store.settings = self.store.settings.copy()
+        
+        # Signals
+        self.store.settings.settingsChanged.connect(self.apply_settings)
+
+        self.apply_settings()
+        
+        '''Continue init'''
+        dataframe_kwargs = {'Analysis':self.df, 'Testing':self.df_2}
+        for df_name, df in dataframe_kwargs.items():
+            self.store.add_dataframe(df, df_name)
+
+        # Default to first item
+        self.navigator.setCurrentItem(self.navigator.topLevelItem(0))
+        
+        # gui = show(self.df)
+        # self.pandasgui = PandasGui(self.df)
+        # self.verticalLayout_2.addWidget(self.pandasgui)
+        
         # self.df_viewer = data.dataframe_viewer.DataFrameViewer(self.df)
         # self.verticalLayout_2.addWidget(self.df_viewer)
         
-        # self.df_viewer = DataFrameViewer(self.df)
-        # self.verticalLayout_2.addWidget(self.df_viewer)
+        '''Add  to menubar'''
+        @dataclass
+        class MenuItem:
+            name: str
+            func: Callable
+            shortcut: str = ''
+
+        items = {'Edit': [MenuItem(name='Find',
+                                   func=self.find_bar.show_find_bar,
+                                   shortcut='Ctrl+F'),
+                          MenuItem(name='Copy',
+                                   func=self.copy,
+                                   shortcut='Ctrl+C'),
+                          MenuItem(name='Copy With Headers',
+                                   func=self.copy_with_headers,
+                                   shortcut='Ctrl+Shift+C'),
+                          MenuItem(name='Paste',
+                                   func=self.paste,
+                                   shortcut='Ctrl+V'),
+                          MenuItem(name='Import',
+                                   func=self.import_dialog),
+                          MenuItem(name='Import From Clipboard',
+                                   func=self.import_from_clipboard),
+                          MenuItem(name='Export',
+                                   func=self.export_dialog),
+                          MenuItem(name='Code Export',
+                                   func=self.show_code_export),
+                          ],
+                 'DataFrame': [MenuItem(name='Delete Selected DataFrames',
+                                        func=self.delete_selected_dataframes),
+                               MenuItem(name='Reload DataFrames',
+                                        func=self.reload_data,
+                                        shortcut='Ctrl+R'),
+                               MenuItem(name='Parse All Dates',
+                                        func=lambda: self.store.selected_pgdf.parse_all_dates()),
+                               ],
+                 'Settings': [MenuItem(name='Preferences...',
+                                       func=self.edit_settings),
+                              {"Context Menus": [MenuItem(name='Add PandasGUI To Context Menu',
+                                                          func=self.add_to_context_menu),
+                                                 MenuItem(name='Remove PandasGUI From Context Menu',
+                                                          func=self.remove_from_context_menu),
+                                                 MenuItem(name='Add JupyterLab To Context Menu',
+                                                          func=self.add_jupyter_to_context_menu),
+                                                 MenuItem(name='Remove JupyterLab From Context Menu',
+                                                          func=self.remove_jupyter_from_context_menu), ]}
+
+                              ],
+                 'Debug': [MenuItem(name='About',
+                                    func=self.about),
+                           MenuItem(name='Browse Sample Datasets',
+                                    func=self.show_sample_datasets),
+                           MenuItem(name='View PandasGuiStore',
+                                    func=self.view_store),
+                           MenuItem(name='View DataFrame History',
+                                    func=self.view_history),
+                           ]
+                 }
+        
+        def add_menus(dic, root):
+            # Add menu items and actions to UI using the schema defined above
+            for menu_name in dic.keys():
+                menu = root.addMenu(menu_name)
+                for x in dic[menu_name]:
+                    if type(x) == dict:
+                        add_menus(x, menu)
+                    else:
+                        action = QtWidgets.QAction(x.name, self)
+                        action.setShortcut(x.shortcut)
+                        action.triggered.connect(x.func)
+                        menu.addAction(action)
+
+        add_menus(items, self.menubar)
+        
+        '''End PandasGUI init'''
         
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
@@ -411,6 +594,202 @@ class MainWindow(QMainWindow):
 
         # Tests
         # print(xw.books.active.name)
+        
+        
+    ################################################################################################
+    '''
+    PandasGUI Methods
+    '''
+    ################################################################################################
+    def apply_settings(self):
+        theme = self.store.settings.theme.value
+        if theme == "classic":
+            self.setStyleSheet("")
+            self.store.settings.theme.value = 'classic'
+        elif theme == "dark":
+            self.setStyleSheet(qtstylish.dark())
+            self.store.settings.theme.value = 'dark'
+        elif theme == "light":
+            self.setStyleSheet(qtstylish.light())
+            self.store.settings.theme.value = 'light'
+
+    def copy(self):
+        if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
+            self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.copy()
+        elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
+            self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy()
+
+    def copy_with_headers(self):
+        if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
+            self.store.selected_pgdf.dataframe_viewer.copy(header=True)
+        elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
+            self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy(header=True)
+
+    def paste(self):
+        if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
+            self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.paste()
+
+    def show_code_export(self):
+        self.store.selected_pgdf.dataframe_explorer.code_history_viewer.show()
+
+    def update_code_export(self):
+        self.store.selected_pgdf.dataframe_explorer.code_history_viewer.refresh()
+
+
+    def delete_selected_dataframes(self):
+        for name in [item.text(0) for item in self.navigator.selectedItems()]:
+            self.store.remove_dataframe(name)
+
+    def reorder_columns(self):
+        self.store.selected_pgdf
+
+    def dropEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.setDropAction(QtCore.Qt.CopyAction)
+            e.accept()
+            fpath_list = []
+            for url in e.mimeData().urls():
+                fpath_list.append(str(url.toLocalFile()))
+
+            for fpath in fpath_list:
+                self.store.import_file(fpath)
+        else:
+            e.ignore()
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
+    def dragMoveEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
+    def view_history(self):
+        d = self.store.selected_pgdf.history
+        self.viewer = JsonViewer(d)
+        self.viewer.show()
+
+    def view_store(self):
+        d = as_dict(self.store)
+        self.viewer = JsonViewer(d)
+        self.viewer.show()
+
+    # Return all DataFrames, or a subset specified by names. Returns a dict of name:df or a single df if there's only 1
+    def get_dataframes(self, names: Union[None, str, list] = None):
+        return self.store.get_dataframes(names)
+
+    def __getitem__(self, key):
+        return self.get_dataframes(key)
+
+    def import_dialog(self):
+        dialog = QtWidgets.QFileDialog()
+        paths, _ = dialog.getOpenFileNames(filter="*.csv *.xlsx *.parquet *.json")
+        for path in paths:
+            self.store.import_file(path)
+
+    def export_dialog(self):
+        dialog = QtWidgets.QFileDialog()
+        pgdf = self.store.selected_pgdf
+        path, _ = dialog.getSaveFileName(directory=pgdf.name, filter="*.csv")
+        if path:
+            pgdf.df.to_csv(path, index=False)
+
+    def import_from_clipboard(self):
+        df = pd.read_clipboard(sep=',|\t', engine="python",
+                               na_values='""',  # https://stackoverflow.com/a/67915100/3620725
+                               skip_blank_lines=False)
+        self.store.add_dataframe(df)
+
+    # https://stackoverflow.com/a/29769228/3620725
+    def add_to_context_menu(self):
+        import winreg
+
+        key = winreg.HKEY_CURRENT_USER
+        command_value = rf'{sys.executable} -m pandasgui.run_with_args "%V"'
+        icon_value = fr"{os.path.dirname(pandasgui.__file__)}\resources\images\icon.ico"
+
+        handle = winreg.CreateKeyEx(key, "Software\Classes\*\shell\Open with PandasGUI\command", 0,
+                                    winreg.KEY_SET_VALUE)
+        winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
+        handle = winreg.CreateKeyEx(key, "Software\Classes\*\shell\Open with PandasGUI", 0, winreg.KEY_SET_VALUE)
+        winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
+
+    def remove_from_context_menu(self):
+        import winreg
+        key = winreg.HKEY_CURRENT_USER
+        winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI\command")
+        winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI")
+
+    def add_jupyter_to_context_menu(self):
+        import winreg
+
+        key = winreg.HKEY_CURRENT_USER
+        command_value = rf'cmd.exe /k jupyter lab --notebook-dir="%V"'
+        icon_value = fr"{os.path.dirname(pandasgui.__file__)}\resources\images\jupyter_icon.ico"
+
+        handle = winreg.CreateKeyEx(key, "Software\Classes\directory\Background\shell\Open with JupyterLab\command", 0,
+                                    winreg.KEY_SET_VALUE)
+        winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
+        handle = winreg.CreateKeyEx(key, "Software\Classes\directory\Background\shell\Open with JupyterLab", 0,
+                                    winreg.KEY_SET_VALUE)
+        winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
+
+    def remove_jupyter_from_context_menu(self):
+        import winreg
+        key = winreg.HKEY_CURRENT_USER
+        winreg.DeleteKey(key, "Software\Classes\directory\Background\shell\Open with JupyterLab\command")
+        winreg.DeleteKey(key, "Software\Classes\directory\Background\shell\Open with JupyterLab")
+
+    def edit_settings(self):
+
+        dialog = QtWidgets.QDialog(self)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(SettingsEditor(self.store.settings))
+        dialog.setLayout(layout)
+        dialog.resize(700, 800)
+        dialog.show()
+
+    def about(self):
+        import pandasgui
+        dialog = QtWidgets.QDialog(self)
+        layout = QtWidgets.QVBoxLayout()
+        dialog.setLayout(layout)
+        layout.addWidget(QtWidgets.QLabel(f"Version: {pandasgui.__version__}"))
+        layout.addWidget(QtWidgets.QLabel(
+            f'''GitHub: <a style="color: #1e81cc;" href="https://github.com/adamerose/PandasGUI">https://github.com/adamerose/PandasGUI</a>'''))
+        # dialog.resize(500, 500)
+        dialog.setWindowTitle("About")
+        dialog.show()
+
+    def show_sample_datasets(self):
+        from pandasgui.datasets import LOCAL_DATASET_DIR
+        import os
+        os.startfile(LOCAL_DATASET_DIR, 'explore')
+
+    def closeEvent(self, e: QtGui.QCloseEvent) -> None:
+        refs.remove(self)
+        super().closeEvent(e)
+
+    # Replace all GUI DataFrames with the current DataFrame of the same name from the scope show was called
+    def reload_data(self):
+        callers_local_vars = self.caller_stack.f_locals.items()
+        refreshed_names = []
+        for var_name, var_val in callers_local_vars:
+            for ix, name in enumerate([pgdf.name for pgdf in self.store.data.values()]):
+                if var_name == name:
+                    none_found_flag = False
+                    self.store.remove_dataframe(var_name)
+                    self.store.add_dataframe(var_val, name=var_name)
+                    refreshed_names.append(var_name)
+
+        if not refreshed_names:
+            print("No matching DataFrames found to reload")
+        else:
+            print(f"Refreshed {', '.join(refreshed_names)}")
 
     ################################################################################################
     '''
@@ -497,7 +876,16 @@ class MainWindow(QMainWindow):
                     value = index.sibling(index.row(),index.column()).data()
                 self.stackedWidget.setCurrentWidget(self.faq)
                 self.searchbar_3.setText(value)
-
+        # Navigate back to working view
+        if source.objectName() == 'search_box_3':
+            if event.type() == 82:
+                index = self.search_box_3.selectionModel().currentIndex()
+                value = index.sibling(index.row(),index.column()).data()
+                self.search_column_select_3.setCurrentIndex(index.column())
+                self.searchbar.setText(value) if self.workingViewNum == 0 else self.searchbar_2.setText(value)
+                self.stackedWidget.setCurrentIndex(self.workingViewNum)
+                self.populate_search_box()
+                
         # Right click to select chat messages | middle click to add Variants
         if 'bot_' in source.objectName() or 'customer_' in source.objectName():
             if event.type() == QEvent.MouseButtonPress:
@@ -695,6 +1083,7 @@ class MainWindow(QMainWindow):
         for idx, item in enumerate(list(self.faq_df.columns.values)):
             item = QStandardItem(item)
             model.setItem(idx, 0, item)
+            
         # For searching all columns
         item = QStandardItem('Search in all columns')
         model.setItem(len(self.faq_df.columns), 0, item)
@@ -723,14 +1112,17 @@ class MainWindow(QMainWindow):
             self.search_column_select_2.setCurrentIndex(index)
             
         # Set table column to filter by
-        if index == len(self.faq_df.columns):
-            # Set to filter by all columns
-            self.faq_auto_search_model.setFilterKeyColumn(-1)
-        else:
-            self.faq_auto_search_model.setFilterKeyColumn(index)
+        try:
+            if index == len(self.faq_df.columns):
+                # Set to filter by all columns
+                self.faq_auto_search_model.setFilterKeyColumn(-1)
+            else:
+                self.faq_auto_search_model.setFilterKeyColumn(index)
+        except:
+            traceback.print_exc()
             
         # Show/hide columns according to current selection
-        if page == 0 or page == 1 and index != len(self.faq_df.columns):
+        if (page == 0 or page == 1) and index != len(self.faq_df.columns):
             for i in range(0, len(self.faq_df.index)):
                 if i != index:
                     self.search_box.hideColumn(i) if page == 0 else self.search_box_2.hideColumn(i)
