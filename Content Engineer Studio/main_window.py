@@ -684,7 +684,8 @@ class MainWindow(QMainWindow):
         self.viewer = JsonViewer(d)
         self.viewer.show()
 
-    # Return all DataFrames, or a subset specified by names. Returns a dict of name:df or a single df if there's only 1
+    # Return all DataFrames, or a subset specified by names. 
+    # Returns a dict of name:df or a single df if there's only 1
     def get_dataframes(self, names: Union[None, str, list] = None):
         return self.store.get_dataframes(names)
 
@@ -766,7 +767,8 @@ class MainWindow(QMainWindow):
         dialog.setLayout(layout)
         layout.addWidget(QtWidgets.QLabel(f"Version: {pandasgui.__version__}"))
         layout.addWidget(QtWidgets.QLabel(
-            f'''GitHub: <a style="color: #1e81cc;" href="https://github.com/adamerose/PandasGUI">https://github.com/adamerose/PandasGUI</a>'''))
+            f'''GitHub: <a style="color: #1e81cc;" 
+            href="https://github.com/adamerose/PandasGUI">https://github.com/adamerose/PandasGUI</a>'''))
         # dialog.resize(500, 500)
         dialog.setWindowTitle("About")
         dialog.show()
@@ -1239,7 +1241,8 @@ class MainWindow(QMainWindow):
         self.saveOnRowChange()
 
     def btn_colorize(self):
-        self.analysis_excel.colorize(self.row + 2, self.cell_selector.currentIndex() + self.cell_selector_start + 1)
+        self.analysis_excel.colorize(
+            self.row + 2, self.cell_selector.currentIndex() + self.cell_selector_start + 1)
 
     def switchToAnalysis(self):
         self.is_webscraping = False
@@ -1294,7 +1297,8 @@ class MainWindow(QMainWindow):
         self.df_2 = self.testing_excel.reload()
         self.header_len_2 = len(self.df_2.columns)
         self.index_len_2 = len(self.df_2.index)
-        self.completed_2 = self.testing_excel.incomplete(self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
+        self.completed_2 = self.testing_excel.incomplete(
+            self.df_2, self.cell_selector_start_2, len(self.df_2.columns))
         self.populate_sidebar_2()
 
         # Autoscrolling to the selection on the sidebar
@@ -1487,12 +1491,14 @@ class MainWindow(QMainWindow):
 
     def populate_analysis_2(self):
         # '''Bugfix for number only entries on the excel sheet needed. 
-        # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
+        # self.analysis.setText(
+            # self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         # print(self.row_2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2)
         # print(self.df.head)
         # self.analysis_2.setText(self.df_2.loc[1][3])
-        self.analysis_2.setText(self.df_2.loc[self.row_2][self.cell_selector_2.currentIndex() + self.cell_selector_start_2])
+        self.analysis_2.setText(
+            self.df_2.loc[self.row_2][self.cell_selector_2.currentIndex() + self.cell_selector_start_2])
 
     def populate_canned_2(self):
         # Radiobuttons
@@ -1694,9 +1700,10 @@ class MainWindow(QMainWindow):
 
     def btn_colorize_2(self):
         '''
-        Gives new dialogs a different color in the history table view
+        Applies highlight color to specified cells
         '''
-        self.testing_excel.colorize(self.row_2 + 2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2 + 1)
+        self.testing_excel.colorize(
+            self.row_2 + 2, self.cell_selector_2.currentIndex() + self.cell_selector_start_2 + 1)
 
 
 if __name__ == '__main__':

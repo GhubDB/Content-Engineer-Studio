@@ -1,6 +1,7 @@
 import sys
 import threading
 import os
+import timeit
 from typing import Union
 
 import numpy as np
@@ -338,16 +339,16 @@ class DataFrameViewer(QtWidgets.QWidget):
 
 
 # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
-class NoFocusDelegate(QtWidgets.QStyledItemDelegate):
-    def paint(
-            self,
-            painter: QtGui.QPainter,
-            item: QtWidgets.QStyleOptionViewItem,
-            ix: QtCore.QModelIndex,
-    ):
-        if item.state & QtWidgets.QStyle.State_HasFocus:
-            item.state = item.state ^ QtWidgets.QStyle.State_HasFocus
-        super().paint(painter, item, ix)
+# class NoFocusDelegate(QtWidgets.QStyledItemDelegate):
+#     def paint(
+#             self,
+#             painter: QtGui.QPainter,
+#             item: QtWidgets.QStyleOptionViewItem,
+#             ix: QtCore.QModelIndex,
+#     ):
+#         if item.state & QtWidgets.QStyle.State_HasFocus:
+#             item.state = item.state ^ QtWidgets.QStyle.State_HasFocus
+#         super().paint(painter, item, ix)
 
 
 class DataTableModel(QtCore.QAbstractTableModel):
@@ -513,6 +514,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         self.editors = {}
 
     def createEditor(self, parent, option, index):
+        '''
+        Method override
+        '''
         pIndex = QtCore.QPersistentModelIndex(index)
         editor = self.editors.get(pIndex)
         if not editor:
@@ -532,6 +536,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         return super().eventFilter(editor, event)
 
     def destroyEditor(self, editor, index):
+        '''
+        Method override
+        '''
         # remove the editor from the dict so that it gets properly destroyed;
         # this avoids any "wrapped C++ object destroyed" exception
         self.editors.pop(QtCore.QPersistentModelIndex(index))
@@ -542,6 +549,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
 
 
     def paint(self, painter, option, index):
+        '''
+        Method override
+        '''
         self.initStyleOption(option, index)
         painter.save()
         doc = QtGui.QTextDocument()
@@ -556,6 +566,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         painter.restore()
 
     def sizeHint(self, option, index):
+        '''
+        Method override
+        '''
         self.initStyleOption(option, index)
         editor = self.editors.get(QtCore.QPersistentModelIndex(index))
         if editor:
@@ -573,23 +586,23 @@ class DataTableView(QtWidgets.QTableView):
     """
     Displays the DataFrame data as a table
     """
-
     def __init__(self, parent: DataFrameViewer):
         super().__init__(parent)
         
-        # '''
-        # Insert
-        # https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
-        # '''
-        # delegate = SegmentsTableViewDelegate(self)
-        # self.setItemDelegate(delegate)
-        # delegate.rowSizeHintChanged.connect(self.resizeRowToContents)
+        '''
+        Insert
+        https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
+        '''
+        delegate = SegmentsTableViewDelegate(self)
+        self.setItemDelegate(delegate)
+        delegate.rowSizeHintChanged.connect(self.resizeRowToContents)
+        '''
+        End Insert
+        '''
         
-        # self.dataframe_viewer: DataFrameViewer = parent
-        # self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-        # '''
-        # End Insert
-        # '''
+        self.dataframe_viewer: DataFrameViewer = parent
+        self.pgdf: PandasGuiDataFrameStore = parent.pgdf
+     
         
         # Create and set model
         model = DataTableModel(parent)
@@ -607,7 +620,24 @@ class DataTableView(QtWidgets.QTableView):
         # self.resizeRowsToContents()
         self.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
-
+        
+        
+        # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
+        
+        
+        # self.showEvent.connect(self.resizeRowsToContents)
+    #     self.horizontalHeader().sectionResized.connect(self.resizeRowsToContents)   
+    
+    def showEvent(self, event):
+        self.resizeRowsToContents()
+        event.accept()
+        
+    # def resizeRowsToContents(self):
+    #     header = self.verticalHeader()
+    #     for row in range(self.model().rowCount()):
+    #         hint = self.sizeHintForRow(row)
+    #         header.resizeSection(row, hint)
+        
     def on_selectionChanged(self):
         """
         Runs when cells are selected in the main table. This logic highlights the correct cells in the vertical and
@@ -1099,7 +1129,8 @@ class HeaderView(QtWidgets.QTableView):
                 width += max(self.columnWidth(i), 100)
         return QtCore.QSize(width, height)
 
-    # This is needed because otherwise when the horizontal header is a single row it will add whitespace to be bigger
+    # This is needed because otherwise when the horizontal header is a single row 
+    # it will add whitespace to be bigger
     def minimumSizeHint(self):
         if self.orientation == Qt.Horizontal:
             return QtCore.QSize(0, self.sizeHint().height())
