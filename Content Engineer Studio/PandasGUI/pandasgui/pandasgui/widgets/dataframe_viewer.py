@@ -1,13 +1,11 @@
-import sys
-import threading
-import os
-import timeit
+import sys, re, threading, os
 from typing import Union
 
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor, QBrush, QPalette
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
 import pandasgui
@@ -101,6 +99,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         default_row_height = 28
         self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
         self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
+        
 
         # Set column widths
         for column_index in range(self.columnHeader.model().columnCount()):
@@ -208,6 +207,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             pass
         if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
             pass
+        
 
     def copy(self, header=False):
         """
@@ -342,7 +342,6 @@ class DataTableModel(QtCore.QAbstractTableModel):
     """
     Model for DataTableView to connect for DataFrame data
     """
-
     def __init__(self, parent: DataFrameViewer):
         super().__init__(parent)
         self.dataframe_viewer: DataFrameViewer = parent
@@ -421,16 +420,18 @@ class DataTableModel(QtCore.QAbstractTableModel):
         else:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-    def setData(self, index, value, role=None):
-        if role == QtCore.Qt.EditRole:
-            row = index.row()
-            col = index.column()
-            try:
-                self.pgdf.edit_data(row, col, value)
-            except Exception as e:
-                logger.exception(e)
-                return False
-            return True
+    # TODO check if this is needed for something
+    # def setData(self, index, value, role=None):
+    #     if role == QtCore.Qt.EditRole:
+    #         row = index.row()
+    #         col = index.column()
+    #         print(value)
+    #         try:
+    #             self.pgdf.edit_data(row, col, value)
+    #         except Exception as e:
+    #             logger.exception(e)
+    #             return False
+    #         return True
         
 class DelegateRichTextEditor(QtWidgets.QTextEdit):
     '''
@@ -446,7 +447,7 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.contentTimer = QtCore.QTimer(self, 
             timeout=self.contentsChange, interval=0)
-        self.document().setDocumentMargin(0)
+        self.document().setDocumentMargin(3)
         self.document().contentsChange.connect(self.contentTimer.start)
 
     @QtCore.pyqtProperty(str, user=True)
@@ -469,6 +470,9 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
             self.sizeHintChanged.emit()
 
     def keyPressEvent(self, event):
+        '''
+        Hotkeys
+        '''
         if event.modifiers() == QtCore.Qt.ControlModifier:
             if event.key() in (QtCore.Qt.Key_Return, ):
                 self.commit.emit(self)
@@ -500,6 +504,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         super().__init__(*args, **kwargs)
         self.editors = {}
 
+        
     def createEditor(self, parent, option, index):
         '''
         Method override
@@ -533,6 +538,25 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         # emit the signal again: if the data has been rejected, we need to
         # restore the correct hint
         self.rowSizeHintChanged.emit(index.row())
+        
+    def setModelData(self, editor, model, index):
+        row = index.row()
+        col = index.column()
+        value = editor.toPlainText()
+        try:
+            model.pgdf.edit_data(row, col, value)
+        except Exception as e:
+            logger.exception(e)
+            return False
+        return True
+        
+        
+    # def initStyleOption(self, option, index):
+    #     option.backgroundBrush = QBrush(QColor(255, 255, 255, 200))
+    #     return super().initStyleOption(option, index)
+    
+    # def drawContents(self, painter):
+    #     painter.setPen(QtGui.QPen(QtCore.Qt.white))
 
 
     def paint(self, painter, option, index):
@@ -546,7 +570,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         self.initStyleOption(option, index)
         painter.save()
         doc = QtGui.QTextDocument()
-        doc.setDocumentMargin(0)
+        doc.setDocumentMargin(2)
         doc.setTextWidth(option.rect.width())
         doc.setHtml(option.text)
         option.text = ""
@@ -567,7 +591,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             doc = QtGui.QTextDocument.clone(editor.document())
         else:
             doc = QtGui.QTextDocument()
-            doc.setDocumentMargin(0)
+            doc.setDocumentMargin(3)
             doc.setHtml(option.text)
             doc.setTextWidth(option.rect.width())
         doc_height_int = int(doc.size().height())
@@ -608,15 +632,17 @@ class DataTableView(QtWidgets.QTableView):
         self.selectionModel().selectionChanged.connect(self.on_selectionChanged)
 
         # Settings
-        # self.setWordWrap(True)
-        # self.resizeRowsToContents()
         self.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+        
         
         # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
        
     
     def showEvent(self, event):
+        '''
+        https://stackoverflow.com/questions/36975782/how-to-connect-signal-after-the-display-of-a-page-in-pyqt-wizard
+        '''
         self.resizeRowsToContents()
         event.accept()
         

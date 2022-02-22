@@ -97,6 +97,7 @@ class BackgroundRemover(QStandardItemModel):
         roles = super().itemData(item.index())
         if 8 in roles:
             del roles[8]
+            return super().itemData(item.index())
             return roles
             print(roles)
 
@@ -387,7 +388,7 @@ class MainWindow(QMainWindow):
         fix_ipython()
 
         # Keep a list of widgets so they don't get garbage collected
-        refs = []       
+        self.refs = []       
         
         '''Start show'''
         settings = {}
@@ -411,7 +412,7 @@ class MainWindow(QMainWindow):
         self.splitter = None
         self.find_bar = None
         
-        refs.append(self)
+        self.refs.append(self)
         
         self.store = PandasGuiStore()
         self.store.gui = self
@@ -470,13 +471,6 @@ class MainWindow(QMainWindow):
 
         # Default to first item
         self.navigator.setCurrentItem(self.navigator.topLevelItem(0))
-        
-        # gui = show(self.df)
-        # self.pandasgui = PandasGui(self.df)
-        # self.verticalLayout_2.addWidget(self.pandasgui)
-        
-        # self.df_viewer = data.dataframe_viewer.DataFrameViewer(self.df)
-        # self.verticalLayout_2.addWidget(self.df_viewer)
         
         '''Add  to menubar'''
         @dataclass
@@ -779,7 +773,7 @@ class MainWindow(QMainWindow):
         os.startfile(LOCAL_DATASET_DIR, 'explore')
 
     def closeEvent(self, e: QtGui.QCloseEvent) -> None:
-        refs.remove(self)
+        self.refs.remove(self)
         super().closeEvent(e)
 
     # Replace all GUI DataFrames with the current DataFrame of the same name from the scope show was called
@@ -1128,8 +1122,8 @@ class MainWindow(QMainWindow):
                 self.faq_auto_search_model.setFilterKeyColumn(-1)
             else:
                 self.faq_auto_search_model.setFilterKeyColumn(index)
-        except:
-            traceback.print_exc()
+        except UnboundLocalError as e:
+            pass
             
         # Show/hide columns according to current selection
         if (page == 0 or page == 1) and index != len(self.faq_df.columns):
@@ -1713,3 +1707,4 @@ if __name__ == '__main__':
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())
+

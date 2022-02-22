@@ -1,4 +1,5 @@
 priorities:
+add resizeRowsToContents button to Dataframe Viewer
 turn sidebar from tablewidget into tableview
 remove background color from drag & drop rows
 add logging
