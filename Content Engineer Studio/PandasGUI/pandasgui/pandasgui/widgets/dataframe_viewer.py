@@ -338,19 +338,6 @@ class DataFrameViewer(QtWidgets.QWidget):
             view.updateGeometry()
 
 
-# Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
-# class NoFocusDelegate(QtWidgets.QStyledItemDelegate):
-#     def paint(
-#             self,
-#             painter: QtGui.QPainter,
-#             item: QtWidgets.QStyleOptionViewItem,
-#             ix: QtCore.QModelIndex,
-#     ):
-#         if item.state & QtWidgets.QStyle.State_HasFocus:
-#             item.state = item.state ^ QtWidgets.QStyle.State_HasFocus
-#         super().paint(painter, item, ix)
-
-
 class DataTableModel(QtCore.QAbstractTableModel):
     """
     Model for DataTableView to connect for DataFrame data
@@ -552,6 +539,10 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         '''
         Method override
         '''
+        # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
+        if option.state & QtWidgets.QStyle.State_HasFocus:
+            option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
+        
         self.initStyleOption(option, index)
         painter.save()
         doc = QtGui.QTextDocument()
@@ -564,6 +555,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         painter.translate(option.rect.left(), option.rect.top())
         doc.drawContents(painter)
         painter.restore()
+        
 
     def sizeHint(self, option, index):
         '''
@@ -621,12 +613,8 @@ class DataTableView(QtWidgets.QTableView):
         self.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         
-        
         # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
-        
-        
-        # self.showEvent.connect(self.resizeRowsToContents)
-    #     self.horizontalHeader().sectionResized.connect(self.resizeRowsToContents)   
+       
     
     def showEvent(self, event):
         self.resizeRowsToContents()
