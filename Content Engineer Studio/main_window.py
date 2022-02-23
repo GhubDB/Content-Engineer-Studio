@@ -132,7 +132,6 @@ class Highlighter(QSyntaxHighlighter):
         # Email addresses
         class_format = QTextCharFormat()
         class_format.setBackground(QColor(68, 126, 237))
-        # class_format.setFontWeight(QFont.Bold)  
         pattern = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" # Working changes
         # pattern = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" # Original
         self.add_mapping(pattern, class_format)
@@ -140,7 +139,6 @@ class Highlighter(QSyntaxHighlighter):
         # Phone numbers
         class_format = QTextCharFormat()
         class_format.setBackground(QColor(68, 126, 237))
-        # class_format.setFontWeight(QFont.Bold)        
         pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
         # class_format.setTextColor(QColor(120, 135, 171))
         self.add_mapping(pattern, class_format)
@@ -159,13 +157,34 @@ class Highlighter(QSyntaxHighlighter):
                 start, end = match.span()
                 win.auto_anonymized.append([self.name, start, end])
                 # self.setFormat(start, end-start, fmt) # Original implementation
+                
 class TextEdit(QTextEdit):
     '''
-    For auto resizing text edits in tables
+    Custom implementation for auto resizing text edits in tables and keeping track of user selected messages
     '''
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, participant, index, **kwargs, ):
         super().__init__(*args, **kwargs)
-        self.textChanged.connect(self.updateGeometry) 
+        self.textChanged.connect(self.updateGeometry)
+        self.participant = participant
+        self.index = index
+        self.selected = False
+        
+    def setSelection(self):
+        if self.selected:
+            self.selected = False
+            if self.participant == 'bot':
+                 self.setStyleSheet(style_bot)
+            else:
+                self.setStyleSheet(style_customer)
+        else:
+            self.selected = True
+            if self.participant == 'bot':
+                self.setStyleSheet(style_bot_selected)
+            else:
+                self.setStyleSheet(style_customer_selected)
+        
+    def __str__(self):
+        return self.toHtml()
 
     def sizeHint(self):
         hint = super().sizeHint()
@@ -265,8 +284,8 @@ class MainWindow(QMainWindow):
         self.dialog_num = 0
         self.canned_states = {}
         self.canned_states_2 = {}
-        self.marked_messages = []
-        self.marked_messages_2 = []
+        self.marked_messages = {}
+        self.marked_messages_2 = {}
         self.chat_test = []
         self.filter_proxy_model = ''
         self.auto_anonymized = []
@@ -807,7 +826,7 @@ class MainWindow(QMainWindow):
         # Save and clean up before next row is loaded
         self.saveOnRowChange()
         self.clearChat()
-        self.marked_messages = []
+        self.marked_messages = {}
 
         # Updates the self.row property
         idx = selected.indexes()
@@ -840,7 +859,7 @@ class MainWindow(QMainWindow):
         Saves current states to Excel
         '''
         # Saving chat messages
-        if len(self.marked_messages) > 0:
+        if self.chat.rowCount() > 0:
             customer, bot  = self.getChatText()
             self.analysis_excel.updateCells(customer, self.row + 2, 5)
             self.analysis_excel.updateCells(bot, self.row + 2, 6)
@@ -894,10 +913,7 @@ class MainWindow(QMainWindow):
         if 'bot_' in source.objectName() or 'customer_' in source.objectName():
             if event.type() == QEvent.MouseButtonPress:
                 if event.button() == Qt.RightButton:
-                    if self.stackedWidget.currentIndex() == 0:
-                        QTimer.singleShot(0, lambda x=event, y=source: self.select_chat(x, y))
-                    else:
-                        QTimer.singleShot(0, lambda x=event, y=source: self.select_chat_2(x, y))
+                    source.setSelection()
                 # Variants
                 if event.button() == Qt.MiddleButton and 'customer' in source.objectName():
                     text = source.toPlainText()
@@ -954,9 +970,13 @@ class MainWindow(QMainWindow):
         self.chat.setRowCount(len(chat))
         for idx, sender, in enumerate(chat):
             if sender[0] == 'bot':
-                combo = TextEdit(self, objectName=f'bot_{idx}') 
+                combo = TextEdit(
+                    self, objectName=f'bot_{idx}', 
+                    participant='bot', index=idx) 
             else:
-                combo = TextEdit(self, objectName=f'customer_{idx}') 
+                combo = TextEdit(
+                    self, objectName=f'customer_{idx}', 
+                    participant='customer', index=idx) 
             self.chat.setCellWidget(idx, 0, combo)
             
             # Add auto highlighting
@@ -986,57 +1006,29 @@ class MainWindow(QMainWindow):
         # self.chat.clear()
         self.chat.setRowCount(0)
 
-    def select_chat(self, event, source):
-        '''
-        Handles highlighting of user selected chat messages and adding them to a data structure
-        '''
-        if 'bot' in source.objectName():
-            if source.objectName() not in self.marked_messages:
-                self.marked_messages.append(source.objectName())
-                source.setStyleSheet(style_bot_selected)
-                # background-color: rgb(70, 81, 70); \
-                # source.setAlignment(Qt.AlignRight)  
-            else:
-                self.marked_messages.remove(source.objectName())
-                source.setStyleSheet(style_bot)
-                # source.setAlignment(Qt.AlignRight)
-
-        else:
-            if source.objectName() not in self.marked_messages:
-                self.marked_messages.append(source.objectName())
-                source.setStyleSheet(style_customer_selected)
-                    # background-color: rgb(74, 69, 78);
-            else:                   
-                self.marked_messages.remove(source.objectName())
-                source.setStyleSheet(style_customer)
-
-
     def getChatText(self, export=None):
         '''
         Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
         '''
         bot = []
         customer = []
-        # message_cells = []
-        # Isolate numbers from list of selected message object names and add the sorted output to new list
-        if len(self.marked_messages) > 0:
-            message_cells = [message.split('_') for message in self.marked_messages]
-            message_cells = sorted(message_cells, key = lambda x: x[1])
-            # Iterate over selected chat messages
-            for message, idx in message_cells:
+        # Iterate over editors in self.chat TableWidget
+        for idx in range(0, self.chat.rowCount()):
+            editor = self.chat.cellWidget(idx, 0)
+            if editor.selected:
                 # Convert the text of the message at the grid location to HTML and parse it
-                message_html = BeautifulSoup(self.chat.cellWidget(int(idx), 0).toHtml(), 'html.parser')
+                message_html = BeautifulSoup(str(editor), 'html.parser')
                 # Find all span tags and replace the text with ***
                 tags = message_html.find_all('span')
                 for tag in tags:
                     tag.string = '***'
-                if 'bot' in message:
+                if editor.participant == 'bot':
                     bot.append(message_html.get_text().strip())
                 else:
                     customer.append(message_html.get_text().strip())
             if export:
                 return customer
-            return '\n'.join(customer), '\n'.join(bot)
+        return '\n'.join(customer), '\n'.join(bot)
 
 
     def highlight_selection(self):
@@ -1280,7 +1272,7 @@ class MainWindow(QMainWindow):
         # Save and clean up before next row is loaded
         self.saveOnRowChange_2()
         self.chat_2.setRowCount(0)
-        self.marked_messages_2 = []
+        self.marked_messages_2 = {}
 
         # Updates the self.row property
         idx = selected.indexes()
@@ -1316,7 +1308,7 @@ class MainWindow(QMainWindow):
 
         # Saving chat messages
         print(len(self.marked_messages_2))
-        if len(self.marked_messages_2) > 0:
+        if self.chat_2.rowCount() > 0:
             customer, bot = self.getChatText_2()
             self.testing_excel.updateCells(customer, self.row_2 + 2, 3)
             self.testing_excel.updateCells(bot, self.row_2 + 2, 4)
@@ -1394,9 +1386,9 @@ class MainWindow(QMainWindow):
         self.chat_2.setRowCount(length + len(output))
         for idx, sender, in enumerate(output, start=length):
             if sender[0] == 'bot':
-                combo = TextEdit(self, objectName=f'bot_{idx}') 
+                combo = TextEdit(self, objectName=f'bot_{idx}', participant='bot', index=idx)
             else:
-                combo = TextEdit(self, objectName=f'customer_{idx}') 
+                combo = TextEdit(self, objectName=f'customer_{idx}', participant='customer', index=idx)
             self.chat_2.setCellWidget(idx, 0, combo)
             combo.setText(sender[1])
             combo.setContextMenuPolicy(Qt.PreventContextMenu)
@@ -1412,55 +1404,30 @@ class MainWindow(QMainWindow):
         [self.chat_test.append(message) for message in output]
         self.chat_2.installEventFilter(self)
         self.chat_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        
-
-    def select_chat_2(self, event, source):
-        '''
-        Handles highlighting of user selected chat messages and adding them to a data structure
-        '''
-        if 'bot' in source.objectName():
-            if source.objectName() not in self.marked_messages_2:
-                self.marked_messages_2.append(source.objectName())
-                source.setStyleSheet(style_bot_selected)
-                source.setAlignment(Qt.AlignRight)  
-            else:
-                self.marked_messages_2.remove(source.objectName())
-                source.setStyleSheet(style_bot)
-                source.setAlignment(Qt.AlignRight)
-
-        else:
-            if source.objectName() not in self.marked_messages_2:
-                self.marked_messages_2.append(source.objectName())
-                source.setStyleSheet(style_customer_selected)
-            else:
-                self.marked_messages_2.remove(source.objectName())
-                source.setStyleSheet(style_customer)
     
 
-    def getChatText_2(self):
+    def getChatText_2(self, export=None):
         '''
         Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
         '''
         bot = []
         customer = []
-        message_cells = []
-        # Isolate numbers from list of selected message object names and add the sorted output to new list
-        if len(self.marked_messages_2) > 0:
-            [message_cells.append(message.split('_')) for message in self.marked_messages_2]
-            message_cells = sorted(message_cells, key = lambda x: x[1])
-            # Iterate over selected chat messages
-            for message, idx in message_cells:
-                # Convert the text of the message at the grid location to HTML and parse it
+        # Iterate over editors in self.chat TableWidget
+        for idx in range(0, self.chat_2.rowCount()):
+            editor = self.chat_2.cellWidget(idx, 0)
+            if editor.selected:
                 message_html = BeautifulSoup(self.chat_2.cellWidget(int(idx), 0).toHtml(), 'html.parser')
                 # Find all span tags and replace the text with ***
                 tags = message_html.find_all('span')
                 for tag in tags:
                     tag.string = '***'
-                if 'bot' in message:
+                if editor.participant == 'bot':
                     bot.append(message_html.get_text().strip())
                 else:
                     customer.append(message_html.get_text().strip())
-            return '\n'.join(customer), '\n'.join(bot)
+            if export:
+                return customer
+        return '\n'.join(customer), '\n'.join(bot)
 
 
     def highlight_selection_2(self):

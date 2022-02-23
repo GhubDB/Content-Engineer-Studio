@@ -547,8 +547,8 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             model.pgdf.edit_data(row, col, value)
         except Exception as e:
             logger.exception(e)
-            return False
-        return True
+        #     return False
+        # return True
         
         
     # def initStyleOption(self, option, index):

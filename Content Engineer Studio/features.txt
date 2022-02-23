@@ -25,6 +25,7 @@ jira connection make a new table for each story and index entries under the stor
 network database
 add variants to database easily
 add output such as new faq's faq changed, variants etc to table attached to main story table
+add the option to set multiple questions and answering flows/FAQ's for each conversation
 
 Database for already analyzed cases by session ID
 excel like table for drag and drop copying of values
