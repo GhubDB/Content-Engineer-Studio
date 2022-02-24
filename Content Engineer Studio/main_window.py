@@ -11,7 +11,7 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem, \
 from excel_helpers import Excel 
 from selenium_helpers import Browser
 from data_variables import *
-from stylesheets import *
+from stylesheets import Stylesheets
 from bs4 import BeautifulSoup  
 import qtstylish
 
@@ -160,7 +160,8 @@ class Highlighter(QSyntaxHighlighter):
                 
 class TextEdit(QTextEdit):
     '''
-    Custom implementation for auto resizing text edits in tables and keeping track of user selected messages
+    Custom implementation for auto resizing text edits in tables 
+    and keeping track of user selected messages
     '''
     def __init__(self, *args, participant, index, **kwargs, ):
         super().__init__(*args, **kwargs)
@@ -169,24 +170,27 @@ class TextEdit(QTextEdit):
         self.index = index
         self.selected = False
         
+    # Handles setting style change when user selects a message 
+    # as well as setting the selection status.
     def setSelection(self):
         if self.selected:
             self.selected = False
             if self.participant == 'bot':
-                 self.setStyleSheet(style_bot)
+                 self.setStyleSheet(Stylesheets.bot)
             else:
-                self.setStyleSheet(style_customer)
+                self.setStyleSheet(Stylesheets.customer)
         else:
             self.selected = True
             if self.participant == 'bot':
-                self.setStyleSheet(style_bot_selected)
+                self.setStyleSheet(Stylesheets.bot_selected)
             else:
-                self.setStyleSheet(style_customer_selected)
+                self.setStyleSheet(Stylesheets.customer_selected)
         
     def __str__(self):
         return self.toHtml()
 
     def sizeHint(self):
+        # Auto resizing text editors
         hint = super().sizeHint()
         if self.toPlainText():
             doc = self.document().clone()
@@ -235,7 +239,7 @@ class AddVariant(QWidget):
         self.layout.addWidget(add_variant, 1, 0, 1, 1)
         self.layout.addWidget(self.cancel_variant, 1, 1, 1, 1)
         self.setLayout(self.layout)
-        self.setStyleSheet(elegantdark)
+        self.setStyleSheet(Stylesheets.elegantdark)
         self.show()
 
 
@@ -301,7 +305,7 @@ class MainWindow(QMainWindow):
         self.splitter_2.setSizes(sizes)
 
         # Apply custom stylesheets
-        self.setStyleSheet(style_custom_dark)
+        self.setStyleSheet(Stylesheets.custom_dark)
         # self.colorize_2.setStyleSheet(style_colorize_2)
         # self.setStyleSheet(style_QLineEdit)
                     
@@ -989,12 +993,12 @@ class MainWindow(QMainWindow):
             
             # Bot
             if sender[0] == 'bot':
-                combo.setStyleSheet(style_bot)
+                combo.setStyleSheet(Stylesheets.bot)
                 # combo.setAlignment(Qt.AlignRight)
                 
             # customer
             else:
-                combo.setStyleSheet(style_customer)
+                combo.setStyleSheet(Stylesheets.customer)
                 
             combo.textChanged.connect(lambda idx=idx: self.chat.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection)
@@ -1026,7 +1030,7 @@ class MainWindow(QMainWindow):
                     bot.append(message_html.get_text().strip())
                 else:
                     customer.append(message_html.get_text().strip())
-            if export:
+        if export:
                 return customer
         return '\n'.join(customer), '\n'.join(bot)
 
@@ -1240,10 +1244,11 @@ class MainWindow(QMainWindow):
         self.populate_search_box()
 
     def exportToTesting(self):
-        customer= self.getChatText(export=1)
+        customer = self.getChatText(export=1)
         if customer:
             for message in customer:
-                item = QtGui.QStandardItem(message.lstrip())
+                print(message)
+                item = QtGui.QStandardItem(message)
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
         self.populate_search_box()
@@ -1373,9 +1378,9 @@ class MainWindow(QMainWindow):
                 chats = self.browsers[self.current_browser].getCleverbotLive()
                 if chats:
                     output.emit(chats)
-                time.sleep(3)
+                time.sleep(5)
             except:
-                time.sleep(3)
+                time.sleep(5)
                 continue
 
     def populate_chat_2(self, chat):
@@ -1395,10 +1400,10 @@ class MainWindow(QMainWindow):
             combo.installEventFilter(self)
             # Bot
             if sender[0] == 'bot':
-                combo.setStyleSheet(style_bot)
+                combo.setStyleSheet(Stylesheets.bot)
             # customer
             else:
-                combo.setStyleSheet(style_customer)
+                combo.setStyleSheet(Stylesheets.customer)
             combo.textChanged.connect(lambda idx=idx: self.chat_2.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection_2)
         [self.chat_test.append(message) for message in output]

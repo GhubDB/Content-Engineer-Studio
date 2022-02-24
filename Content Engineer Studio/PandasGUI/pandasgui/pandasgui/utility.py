@@ -467,6 +467,7 @@ def parse_cell(text, column_dtype):
         return text
 
     # Parse text using same logic as reading a CSV file by using a file buffer
+    # TODO fix input with commas
     try:
         from io import StringIO
         import pandas as pd

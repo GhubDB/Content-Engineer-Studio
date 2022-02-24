@@ -525,19 +525,25 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
                 self.commitData.emit(editor)
                 self.closeEditor.emit(editor)
                 return True
+        if event.type() == 151:
+            self.commitData.emit(editor)
+            self.closeEditor.emit(editor)
+            return True
         return super().eventFilter(editor, event)
 
-    def destroyEditor(self, editor, index):
-        '''
-        Method override
-        '''
-        # remove the editor from the dict so that it gets properly destroyed;
-        # this avoids any "wrapped C++ object destroyed" exception
-        self.editors.pop(QtCore.QPersistentModelIndex(index))
-        super().destroyEditor(editor, index)
-        # emit the signal again: if the data has been rejected, we need to
-        # restore the correct hint
-        self.rowSizeHintChanged.emit(index.row())
+    # def destroyEditor(self, editor, index):
+    #     '''
+    #     Method override
+        # TODO: Check why the editors on the dict do not have the same index 
+    #     '''
+    #     # remove the editor from the dict so that it gets properly destroyed;
+    #     # this avoids any "wrapped C++ object destroyed" exception
+    #     print(self.editors)
+    #     self.editors.pop(QtCore.QPersistentModelIndex(index))
+    #     super().destroyEditor(editor, index)
+    #     # emit the signal again: if the data has been rejected, we need to
+    #     # restore the correct hint
+    #     self.rowSizeHintChanged.emit(index.row())
         
     def setModelData(self, editor, model, index):
         row = index.row()
@@ -549,14 +555,6 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             logger.exception(e)
         #     return False
         # return True
-        
-        
-    # def initStyleOption(self, option, index):
-    #     option.backgroundBrush = QBrush(QColor(255, 255, 255, 200))
-    #     return super().initStyleOption(option, index)
-    
-    # def drawContents(self, painter):
-    #     painter.setPen(QtGui.QPen(QtCore.Qt.white))
 
 
     def paint(self, painter, option, index):
@@ -577,7 +575,15 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         option.widget.style().drawControl(
             QtWidgets.QStyle.CE_ItemViewItem, option, painter)
         painter.translate(option.rect.left(), option.rect.top())
+        '''Add this if there are artefacts'''
+        # clip = QtCore.QRectF(0, 0, 
+        #     option.rect.width(), option.rect.height())
+        # painter.setClipRect(clip)
         doc.drawContents(painter)
+        layout = doc.documentLayout()
+        ctx = layout.PaintContext()
+        ctx.palette = option.palette
+        layout.draw(painter, ctx)
         painter.restore()
         
 
@@ -591,7 +597,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             doc = QtGui.QTextDocument.clone(editor.document())
         else:
             doc = QtGui.QTextDocument()
-            doc.setDocumentMargin(3)
+            doc.setDocumentMargin(1)
             doc.setHtml(option.text)
             doc.setTextWidth(option.rect.width())
         doc_height_int = int(doc.size().height())
