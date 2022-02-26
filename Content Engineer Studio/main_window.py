@@ -19,7 +19,7 @@ import qtstylish
 import inspect
 import os
 import pprint
-from typing import Callable, Union
+from typing import Callable, Union, List, Optional
 from dataclasses import dataclass
 import pandas as pd
 import pkg_resources
@@ -826,7 +826,7 @@ class MainWindow(QMainWindow):
     ################################################################################################
 
 
-    def row_selector(self, selected):
+    def row_selector(self, selected: QtCore.QObject):
         '''
         Master Controller. Keeps the current row number updated
         '''
@@ -879,7 +879,7 @@ class MainWindow(QMainWindow):
         # Saves the excel file
         self.analysis_excel.saveWB()
 
-    def eventFilter(self, source, event):
+    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent):
         '''
         Filters Events and calls the respective functions
         '''
@@ -972,7 +972,7 @@ class MainWindow(QMainWindow):
         output.emit(chat_text)
         # self.populate_chat(chat_text)
 
-    def populate_chat(self, chat):
+    def populate_chat(self, chat: list[list[str]]):
         self.chat.setColumnCount(1)
         self.chat.setRowCount(len(chat))
         for idx, sender, in enumerate(chat):
@@ -1012,9 +1012,9 @@ class MainWindow(QMainWindow):
         # self.chat.clear()
         self.chat.setRowCount(0)
 
-    def getChatText(self, export=None):
+    def getChatText(self, export: Optional[bool]=False) -> str:
         '''
-        Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
+        Pulls and anonymizes user selected messages from the chat tablewidget.
         '''
         bot = []
         customer = []
@@ -1185,7 +1185,7 @@ class MainWindow(QMainWindow):
         self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
 
-    def populate_status_bar(self, row, start, end):
+    def populate_status_bar(self, row: int, start: int, end: int):
         self.status_bar.setText(self.df.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
 
     def populate_flows(self, flows):
@@ -1246,7 +1246,7 @@ class MainWindow(QMainWindow):
         self.populate_search_box()
 
     def exportToTesting(self):
-        customer = self.getChatText(export=1)
+        customer = self.getChatText(export=True)
         if customer:
             for message in customer:
                 print(message)
@@ -1272,7 +1272,7 @@ class MainWindow(QMainWindow):
     '''
     ################################################################################################
 
-    def row_selector_2(self, selected):
+    def row_selector_2(self, selected: QtCore.QObject):
         '''
         Master Controller. Keeps the current row number updated
         '''
@@ -1347,7 +1347,7 @@ class MainWindow(QMainWindow):
         self.sent_messages = []
         return
 
-    def setUpNewAutoDialog(self, i):
+    def setUpNewAutoDialog(self, i: int) -> None:
         '''
         Prebuffers browser windows and asks auto_queue questions
         '''
@@ -1371,7 +1371,7 @@ class MainWindow(QMainWindow):
             # Execute
             self.threadpool.start(live_webscraper)
 
-    def chatWebscrapingLoop(self, output):
+    def chatWebscrapingLoop(self, output: QtCore.pyqtSignal):
         '''
         Continuously fetches new messages from the chat page
         '''
@@ -1385,7 +1385,7 @@ class MainWindow(QMainWindow):
                 time.sleep(5)
                 continue
 
-    def populate_chat_2(self, chat):
+    def populate_chat_2(self, chat: list[list[str]]):
         output = []
         # Add new messages that are not empty strings to output and reset table
         [output.append(message) for message in chat if message not in self.sent_messages and '' not in message]
@@ -1414,7 +1414,7 @@ class MainWindow(QMainWindow):
         self.chat_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
 
-    def getChatText_2(self, export=None):
+    def getChatText_2(self, export: Optional[bool]=False):
         '''
         Pulls and anonymizes user selected messages from the chat tablewidget. Returns dict of messages.
         '''

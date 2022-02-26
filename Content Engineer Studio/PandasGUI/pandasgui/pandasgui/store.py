@@ -183,18 +183,18 @@ class SettingsStore(DictLike, QtCore.QObject):
             self[setting_name].value = setting_value
 
     def copy(self):
-            """ 
+            """
             Create a copy of the settings with a new QObject. Intended as a workaround
             to this bug: https://github.com/adamerose/PandasGUI/issues/166
             """
             # Create new settings instance
             new_settings = SettingsStore()
-            
+
             # Copy every attribute that's a Setting
             for attr, value in self.__dict__.items():
                 if isinstance(value, Setting):
                     setattr(new_settings, attr, value)
-                
+
             return new_settings
 
     def __repr__(self):
@@ -404,6 +404,8 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         row = self.filtered_index_map[row]
         old_val = self.df_unfiltered.iat[row, col]
         if old_val != value and not (pd.isna(old_val) and pd.isna(value)):
+            # print('old', old_val)
+            # print(value)
             self.df_unfiltered.iat[row, col] = value
             self.apply_filters()
 

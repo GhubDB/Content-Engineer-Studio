@@ -27,7 +27,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -267,6 +267,9 @@
                 </property>
                 <property name="horizontalScrollBarPolicy">
                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="editTriggers">
+                 <set>QAbstractItemView::NoEditTriggers</set>
                 </property>
                 <attribute name="horizontalHeaderVisible">
                  <bool>false</bool>
@@ -858,6 +861,9 @@
                 </property>
                 <property name="horizontalScrollBarPolicy">
                  <enum>Qt::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="editTriggers">
+                 <set>QAbstractItemView::NoEditTriggers</set>
                 </property>
                 <property name="selectionMode">
                  <enum>QAbstractItemView::SingleSelection</enum>
@@ -1514,6 +1520,9 @@
           </property>
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>

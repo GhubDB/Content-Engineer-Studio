@@ -463,11 +463,12 @@ def parse_cell(text, column_dtype):
     if text == "":
         return np.nan
 
-    if column_dtype == str:
-        return text
+    # if column_dtype == str:
+    # print(text)
+    return text
 
     # Parse text using same logic as reading a CSV file by using a file buffer
-    # TODO fix input with commas
+    # TODO check if this is needed for anything
     try:
         from io import StringIO
         import pandas as pd

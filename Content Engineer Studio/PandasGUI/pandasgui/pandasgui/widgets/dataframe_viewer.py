@@ -99,7 +99,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         default_row_height = 28
         self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
         self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
-        
+
 
         # Set column widths
         for column_index in range(self.columnHeader.model().columnCount()):
@@ -207,7 +207,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             pass
         if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
             pass
-        
+
 
     def copy(self, header=False):
         """
@@ -367,7 +367,8 @@ class DataTableModel(QtCore.QAbstractTableModel):
         if (role == QtCore.Qt.DisplayRole
                 or role == QtCore.Qt.EditRole
                 or role == QtCore.Qt.ToolTipRole):
-            # Need to check type since a cell might contain a list or Series, then .isna returns a Series not a bool
+            # Need to check type since a cell might contain a list or Series,
+            # then .isna returns a Series not a bool
             cell_is_na = pd.isna(cell)
             if type(cell_is_na) == bool and cell_is_na:
                 if role == QtCore.Qt.DisplayRole:
@@ -381,7 +382,6 @@ class DataTableModel(QtCore.QAbstractTableModel):
             if isinstance(cell, (float, np.floating)):
                 if role == QtCore.Qt.DisplayRole:
                     return str(round(cell, 3))
-
             return str(cell)
 
         elif role == QtCore.Qt.ToolTipRole:
@@ -425,14 +425,13 @@ class DataTableModel(QtCore.QAbstractTableModel):
     #     if role == QtCore.Qt.EditRole:
     #         row = index.row()
     #         col = index.column()
-    #         print(value)
     #         try:
     #             self.pgdf.edit_data(row, col, value)
     #         except Exception as e:
     #             logger.exception(e)
     #             return False
     #         return True
-        
+
 class DelegateRichTextEditor(QtWidgets.QTextEdit):
     '''
     # https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
@@ -445,9 +444,9 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
         super().__init__(parent)
         self.setFrameShape(0)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.contentTimer = QtCore.QTimer(self, 
+        self.contentTimer = QtCore.QTimer(self,
             timeout=self.contentsChange, interval=0)
-        self.document().setDocumentMargin(3)
+        self.document().setDocumentMargin(0)
         self.document().contentsChange.connect(self.contentTimer.start)
 
     @QtCore.pyqtProperty(str, user=True)
@@ -461,7 +460,8 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
 
     @content.setter
     def content(self, text):
-        self.setHtml(text)
+        # changed to setPlainText from setHtml
+        self.setPlainText(text)
 
     def contentsChange(self):
         newSize = self.document().size()
@@ -469,24 +469,24 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
             self.storedSize = newSize
             self.sizeHintChanged.emit()
 
-    def keyPressEvent(self, event):
-        '''
-        Hotkeys
-        '''
-        if event.modifiers() == QtCore.Qt.ControlModifier:
-            if event.key() in (QtCore.Qt.Key_Return, ):
-                self.commit.emit(self)
-                return
-            elif event.key() == QtCore.Qt.Key_B:
-                if self.fontWeight() == QtGui.QFont.Bold:
-                    self.setFontWeight(QtGui.QFont.Normal)
-                else:
-                    self.setFontWeight(QtGui.QFont.Bold)
-            elif event.key() == QtCore.Qt.Key_I:
-                self.setFontItalic(not self.fontItalic())
-            elif event.key() == QtCore.Qt.Key_U:
-                self.setFontUnderline(not self.fontUnderline())
-        super().keyPressEvent(event)
+    # def keyPressEvent(self, event):
+    #     '''
+    #     Hotkeys
+    #     '''
+    #     if event.modifiers() == QtCore.Qt.ControlModifier:
+    #         if event.key() in (QtCore.Qt.Key_Return, ):
+    #             self.commit.emit(self)
+    #             return
+    #         elif event.key() == QtCore.Qt.Key_B:
+    #             if self.fontWeight() == QtGui.QFont.Bold:
+    #                 self.setFontWeight(QtGui.QFont.Normal)
+    #             else:
+    #                 self.setFontWeight(QtGui.QFont.Bold)
+    #         elif event.key() == QtCore.Qt.Key_I:
+    #             self.setFontItalic(not self.fontItalic())
+    #         elif event.key() == QtCore.Qt.Key_U:
+    #             self.setFontUnderline(not self.fontUnderline())
+    #     super().keyPressEvent(event)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -504,7 +504,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         super().__init__(*args, **kwargs)
         self.editors = {}
 
-        
+
     def createEditor(self, parent, option, index):
         '''
         Method override
@@ -519,32 +519,29 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         return editor
 
     def eventFilter(self, editor, event):
-        if (event.type() == event.KeyPress and 
-            event.modifiers() == QtCore.Qt.ControlModifier and 
+        if (event.type() == event.KeyPress and
+            event.modifiers() == QtCore.Qt.ControlModifier and
             event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return)):
+                print('event 151')
                 self.commitData.emit(editor)
                 self.closeEditor.emit(editor)
                 return True
-        if event.type() == 151:
-            self.commitData.emit(editor)
-            self.closeEditor.emit(editor)
-            return True
         return super().eventFilter(editor, event)
 
-    # def destroyEditor(self, editor, index):
-    #     '''
-    #     Method override
-        # TODO: Check why the editors on the dict do not have the same index 
-    #     '''
-    #     # remove the editor from the dict so that it gets properly destroyed;
-    #     # this avoids any "wrapped C++ object destroyed" exception
-    #     print(self.editors)
-    #     self.editors.pop(QtCore.QPersistentModelIndex(index))
-    #     super().destroyEditor(editor, index)
-    #     # emit the signal again: if the data has been rejected, we need to
-    #     # restore the correct hint
-    #     self.rowSizeHintChanged.emit(index.row())
-        
+    def destroyEditor(self, editor, index):
+        '''
+        Method override
+        TODO: Check why the editors on the dict do not have the same index
+        '''
+        # remove the editor from the dict so that it gets properly destroyed;
+        # this avoids any "wrapped C++ object destroyed" exception
+        # print(self.editors)
+        self.editors.pop(QtCore.QPersistentModelIndex(index))
+        super().destroyEditor(editor, index)
+        # emit the signal again: if the data has been rejected, we need to
+        # restore the correct hint
+        self.rowSizeHintChanged.emit(index.row())
+
     def setModelData(self, editor, model, index):
         row = index.row()
         col = index.column()
@@ -553,7 +550,8 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             model.pgdf.edit_data(row, col, value)
         except Exception as e:
             logger.exception(e)
-        #     return False
+            # return False
+        # self.closeEditor.emit(editor)
         # return True
 
 
@@ -564,28 +562,31 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
         if option.state & QtWidgets.QStyle.State_HasFocus:
             option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
-        
+
         self.initStyleOption(option, index)
         painter.save()
         doc = QtGui.QTextDocument()
-        doc.setDocumentMargin(2)
+        doc.setDocumentMargin(0)
         doc.setTextWidth(option.rect.width())
-        doc.setHtml(option.text)
+        # changed to setPlainText from setHtml
+        doc.setPlainText(option.text)
         option.text = ""
         option.widget.style().drawControl(
             QtWidgets.QStyle.CE_ItemViewItem, option, painter)
         painter.translate(option.rect.left(), option.rect.top())
-        '''Add this if there are artefacts'''
-        # clip = QtCore.QRectF(0, 0, 
-        #     option.rect.width(), option.rect.height())
-        # painter.setClipRect(clip)
-        doc.drawContents(painter)
+
+        '''Add this if there are artifacts'''
+        clip = QtCore.QRectF(0, 0,
+            option.rect.width(), option.rect.height())
+        painter.setClipRect(clip)
+
+        # doc.drawContents(painter)
         layout = doc.documentLayout()
         ctx = layout.PaintContext()
         ctx.palette = option.palette
         layout.draw(painter, ctx)
         painter.restore()
-        
+
 
     def sizeHint(self, option, index):
         '''
@@ -597,7 +598,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             doc = QtGui.QTextDocument.clone(editor.document())
         else:
             doc = QtGui.QTextDocument()
-            doc.setDocumentMargin(1)
+            doc.setDocumentMargin(0)
             doc.setHtml(option.text)
             doc.setTextWidth(option.rect.width())
         doc_height_int = int(doc.size().height())
@@ -610,7 +611,7 @@ class DataTableView(QtWidgets.QTableView):
     """
     def __init__(self, parent: DataFrameViewer):
         super().__init__(parent)
-        
+
         '''
         Insert
         https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
@@ -621,11 +622,11 @@ class DataTableView(QtWidgets.QTableView):
         '''
         End Insert
         '''
-        
+
         self.dataframe_viewer: DataFrameViewer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-     
-        
+
+
         # Create and set model
         model = DataTableModel(parent)
         self.setModel(model)
@@ -640,24 +641,24 @@ class DataTableView(QtWidgets.QTableView):
         # Settings
         self.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
-        
-        
+
+
         # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
-       
-    
+
+
     def showEvent(self, event):
         '''
         https://stackoverflow.com/questions/36975782/how-to-connect-signal-after-the-display-of-a-page-in-pyqt-wizard
         '''
         self.resizeRowsToContents()
         event.accept()
-        
+
     # def resizeRowsToContents(self):
     #     header = self.verticalHeader()
     #     for row in range(self.model().rowCount()):
     #         hint = self.sizeHintForRow(row)
     #         header.resizeSection(row, hint)
-        
+
     def on_selectionChanged(self):
         """
         Runs when cells are selected in the main table. This logic highlights the correct cells in the vertical and
@@ -1149,7 +1150,7 @@ class HeaderView(QtWidgets.QTableView):
                 width += max(self.columnWidth(i), 100)
         return QtCore.QSize(width, height)
 
-    # This is needed because otherwise when the horizontal header is a single row 
+    # This is needed because otherwise when the horizontal header is a single row
     # it will add whitespace to be bigger
     def minimumSizeHint(self):
         if self.orientation == Qt.Horizontal:
