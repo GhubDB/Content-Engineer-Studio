@@ -5,14 +5,14 @@ from PyQt5.uic import loadUi
 from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtCore import QEvent
-from PyQt5.QtWidgets import * 
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, \
     QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
-from excel_helpers import Excel 
+from excel_helpers import Excel
 from selenium_helpers import Browser
 from data_variables import *
 from stylesheets import Stylesheets
-from bs4 import BeautifulSoup  
+from bs4 import BeautifulSoup
 import qtstylish
 
 # PandasGUI imports
@@ -91,7 +91,7 @@ class BackgroundRemover(QStandardItemModel):
     def __init__(self):
         super().__init__()
         self.itemChanged.connect(self.itemData)
-    
+
     def itemData(self, item):
         # print(item.index())
         roles = super().itemData(item.index())
@@ -128,21 +128,21 @@ class Highlighter(QSyntaxHighlighter):
         super().__init__(parent)
         self._mapping = {}
         self.name = name
-        
+
         # Email addresses
         class_format = QTextCharFormat()
         class_format.setBackground(QColor(68, 126, 237))
         pattern = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+" # Working changes
         # pattern = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" # Original
         self.add_mapping(pattern, class_format)
-        
+
         # Phone numbers
         class_format = QTextCharFormat()
         class_format.setBackground(QColor(68, 126, 237))
         pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
         # class_format.setTextColor(QColor(120, 135, 171))
         self.add_mapping(pattern, class_format)
-        
+
         self.setDocument(document)
 
     def add_mapping(self, pattern, pattern_format):
@@ -157,10 +157,10 @@ class Highlighter(QSyntaxHighlighter):
                 start, end = match.span()
                 win.auto_anonymized.append([self.name, start, end])
                 # self.setFormat(start, end-start, fmt) # Original implementation
-                
+
 class TextEdit(QTextEdit):
     '''
-    Custom implementation for auto resizing text edits in tables 
+    Custom implementation for auto resizing text edits in tables
     and keeping track of user selected messages
     '''
     def __init__(self, *args, participant, index, **kwargs, ):
@@ -169,8 +169,8 @@ class TextEdit(QTextEdit):
         self.participant = participant
         self.index = index
         self.selected = False
-        
-    # Handles setting style change when user selects a message 
+
+    # Handles setting style change when user selects a message
     # as well as setting the selection status.
     def setSelection(self):
         if self.selected:
@@ -185,7 +185,7 @@ class TextEdit(QTextEdit):
                 self.setStyleSheet(Stylesheets.bot_selected)
             else:
                 self.setStyleSheet(Stylesheets.customer_selected)
-        
+
     def __str__(self):
         return self.toHtml()
 
@@ -215,7 +215,7 @@ class AddVariant(QWidget):
         self.setWindowFlags(self.windowFlags() | Qt.Window)
         self.setWindowTitle("Add Variant")
         self.setAttribute(Qt.WA_DeleteOnClose)
-        
+
         self.variant = QTextEdit(objectName='variant_text')
         self.variant.setText(text_input)
         self.variant.setStyleSheet(
@@ -227,13 +227,13 @@ class AddVariant(QWidget):
                     background-color: rgb(90, 90, 90);')
         self.variant.installEventFilter(self)
         self.variant.setMinimumWidth(700)
-        
+
         add_variant = QPushButton(
-            text='Add Variant', objectName='add_variant')        
+            text='Add Variant', objectName='add_variant')
         self.cancel_variant = QPushButton(
-            text='Cancel', objectName='cancel_add_variant')        
+            text='Cancel', objectName='cancel_add_variant')
         self.cancel_variant.clicked.connect(self.close)
-        
+
         self.layout = QGridLayout()
         self.layout.addWidget(self.variant, 0, 0, 1, 2)
         self.layout.addWidget(add_variant, 1, 0, 1, 1)
@@ -273,7 +273,7 @@ class MainWindow(QMainWindow):
 
         # Breaks the buffering loop
         self.buffering = False
-        
+
         self.current_browser = 0
         self.questions = []
         self.highlighters = {}
@@ -290,7 +290,7 @@ class MainWindow(QMainWindow):
         self.canned_states_2 = {}
         self.marked_messages = {}
         self.marked_messages_2 = {}
-        self.chat_test = []
+        self.sent_messages = []
         self.filter_proxy_model = ''
         self.auto_anonymized = []
 
@@ -298,7 +298,7 @@ class MainWindow(QMainWindow):
         loadUi('main_window.ui', self)
         self.setWindowTitle('Content Engineer Studio')
         self.setContentsMargins(0, 0, 0, 0)
-        
+
         # Set analysis and testing splitter stretch
         sizes = [99999, 1]
         self.splitter_5.setSizes(sizes)
@@ -308,7 +308,7 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(Stylesheets.custom_dark)
         # self.colorize_2.setStyleSheet(style_colorize_2)
         # self.setStyleSheet(style_QLineEdit)
-                    
+
         # Create model for auto_queue and history
         self.history_model = QStandardItemModel()
         self.history.setModel(self.history_model)
@@ -317,7 +317,7 @@ class MainWindow(QMainWindow):
         items = ['Hello there.', 'How are you today?', 'What are you doing today?']
         for item in items:
             items = QtGui.QStandardItem(item)
-            self.history_model.appendRow(items) 
+            self.history_model.appendRow(items)
 
         # Setting up Auto Queue
         self.auto_queue_model = BackgroundRemover()
@@ -328,9 +328,12 @@ class MainWindow(QMainWindow):
         # Installing Event filters
         self.analysis.installEventFilter(self)
         self.analysis_2.installEventFilter(self)
-        
+        self.chat_2.installEventFilter(self)
+        self.chat.installEventFilter(self)
+
+
         # Connecting functions
-        [self.sidebar.selectionModel().selectionChanged.connect(x) for x in 
+        [self.sidebar.selectionModel().selectionChanged.connect(x) for x in
         [self.row_selector, self.clear_selections]]
         self.sidebar_2.selectionModel().selectionChanged.connect(self.row_selector_2)
         self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
@@ -381,9 +384,9 @@ class MainWindow(QMainWindow):
         self.index_len = len(self.df.index)
         self.completed = self.analysis_excel.incomplete(self.df, self.cell_selector_start, len(self.df.columns))
         self.populate_sidebar()
-        
 
-        
+
+
         self.df_2 = self.testing_excel.load('testing.xlsx', 'Sheet1')
         self.header_len_2 = len(self.df_2.columns)
         self.index_len_2 = len(self.df_2.index)
@@ -392,7 +395,7 @@ class MainWindow(QMainWindow):
         self.populate_sidebar_2()
 
         self.faq_df = self.faq_excel.load('recipes.xlsx', 'Sheet1')
-        
+
         # Adding PandasGUI
         '''
         Start PandasGUI init
@@ -403,7 +406,7 @@ class MainWindow(QMainWindow):
 
         def except_hook(cls, exception, traceback):
             sys.__excepthook__(cls, exception, traceback)
-        
+
         # Set the exception hook to our wrapping function
         sys.excepthook = except_hook
 
@@ -411,11 +414,11 @@ class MainWindow(QMainWindow):
         fix_ipython()
 
         # Keep a list of widgets so they don't get garbage collected
-        self.refs = []       
-        
+        self.refs = []
+
         '''Start show'''
         settings = {}
-        
+
         # Register IPython magic
         # try:
         #     @register_line_magic
@@ -429,34 +432,34 @@ class MainWindow(QMainWindow):
         #         pass
         #     else:
         #         raise e
-        
+
         '''Start viewer init'''
         self.navigator = None
         self.splitter = None
         self.find_bar = None
-        
+
         self.refs.append(self)
-        
+
         self.store = PandasGuiStore()
         self.store.gui = self
-        
+
         # Add user provided settings to data store
         for key, value in settings.items():
             setting = self.store.settings[key]
             setting.value = value
 
         self.code_history_viewer = None
-        
+
         '''Create all widgets'''
         # Hide the question mark on dialogs
         # self.app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
-        
+
         # Accept drops, for importing files. See methods below: dropEvent, dragEnterEvent, dragMoveEvent
         self.setAcceptDrops(True)
 
         # This holds the DataFrameExplorer for each DataFrame
         self.stacked_widget = QtWidgets.QStackedWidget()
-        
+
         # Make the navigation bar
         self.navigator = Navigator(self.store)
 
@@ -469,24 +472,24 @@ class MainWindow(QMainWindow):
         self.splitter.setCollapsible(1, False)
         self.splitter.setStretchFactor(0, 0)
         self.splitter.setStretchFactor(1, 1)
-        
+
         '''Addin to main_window'''
         self.verticalLayout_2.addWidget(self.splitter)
 
         # makes the find toolbar
         self.find_bar = FindToolbar(self)
         self.addToolBar(self.find_bar)
-        
+
         # Create a copy of the settings in case the SettingsStore reference has
         # been discarded by Qt prematurely
         # https://stackoverflow.com/a/17935694/10342097
         # self.store.settings = self.store.settings.copy()
-        
+
         # Signals
         self.store.settings.settingsChanged.connect(self.apply_settings)
 
         self.apply_settings()
-        
+
         '''Continue init'''
         dataframe_kwargs = {'Analysis':self.df, 'Testing':self.df_2}
         for df_name, df in dataframe_kwargs.items():
@@ -494,7 +497,7 @@ class MainWindow(QMainWindow):
 
         # Default to first item
         self.navigator.setCurrentItem(self.navigator.topLevelItem(0))
-        
+
         '''Add  to menubar'''
         @dataclass
         class MenuItem:
@@ -553,7 +556,7 @@ class MainWindow(QMainWindow):
                                     func=self.view_history),
                            ]
                  }
-        
+
         def add_menus(dic, root):
             # Add menu items and actions to UI using the schema defined above
             for menu_name in dic.keys():
@@ -568,9 +571,9 @@ class MainWindow(QMainWindow):
                         menu.addAction(action)
 
         add_menus(items, self.menubar)
-        
+
         '''End PandasGUI init'''
-        
+
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
         for idx, _ in self.faq_df.iterrows():
@@ -580,7 +583,7 @@ class MainWindow(QMainWindow):
         self.faq_auto_search_model = QSortFilterProxyModel()
         self.faq_auto_search_model.setSourceModel(model)
         self.faq_auto_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.faq_auto_search_model.setFilterKeyColumn(-1) # add this to method 
+        self.faq_auto_search_model.setFilterKeyColumn(-1) # add this to method
         self.search_box.installEventFilter(self)
         self.search_box_2.installEventFilter(self)
         self.search_box_3.installEventFilter(self)
@@ -613,12 +616,12 @@ class MainWindow(QMainWindow):
         self.populate_status_bar(2, 0, 2)
         self.populate_cell_selector(self.cell_selector_start, self.header_len+1)
         self.populate_cell_selector_2(self.cell_selector_start_2, self.header_len_2+1)
-        
+
 
         # Tests
         # print(xw.books.active.name)
-        
-        
+
+
     ################################################################################################
     '''
     PandasGUI Methods
@@ -701,7 +704,7 @@ class MainWindow(QMainWindow):
         self.viewer = JsonViewer(d)
         self.viewer.show()
 
-    # Return all DataFrames, or a subset specified by names. 
+    # Return all DataFrames, or a subset specified by names.
     # Returns a dict of name:df or a single df if there's only 1
     def get_dataframes(self, names: Union[None, str, list] = None):
         return self.store.get_dataframes(names)
@@ -784,7 +787,7 @@ class MainWindow(QMainWindow):
         dialog.setLayout(layout)
         layout.addWidget(QtWidgets.QLabel(f"Version: {pandasgui.__version__}"))
         layout.addWidget(QtWidgets.QLabel(
-            f'''GitHub: <a style="color: #1e81cc;" 
+            f'''GitHub: <a style="color: #1e81cc;"
             href="https://github.com/adamerose/PandasGUI">https://github.com/adamerose/PandasGUI</a>'''))
         # dialog.resize(500, 500)
         dialog.setWindowTitle("About")
@@ -867,10 +870,10 @@ class MainWindow(QMainWindow):
             customer, bot  = self.getChatText()
             self.analysis_excel.updateCells(customer, self.row + 2, 5)
             self.analysis_excel.updateCells(bot, self.row + 2, 6)
-        
+
         # Saving analysis contents
-        self.analysis_excel.updateCells(self.df.iloc[self.row:self.row+1, 
-            self.cell_selector_start:self.header_len].values, 
+        self.analysis_excel.updateCells(self.df.iloc[self.row:self.row+1,
+            self.cell_selector_start:self.header_len].values,
             self.row + 2, self.cell_selector_start + 1)
 
         # Saves the excel file
@@ -912,7 +915,7 @@ class MainWindow(QMainWindow):
                 self.populate_search_box()
                 self.search_box.setMinimumHeight(100)
                 self.search_box_2.setMinimumHeight(100)
-                
+
         # Right click to select chat messages | middle click to add Variants
         if 'bot_' in source.objectName() or 'customer_' in source.objectName():
             if event.type() == QEvent.MouseButtonPress:
@@ -922,12 +925,12 @@ class MainWindow(QMainWindow):
                 if event.button() == Qt.MiddleButton and 'customer' in source.objectName():
                     text = source.toPlainText()
                     self.new_variant = AddVariant(text_input=text)
-                    
+
 
         # Delete items from Auto Queue
         if event.type() == QEvent.KeyPress:
             if event.key() == Qt.Key_Delete:
-                indices = self.auto_queue.selectionModel().selectedRows() 
+                indices = self.auto_queue.selectionModel().selectedRows()
                 for index in sorted(indices):
                     self.auto_queue_model.removeRow(index.row())
 
@@ -938,7 +941,7 @@ class MainWindow(QMainWindow):
                     self.btn_right()
                     return True
 
-        # Tab analysis editor 2     
+        # Tab analysis editor 2
         if source.objectName() == 'analysis_2':
             if event.type() == QEvent.KeyPress:
                 if event.key() == Qt.Key_Tab:
@@ -947,7 +950,7 @@ class MainWindow(QMainWindow):
 
         return super().eventFilter(source, event)
 
-    
+
     def clear_selections(self):
         self.flows.clearSelection()
         self.actions.clearSelection()
@@ -958,7 +961,7 @@ class MainWindow(QMainWindow):
         Saves current analysis text to dataframe
         '''
         self.df.loc[self.row][self.cell_selector.currentText()] = self.analysis.toPlainText()
-    
+
     def getChatlog(self, output):
         '''
         Accesses URL and downloads chat log
@@ -975,37 +978,36 @@ class MainWindow(QMainWindow):
         for idx, sender, in enumerate(chat):
             if sender[0] == 'bot':
                 combo = TextEdit(
-                    self, objectName=f'bot_{idx}', 
-                    participant='bot', index=idx) 
+                    self, objectName=f'bot_{idx}',
+                    participant='bot', index=idx)
             else:
                 combo = TextEdit(
-                    self, objectName=f'customer_{idx}', 
-                    participant='customer', index=idx) 
+                    self, objectName=f'customer_{idx}',
+                    participant='customer', index=idx)
             self.chat.setCellWidget(idx, 0, combo)
-            
+
             # Add auto highlighting
             if sender[0] == 'customer':
                 self.highlighters[idx] = Highlighter(document=combo.document(), name=combo)
-            
+
             combo.setText(sender[1])
             combo.setContextMenuPolicy(Qt.PreventContextMenu)
             combo.installEventFilter(self)
-            
+
             # Bot
             if sender[0] == 'bot':
                 combo.setStyleSheet(Stylesheets.bot)
                 # combo.setAlignment(Qt.AlignRight)
-                
+
             # customer
             else:
                 combo.setStyleSheet(Stylesheets.customer)
-                
+
             combo.textChanged.connect(lambda idx=idx: self.chat.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection)
-        self.chat.installEventFilter(self)
         self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.anynomyzify()
-        
+
     def clearChat(self):
         # self.chat.clear()
         self.chat.setRowCount(0)
@@ -1048,10 +1050,10 @@ class MainWindow(QMainWindow):
         else:
             format.clearBackground()
         cursor.setCharFormat(format)
-        
+
     def anynomyzify(self):
         '''
-        Receives starting and ending positions 
+        Receives starting and ending positions
         of words to select from the Highlighter subclass and selects them
         '''
         for name, start, end in self.auto_anonymized:
@@ -1065,16 +1067,16 @@ class MainWindow(QMainWindow):
     def populate_cell_selector(self, start, end):
         for item in list(self.df.columns.values)[start:end]:
             self.cell_selector.addItem(item)
-            
+
     def populate_analysis(self):
-        # '''Bugfix for number only entries on the excel sheet needed. 
+        # '''Bugfix for number only entries on the excel sheet needed.
         # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
         # print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
         self.analysis.setPlainText(self.df.loc[self.row][self.cell_selector.currentIndex() \
             + self.cell_selector_start])
 
-    
+
     def populate_search_column_select(self):
         '''
         Set model for FAQ search selector
@@ -1083,14 +1085,14 @@ class MainWindow(QMainWindow):
         for idx, item in enumerate(list(self.faq_df.columns.values)):
             item = QStandardItem(item)
             model.setItem(idx, 0, item)
-            
+
         # For searching all columns
         item = QStandardItem('Search in all columns')
         model.setItem(len(self.faq_df.columns), 0, item)
         self.search_column_select.setModel(model)
         self.search_column_select_2.setModel(model)
         self.search_column_select_3.setModel(model)
-  
+
 
     def populate_search_box(self):
         '''
@@ -1110,7 +1112,7 @@ class MainWindow(QMainWindow):
             index = self.search_column_select_3.currentIndex()
             self.search_column_select.setCurrentIndex(index)
             self.search_column_select_2.setCurrentIndex(index)
-            
+
         # Set table column to filter by
         try:
             if index == len(self.faq_df.columns):
@@ -1120,7 +1122,7 @@ class MainWindow(QMainWindow):
                 self.faq_auto_search_model.setFilterKeyColumn(index)
         except UnboundLocalError as e:
             pass
-            
+
         # Show/hide columns according to current selection
         if (page == 0 or page == 1) and index != len(self.faq_df.columns):
             for i in range(0, len(self.faq_df.index)):
@@ -1128,7 +1130,7 @@ class MainWindow(QMainWindow):
                     self.search_box.hideColumn(i) if page == 0 else self.search_box_2.hideColumn(i)
                 else:
                     self.search_box.showColumn(i) if page == 0 else self.search_box_2.showColumn(i)
-        
+
 
     def populate_canned(self):
         '''
@@ -1173,16 +1175,16 @@ class MainWindow(QMainWindow):
 
 
     def populate_sidebar(self):
-        
+
         self.sidebar.setColumnCount(1)
         self.sidebar.setRowCount(self.index_len)
         [self.sidebar.setItem(idx,0, QTableWidgetItem(str(idx + 2))) for idx in range(0, self.index_len)]
-        [self.sidebar.item(idx, 0).setBackground(QtGui.QColor(100, 100, 100)) 
+        [self.sidebar.item(idx, 0).setBackground(QtGui.QColor(100, 100, 100))
             for idx, row in self.completed.iterrows() if row.all()]
         self.sidebar.resizeColumnsToContents()
         self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-  
+
     def populate_status_bar(self, row, start, end):
         self.status_bar.setText(self.df.iloc[row:row+1, start:end+1].to_string(header=False, index=False))
 
@@ -1252,12 +1254,12 @@ class MainWindow(QMainWindow):
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
         self.populate_search_box()
-        
+
     def workingView(self, idx):
         if idx == 0 | idx == 1:
             self.workingViewNum = idx
 
-        
+
     def btn_test(self):
         index = self.history_model.index(3, 0)
         # print(index)
@@ -1317,21 +1319,21 @@ class MainWindow(QMainWindow):
             customer, bot = self.getChatText_2()
             self.testing_excel.updateCells(customer, self.row_2 + 2, 3)
             self.testing_excel.updateCells(bot, self.row_2 + 2, 4)
-        
+
         # Saving analysis contents
-        self.testing_excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1, 
-            self.cell_selector_start_2:self.header_len_2].values, 
+        self.testing_excel.updateCells(self.df_2.iloc[self.row_2:self.row_2+1,
+            self.cell_selector_start_2:self.header_len_2].values,
             self.row_2 + 2, self.cell_selector_start_2 + 1)
 
         # Saves the excel file
-        self.testing_excel.saveWB() 
+        self.testing_excel.saveWB()
 
     def save_analysis_2(self):
         '''
         Saves current analysis text to dataframe
         '''
         self.df_2.loc[self.row_2][self.cell_selector_2.currentText()] = self.analysis_2.toPlainText()
-    
+
     def setUpNewDialog(self, browser_num = None):
         '''
         Sets up (singular) new chat session
@@ -1342,7 +1344,7 @@ class MainWindow(QMainWindow):
         self.dialog_num += 1
         self.chat_2.clear()
         self.chat_2.setRowCount(0)
-        self.chat_test = []
+        self.sent_messages = []
         return
 
     def setUpNewAutoDialog(self, i):
@@ -1385,9 +1387,10 @@ class MainWindow(QMainWindow):
 
     def populate_chat_2(self, chat):
         output = []
-        [output.append(message) for message in chat if message not in self.chat_test and '' not in message]
+        # Add new messages that are not empty strings to output and reset table
+        [output.append(message) for message in chat if message not in self.sent_messages and '' not in message]
         self.chat_2.setColumnCount(1)
-        length = len(self.chat_test)
+        length = len(self.sent_messages)
         self.chat_2.setRowCount(length + len(output))
         for idx, sender, in enumerate(output, start=length):
             if sender[0] == 'bot':
@@ -1404,12 +1407,12 @@ class MainWindow(QMainWindow):
             # customer
             else:
                 combo.setStyleSheet(Stylesheets.customer)
+            # Add auto resizing of editor and highlighting
             combo.textChanged.connect(lambda idx=idx: self.chat_2.resizeRowToContents(idx))
             combo.cursorPositionChanged.connect(self.highlight_selection_2)
-        [self.chat_test.append(message) for message in output]
-        self.chat_2.installEventFilter(self)
+        [self.sent_messages.append(message) for message in output]
         self.chat_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-    
+
 
     def getChatText_2(self, export=None):
         '''
@@ -1456,7 +1459,7 @@ class MainWindow(QMainWindow):
 
 
     def populate_analysis_2(self):
-        # '''Bugfix for number only entries on the excel sheet needed. 
+        # '''Bugfix for number only entries on the excel sheet needed.
         # self.analysis.setText(
             # self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
         # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
@@ -1513,7 +1516,7 @@ class MainWindow(QMainWindow):
         self.sidebar_2.setColumnCount(1)
         self.sidebar_2.setRowCount(self.index_len)
         [self.sidebar_2.setItem(idx,0, QTableWidgetItem(str(idx + 2))) for idx in range(0, self.index_len_2)]
-        [self.sidebar_2.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120)) 
+        [self.sidebar_2.item(idx, 0).setBackground(QtGui.QColor(120, 120, 120))
             for idx, row in self.completed_2.iterrows() if row.all()]
         self.sidebar_2.resizeColumnsToContents()
         self.sidebar_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -1565,7 +1568,7 @@ class MainWindow(QMainWindow):
             if self.browsers[self.current_browser] is None:
                 self.browsers[self.current_browser] = Browser()
             self.browsers[self.current_browser].bringToFront()
-            # Start prebuffering previous window 
+            # Start prebuffering previous window
             setup = Worker(lambda: self.setUpNewAutoDialog(current))
             if not self.is_webscraping:
                 setup.signals.finished.connect(self.initializeWebscraping)
@@ -1573,7 +1576,7 @@ class MainWindow(QMainWindow):
             # clear chat
             self.chat_2.clear()
             self.chat_2.setRowCount(0)
-            self.chat_test = []
+            self.sent_messages = []
         else:
             # Start Thread for webdriver setup
             setup = Worker(self.setUpNewDialog)
@@ -1601,7 +1604,7 @@ class MainWindow(QMainWindow):
                 return
 
             if self.questions != []:
-                
+
                 # Set up self.buffer_len new browser windows and ask the questions in the auto_queue
                 for i in range(0, self.buffer_len):
                     setup = Worker(lambda: self.setUpNewAutoDialog(i))
@@ -1617,7 +1620,7 @@ class MainWindow(QMainWindow):
             for i in range(0, self.buffer_len):
                 setup = Worker(lambda: self.browsers[i].tearDown())
                 self.threadpool.start(setup)
-                
+
 
 
 
