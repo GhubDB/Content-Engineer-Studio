@@ -463,7 +463,8 @@ def parse_cell(text, column_dtype):
     if text == "":
         return np.nan
 
-    # if column_dtype == str:
+    if column_dtype == str:
+        return text
     # print(text)
     return text
 

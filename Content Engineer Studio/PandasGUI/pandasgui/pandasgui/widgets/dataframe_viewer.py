@@ -252,6 +252,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             threading.Thread(target=lambda df: df.to_clipboard(index=header, header=header), args=(df,)).start()
 
     def paste(self):
+        # TODO paste empty cells as NaN
         df_to_paste = pd.read_clipboard(sep=',|\t',
                                         na_values='""',  # https://stackoverflow.com/a/67915100/3620725
                                         header=None, skip_blank_lines=False)
@@ -469,24 +470,24 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
             self.storedSize = newSize
             self.sizeHintChanged.emit()
 
-    # def keyPressEvent(self, event):
-    #     '''
-    #     Hotkeys
-    #     '''
-    #     if event.modifiers() == QtCore.Qt.ControlModifier:
-    #         if event.key() in (QtCore.Qt.Key_Return, ):
-    #             self.commit.emit(self)
-    #             return
-    #         elif event.key() == QtCore.Qt.Key_B:
-    #             if self.fontWeight() == QtGui.QFont.Bold:
-    #                 self.setFontWeight(QtGui.QFont.Normal)
-    #             else:
-    #                 self.setFontWeight(QtGui.QFont.Bold)
-    #         elif event.key() == QtCore.Qt.Key_I:
-    #             self.setFontItalic(not self.fontItalic())
-    #         elif event.key() == QtCore.Qt.Key_U:
-    #             self.setFontUnderline(not self.fontUnderline())
-    #     super().keyPressEvent(event)
+    def keyPressEvent(self, event):
+        '''
+        Hotkeys
+        '''
+        if event.modifiers() == QtCore.Qt.ControlModifier:
+            if event.key() in (QtCore.Qt.Key_Return, ):
+                self.commit.emit(self)
+                return
+            elif event.key() == QtCore.Qt.Key_B:
+                if self.fontWeight() == QtGui.QFont.Bold:
+                    self.setFontWeight(QtGui.QFont.Normal)
+                else:
+                    self.setFontWeight(QtGui.QFont.Bold)
+            elif event.key() == QtCore.Qt.Key_I:
+                self.setFontItalic(not self.fontItalic())
+            elif event.key() == QtCore.Qt.Key_U:
+                self.setFontUnderline(not self.fontUnderline())
+        super().keyPressEvent(event)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -526,6 +527,13 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
                 self.commitData.emit(editor)
                 self.closeEditor.emit(editor)
                 return True
+        # if event.type() == 23:
+        #     self.commitData.emit(editor)
+        #     self.closeEditor.emit(editor)
+        # if event.type() == 9:
+        #     self.commitData.emit(editor)
+        #     self.closeEditor.emit(editor)
+        # print(event.type())
         return super().eventFilter(editor, event)
 
     def destroyEditor(self, editor, index):
@@ -540,7 +548,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         super().destroyEditor(editor, index)
         # emit the signal again: if the data has been rejected, we need to
         # restore the correct hint
-        self.rowSizeHintChanged.emit(index.row())
+
+        # Removed this line because it collapsed the row
+        # self.rowSizeHintChanged.emit(index.row())
 
     def setModelData(self, editor, model, index):
         row = index.row()

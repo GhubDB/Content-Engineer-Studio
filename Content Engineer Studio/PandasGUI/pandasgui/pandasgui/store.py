@@ -404,8 +404,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         row = self.filtered_index_map[row]
         old_val = self.df_unfiltered.iat[row, col]
         if old_val != value and not (pd.isna(old_val) and pd.isna(value)):
-            # print('old', old_val)
-            # print(value)
             self.df_unfiltered.iat[row, col] = value
             self.apply_filters()
 
