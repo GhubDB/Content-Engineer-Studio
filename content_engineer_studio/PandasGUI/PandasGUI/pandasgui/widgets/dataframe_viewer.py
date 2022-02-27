@@ -4,7 +4,7 @@ from typing import Union
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor, QBrush, QPalette, QFont
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
@@ -13,6 +13,8 @@ import pandasgui
 import logging
 
 from pandasgui.widgets.column_menu import ColumnMenu
+
+from content_engineer_studio.main_window import Worker, WorkerSignals
 
 logger = logging.getLogger(__name__)
 
@@ -604,7 +606,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
 
     def setModelData(self, editor, model, index):
         self.commitData.emit(editor)
-        # self.closeEditor.emit(editor)
+        self.closeEditor.emit(editor)
         row = index.row()
         col = index.column()
         value = editor.toPlainText()
@@ -654,21 +656,21 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         layout.draw(painter, ctx)
         painter.restore()
 
-    def sizeHint(self, option, index):
-        """
-        Method override
-        """
-        self.initStyleOption(option, index)
-        editor = self.editors.get(QtCore.QPersistentModelIndex(index))
-        if editor:
-            doc = QtGui.QTextDocument.clone(editor.document())
-        else:
-            doc = QtGui.QTextDocument()
-            doc.setDocumentMargin(3)
-            doc.setHtml(option.text)
-            doc.setTextWidth(option.rect.width())
-        doc_height_int = int(doc.size().height())
-        return QtCore.QSize(int(doc.idealWidth()), doc_height_int)
+    # def sizeHint(self, option, index):
+    #     """
+    #     Method override
+    #     """
+    #     self.initStyleOption(option, index)
+    #     editor = self.editors.get(QtCore.QPersistentModelIndex(index))
+    #     if editor:
+    #         doc = QtGui.QTextDocument.clone(editor.document())
+    #     else:
+    #         doc = QtGui.QTextDocument()
+    #         doc.setDocumentMargin(3)
+    #         doc.setHtml(option.text)
+    #         doc.setTextWidth(option.rect.width())
+    #     doc_height_int = int(doc.size().height())
+    #     return QtCore.QSize(int(doc.idealWidth()), doc_height_int)
 
 
 class DataTableView(QtWidgets.QTableView):
@@ -717,7 +719,10 @@ class DataTableView(QtWidgets.QTableView):
         """
         https://stackoverflow.com/questions/36975782/how-to-connect-signal-after-the-display-of-a-page-in-pyqt-wizard
         """
-        self.resizeRowsToContents()
+
+        resizer = Worker(QTimer.singleShot(0, self.resizeRowsToContents))
+        # live_webscraper.signals.output.connect(self.populate_chat_2)
+        self.threadpool.start(resizer)
         event.accept()
 
     # def resizeRowsToContents(self):
