@@ -1,4 +1,3 @@
-
 import sys, re, time, traceback
 from threading import Thread
 from warnings import filters
@@ -7,8 +6,16 @@ from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QStandardItemModel, QStandardItem, \
-    QFont, QFontDatabase, QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
+from PyQt5.QtGui import (
+    QStandardItemModel,
+    QStandardItem,
+    QFont,
+    QFontDatabase,
+    QColor,
+    QSyntaxHighlighter,
+    QTextCharFormat,
+    QTextCursor,
+)
 from excel_helpers import Excel
 from selenium_helpers import Browser
 from data_variables import *
@@ -43,28 +50,37 @@ import logging
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Get a grip of table view row height MRE')
+        self.setWindowTitle("Get a grip of table view row height MRE")
         self.setGeometry(QtCore.QRect(100, 100, 1000, 800))
         layout = QtWidgets.QVBoxLayout()
-        central_widget = QtWidgets.QWidget( self )
+        central_widget = QtWidgets.QWidget(self)
         central_widget.setLayout(layout)
         self.table_view = SegmentsTableView(self)
         self.setCentralWidget(central_widget)
         layout.addWidget(self.table_view)
         rows = [
-         ['one potatoe two potatoe', 'one potatoe two potatoe'],
-         ['Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque',
-          'Sed ut <b>perspiciatis, unde omnis <i>iste natus</b> error sit voluptatem</i> accusantium doloremque'],
-         ['Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui do lorem ipsum, quia dolor sit amet consectetur adipiscing velit, sed quia non numquam do eius modi tempora incididunt, ut labore et dolore magnam aliquam quaerat voluptatem.',
-          'Nemo enim ipsam <i>voluptatem, quia voluptas sit, <b>aspernatur aut odit aut fugit, <u>sed quia</i> consequuntur</u> magni dolores eos</b>, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui do lorem ipsum, quia dolor sit amet consectetur adipiscing velit, sed quia non numquam do eius modi tempora incididunt, ut labore et dolore magnam aliquam quaerat voluptatem.'
-          ],
-         ['Ut enim ad minima veniam',
-          'Ut enim ad minima veniam'],
-         ['Quis autem vel eum iure reprehenderit',
-          'Quis autem vel eum iure reprehenderit'],
-         ['At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga.',
-          'At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga.'
-         ]]
+            [
+                "one potatoe two potatoe\none potatoe two potatoe \n\none potatoe two potatoe ",
+                "one potatoe two potatoe",
+            ],
+            [
+                "Sed ut perspiciatis, unde omnis iste natus error sit voluptatem accusantium doloremque",
+                "Sed ut <b>perspiciatis, unde omnis <i>iste natus</b> error sit voluptatem</i> accusantium doloremque",
+            ],
+            [
+                "Nemo enim ipsam voluptatem, quia voluptas sit, aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui do lorem ipsum, quia dolor sit amet consectetur adipiscing velit, sed quia non numquam do eius modi tempora incididunt, ut labore et dolore magnam aliquam quaerat voluptatem.",
+                "Nemo enim ipsam <i>voluptatem, quia voluptas sit, <b>aspernatur aut odit aut fugit, <u>sed quia</i> consequuntur</u> magni dolores eos</b>, qui ratione voluptatem sequi nesciunt, neque porro quisquam est, qui do lorem ipsum, quia dolor sit amet consectetur adipiscing velit, sed quia non numquam do eius modi tempora incididunt, ut labore et dolore magnam aliquam quaerat voluptatem.",
+            ],
+            ["Ut enim ad minima veniam", "Ut enim ad minima veniam"],
+            [
+                "Quis autem vel eum iure reprehenderit",
+                "Quis autem vel eum iure reprehenderit",
+            ],
+            [
+                "At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga.",
+                "At vero eos et accusamus et iusto odio dignissimos ducimus, qui blanditiis praesentium voluptatum deleniti atque corrupti, quos dolores et quas molestias excepturi sint, obcaecati cupiditate non provident, similique sunt in culpa, qui officia deserunt mollitia animi, id est laborum et dolorum fuga.",
+            ],
+        ]
         for n_row, row in enumerate(rows):
             self.table_view.model().insertRow(n_row)
             self.table_view.model().setItem(n_row, 0, QtGui.QStandardItem(row[0]))
@@ -73,16 +89,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.table_view.setColumnWidth(1, 400)
         self.qle = QtWidgets.QLineEdit()
         layout.addWidget(self.qle)
-        self._second_timer = QtCore.QTimer(self)
-        self._second_timer.timeout.connect(self.show_doc_size)
-        # every 1s
-        self._second_timer.start(1000)
-
-    def show_doc_size(self, *args):
-        if self.table_view.itemDelegate().editor == None:
-            self.qle.setText('no editor yet')
-        else:
-            self.qle.setText(f'self.table_view.itemDelegate().editor.document().size() {self.table_view.itemDelegate().editor.document().size()}')
 
 
 class DelegateRichTextEditor(QtWidgets.QTextEdit):
@@ -94,8 +100,7 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
         super().__init__(parent)
         self.setFrameShape(0)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.contentTimer = QtCore.QTimer(self,
-            timeout=self.contentsChange, interval=0)
+        self.contentTimer = QtCore.QTimer(self, timeout=self.contentsChange, interval=0)
         self.document().setDocumentMargin(0)
         self.document().contentsChange.connect(self.contentTimer.start)
 
@@ -103,9 +108,9 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
     def content(self):
         text = self.toHtml()
         # find the end of the <body> tag and remove the new line character
-        bodyTag = text.find('>', text.find('<body')) + 1
-        if text[bodyTag] == '\n':
-            text = text[:bodyTag] + text[bodyTag + 1:]
+        bodyTag = text.find(">", text.find("<body")) + 1
+        if text[bodyTag] == "\n":
+            text = text[:bodyTag] + text[bodyTag + 1 :]
         return text
 
     @content.setter
@@ -120,7 +125,7 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
 
     def keyPressEvent(self, event):
         if event.modifiers() == QtCore.Qt.ControlModifier:
-            if event.key() in (QtCore.Qt.Key_Return, ):
+            if event.key() in (QtCore.Qt.Key_Return,):
                 self.commit.emit(self)
                 return
             elif event.key() == QtCore.Qt.Key_B:
@@ -143,6 +148,7 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
 
 class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
     rowSizeHintChanged = QtCore.pyqtSignal(int)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.editors = {}
@@ -153,17 +159,20 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         if not editor:
             editor = DelegateRichTextEditor(parent)
             editor.sizeHintChanged.connect(
-                lambda: self.rowSizeHintChanged.emit(pIndex.row()))
+                lambda: self.rowSizeHintChanged.emit(pIndex.row())
+            )
             self.editors[pIndex] = editor
         return editor
 
     def eventFilter(self, editor, event):
-        if (event.type() == event.KeyPress and
-            event.modifiers() == QtCore.Qt.ControlModifier and
-            event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return)):
-                self.commitData.emit(editor)
-                self.closeEditor.emit(editor)
-                return True
+        if (
+            event.type() == event.KeyPress
+            and event.modifiers() == QtCore.Qt.ControlModifier
+            and event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return)
+        ):
+            self.commitData.emit(editor)
+            self.closeEditor.emit(editor)
+            return True
         return super().eventFilter(editor, event)
 
     def destroyEditor(self, editor, index):
@@ -175,7 +184,6 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         # restore the correct hint
         self.rowSizeHintChanged.emit(index.row())
 
-
     def paint(self, painter, option, index):
         self.initStyleOption(option, index)
         painter.save()
@@ -185,7 +193,8 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         doc.setHtml(option.text)
         option.text = ""
         option.widget.style().drawControl(
-            QtWidgets.QStyle.CE_ItemViewItem, option, painter)
+            QtWidgets.QStyle.CE_ItemViewItem, option, painter
+        )
         painter.translate(option.rect.left(), option.rect.top())
         doc.drawContents(painter)
         painter.restore()
@@ -204,9 +213,10 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         return QtCore.QSize(int(doc.idealWidth()), doc_height_int)
 
 
-class SegmentsTableView(QtWidgets.QTableView):
-    def __init__(self, parent):
-        super().__init__(parent)
+# class SegmentsTableView(QtWidgets.QTableView):
+#     def __init__(self, parent):
+#         super().__init__(parent)
+
 
 class SegmentsTableView(QtWidgets.QTableView):
     def __init__(self, parent):
@@ -215,6 +225,10 @@ class SegmentsTableView(QtWidgets.QTableView):
         self.setItemDelegate(delegate)
         delegate.rowSizeHintChanged.connect(self.resizeRowToContents)
         self.setModel(QtGui.QStandardItemModel())
+
+    def showEvent(self, event):
+        self.resizeRowsToContents()
+        event.accept()
 
 
 app = QtWidgets.QApplication([])

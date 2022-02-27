@@ -7,13 +7,22 @@ add unittests
 
 #################################################################
 Bugs:
-    '''Bugfix for number only entries on the excel sheet needed. 
+
+pandasgui multiline issues
+cells with double new lines do not get adjusted to contents
+KeyError: <PyQt5.QtCore.QPersistentModelIndex object at 0x0000021DCE40ABA0> on destruction of editor
+no cell padding
+toPlainText needed in order to preserve newlines
+the whole program sometimes crashes without providing a traceback when randomly opening and closing editors
+font-size inconsistencies
+
+    '''Bugfix for number only entries on the excel sheet needed.
         File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
     self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
     TypeError: setText(self, str): argument 1 has unexpected type 'numpy.float64'''
 ----
     program crashes if a row without values is selected
-----    
+----
     program crashes if excel file is closed during runtime
 
 
@@ -58,7 +67,7 @@ webscraping bot flows and suggesting relevant flows
 
 read and edit open excel files
 - open pages from links in excel for webscraping
-- update open file with values from studio 
+- update open file with values from studio
 - navigate cells
 - display completed and uncompleted rows
 - display filename and worksheet in status bar
@@ -86,7 +95,7 @@ Testing suite
 
 enter test sentence
 program opens test chat and enters test sentence, retrieves answer when ready.
-program matches answer to faq/flow 
+program matches answer to faq/flow
 user selects if correct answer was given. if not, user can select the correct faq/flow
 allow users to suggest a FAQ that is better suited if the one that is used works, but is not ideal.
 optional Notes
@@ -103,7 +112,7 @@ run selenium on server. it is infinitely scalable
 create a history of performance metrics for each FAQ/flow. automate reporting and chart generation.
 
 
-enter testing suite from the analysis suite and carry over the data. 
+enter testing suite from the analysis suite and carry over the data.
 save user configuration and the user's position in the excel sheet/workbook
 
 maybe allow users to add tested questions directly to variants with the necessary highlighting
@@ -112,7 +121,7 @@ have FAQ search field check if this question has been tested. show green for unt
 have search field check other excel lists for questions similar to the one asked and suggest search terms to the user.
 #################################################################
 Future prospects
-- 
+-
 
 
 ##################################################################
