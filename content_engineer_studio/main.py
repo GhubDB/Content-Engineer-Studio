@@ -1002,9 +1002,9 @@ class MainWindow(QMainWindow):
                 QTimer.singleShot(0, self.chat_2.resizeRowsToContents)
 
         # Show FAQ search table
-        if source.objectName() == "search_box" or source.objectName() == "search_box_2":
+        if source.objectName() == ("search_box" or "search_box_2"):
             # print(event.type())
-            if event.type() == 82:
+            if event.type() == 82:  # Type 82 equals right click
                 if self.stackedWidget.currentIndex() == 0:
                     index = self.search_box.selectionModel().currentIndex()
                     value = index.sibling(index.row(), index.column()).data()
@@ -1013,6 +1013,7 @@ class MainWindow(QMainWindow):
                     value = index.sibling(index.row(), index.column()).data()
                 self.stackedWidget.setCurrentWidget(self.faq)
                 self.searchbar_3.setText(value)
+
         # Navigate back to working view
         if source.objectName() == "search_box_3":
             if event.type() == 82:
@@ -1028,7 +1029,7 @@ class MainWindow(QMainWindow):
                 self.search_box_2.setMinimumHeight(100)
 
         # Right click to select chat messages | middle click to add Variants
-        if "bot_" in source.objectName() or "customer_" in source.objectName():
+        if "bot_" or "customer_" in source.objectName():
             if event.type() == QEvent.MouseButtonPress:
                 if event.button() == Qt.RightButton:
                     source.setSelection()

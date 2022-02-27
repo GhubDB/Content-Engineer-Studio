@@ -2,7 +2,7 @@ import sys
 import re
 import threading
 import os
-from typing import Union
+from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -605,11 +605,11 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         # emit the signal again: if the data has been rejected, we need to
         # restore the correct hint
 
-        # Removed this line because it collapsed the row
-        self.rowSizeHintChanged.emit(index.row())
+        # Deleted this line because it kept collapsing the row
+        # self.rowSizeHintChanged.emit(index.row())
 
     def setModelData(self, editor, model, index):
-        self.commitData.emit(editor)
+        # self.commitData.emit(editor)
         self.closeEditor.emit(editor)
         row = index.row()
         col = index.column()
@@ -660,21 +660,21 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         layout.draw(painter, ctx)
         painter.restore()
 
-    # def sizeHint(self, option, index):
-    #     """
-    #     Method override
-    #     """
-    #     self.initStyleOption(option, index)
-    #     editor = self.editors.get(QtCore.QPersistentModelIndex(index))
-    #     if editor:
-    #         doc = QtGui.QTextDocument.clone(editor.document())
-    #     else:
-    #         doc = QtGui.QTextDocument()
-    #         doc.setDocumentMargin(3)
-    #         doc.setHtml(option.text)
-    #         doc.setTextWidth(option.rect.width())
-    #     doc_height_int = int(doc.size().height())
-    #     return QtCore.QSize(int(doc.idealWidth()), doc_height_int)
+    def sizeHint(self, option, index):
+        """
+        Method override
+        """
+        self.initStyleOption(option, index)
+        editor = self.editors.get(QtCore.QPersistentModelIndex(index))
+        if editor:
+            doc = QtGui.QTextDocument.clone(editor.document())
+        else:
+            doc = QtGui.QTextDocument()
+            doc.setDocumentMargin(3)
+            doc.setPlainText(option.text)
+            doc.setTextWidth(option.rect.width())
+        doc_height_int = int(doc.size().height())
+        return QtCore.QSize(int(doc.idealWidth()), doc_height_int)
 
 
 class DataTableView(QtWidgets.QTableView):
@@ -684,6 +684,16 @@ class DataTableView(QtWidgets.QTableView):
 
     def __init__(self, parent: DataFrameViewer):
         super().__init__(parent)
+        """
+        Insert
+        https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
+        """
+        delegate = SegmentsTableViewDelegate(self)
+        self.setItemDelegate(delegate)
+        delegate.rowSizeHintChanged.connect(self.resizeRowToContents)
+        """
+        End Insert
+        """
 
         self.dataframe_viewer: DataFrameViewer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
@@ -708,35 +718,22 @@ class DataTableView(QtWidgets.QTableView):
             gridline-color: rgb(60, 60, 60);"""
         )
         # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
-        """
-        Insert
-        https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
-        """
-        delegate = SegmentsTableViewDelegate(self)
-        self.setItemDelegate(delegate)
-        delegate.rowSizeHintChanged.connect(self.resizeRowToContents)
-        """
-        End Insert
-        """
 
     def showEvent(self, event):
         """
         https://stackoverflow.com/questions/36975782/how-to-connect-signal-after-the-display-of-a-page-in-pyqt-wizard
-        Handles resizing of all rows on show event in a separate thread.
-        singleShot only resizes when there is enough capacity in the main thread
+        Handles resizing of all rows on show event
         """
 
-        resizer = Worker(QTimer.singleShot(0, self.resizeRowsToContents))
-        # live_webscraper.signals.output.connect(self.populate_chat_2)
-        threadpool = QThreadPool.globalInstance()
-        threadpool.start(resizer)
+        # threadpool = QThreadPool.globalInstance()
+        # resizer = Worker(QTimer.singleShot(0, self.resizeRowsToContents))
+        # resizer.signals.finished.connect(
+        #     lambda self=self: self.dataframe_viewer.indexHeader.manage_resizing(
+        #         object=self
+        #     )
+        # threadpool.start(resizer)
+        self.resizeRowsToContents()
         event.accept()
-
-    # def resizeRowsToContents(self):
-    #     header = self.verticalHeader()
-    #     for row in range(self.model().rowCount()):
-    #         hint = self.sizeHintForRow(row)
-    #         header.resizeSection(row, hint)
 
     def on_selectionChanged(self):
         """
