@@ -48,6 +48,7 @@ import pkg_resources
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 
+# This needs to be pip -e filepath installed for development mode
 import pandasgui
 from pandasgui.store import PandasGuiStore
 from pandasgui.utility import as_dict, fix_ipython, get_figure_type, resize_widget

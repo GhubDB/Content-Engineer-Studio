@@ -14,7 +14,7 @@ import logging
 
 from pandasgui.widgets.column_menu import ColumnMenu
 
-from content_engineer_studio.main import Worker, WorkerSignals
+from main import Worker, WorkerSignals
 
 logger = logging.getLogger(__name__)
 
