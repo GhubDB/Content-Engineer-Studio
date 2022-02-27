@@ -1,11 +1,15 @@
-import sys, re, threading, os
+import sys
+import re
+import threading
+import os
 from typing import Union
 
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, QThreadPool
 from PyQt5.QtGui import QColor, QBrush, QPalette, QFont
+
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
 import pandasgui
@@ -14,7 +18,7 @@ import logging
 
 from pandasgui.widgets.column_menu import ColumnMenu
 
-from content_engineer_studio.main import Worker, WorkerSignals
+from main import Worker, WorkerSignals
 
 logger = logging.getLogger(__name__)
 
@@ -718,11 +722,14 @@ class DataTableView(QtWidgets.QTableView):
     def showEvent(self, event):
         """
         https://stackoverflow.com/questions/36975782/how-to-connect-signal-after-the-display-of-a-page-in-pyqt-wizard
+        Handles resizing of all rows on show event in a separate thread.
+        singleShot only resizes when there is enough capacity in the main thread
         """
 
         resizer = Worker(QTimer.singleShot(0, self.resizeRowsToContents))
         # live_webscraper.signals.output.connect(self.populate_chat_2)
-        self.threadpool.start(resizer)
+        threadpool = QThreadPool.globalInstance()
+        threadpool.start(resizer)
         event.accept()
 
     # def resizeRowsToContents(self):
