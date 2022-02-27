@@ -724,7 +724,6 @@ class DataTableView(QtWidgets.QTableView):
 
     def showEvent(self, event):
         """
-        https://stackoverflow.com/questions/36975782/how-to-connect-signal-after-the-display-of-a-page-in-pyqt-wizard
         Handles resizing of all rows on show event
         """
 
@@ -736,6 +735,11 @@ class DataTableView(QtWidgets.QTableView):
         #     )
         # threadpool.start(resizer)
         self.resizeRowsToContents()
+        for row in range(0, self.model().rowCount()):
+            height = self.rowHeight(row)
+            if height != 28:
+                self.dataframe_viewer.indexHeader.setRowHeight(row, height)
+
         event.accept()
 
     def on_selectionChanged(self):
