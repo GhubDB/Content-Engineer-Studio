@@ -315,6 +315,8 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         for row in range(rows[0], len(df_to_paste.index) + rows[0]):
             self.dataView.resizeRowToContents(row)
+            height = self.dataView.rowHeight(row)
+            self.indexHeader.setRowHeight(row, height)
 
         # Select the range of cells that were pasted
         self.dataView.selectionModel().clearSelection()
@@ -694,6 +696,10 @@ class DataTableView(QtWidgets.QTableView):
         delegate = SegmentsTableViewDelegate(self)
         self.setItemDelegate(delegate)
         delegate.rowSizeHintChanged.connect(self.resizeRowToContents)
+        [
+            delegate.rowSizeHintChanged.connect(x)
+            for x in [self.resizeRowToContents, self.resize_header_to_contents]
+        ]
         """
         End Insert
         """
@@ -741,6 +747,11 @@ class DataTableView(QtWidgets.QTableView):
                 self.dataframe_viewer.indexHeader.setRowHeight(row, height)
 
         event.accept()
+
+    def resize_header_to_contents(self, index):
+        # row = index.row()
+        height = self.rowHeight(index)
+        self.dataframe_viewer.indexHeader.setRowHeight(index, height)
 
     def on_selectionChanged(self):
         """
