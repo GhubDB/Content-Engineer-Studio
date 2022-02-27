@@ -287,7 +287,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             # Special case for single-cell copy, excel=False removes the trailing \n character.
             threading.Thread(
                 target=lambda df: df.to_clipboard(
-                    index=header, header=header, excel=False
+                    index=header, header=header, line_terminator=""
                 ),
                 args=(df,),
             ).start()
@@ -298,9 +298,9 @@ class DataFrameViewer(QtWidgets.QWidget):
             ).start()
 
     def paste(self):
-        # TODO paste empty cells as NaN
         df_to_paste = pd.read_clipboard(
-            sep=",|\t",
+            sep="\t",
+            # sep=",|\t", # original implementation
             na_values='""',  # https://stackoverflow.com/a/67915100/3620725
             header=None,
             skip_blank_lines=False,
@@ -312,6 +312,9 @@ class DataFrameViewer(QtWidgets.QWidget):
         cols = [ix.column() for ix in indexes]
 
         self.pgdf.paste_data(min(rows), min(cols), df_to_paste)
+
+        for row in range(rows[0], len(df_to_paste.index) + rows[0]):
+            self.dataView.resizeRowToContents(row)
 
         # Select the range of cells that were pasted
         self.dataView.selectionModel().clearSelection()
