@@ -740,6 +740,7 @@ class DataTableView(QtWidgets.QTableView):
         Handles resizing of all rows on show event
         """
         for row in range(0, 40):
+            print(row)
             self.resizeRowToContents(row)
         for row in range(0, 40):
             height = self.rowHeight(row)
@@ -754,10 +755,12 @@ class DataTableView(QtWidgets.QTableView):
             ),
         )
         threadpool.start(resizer)
+
         event.accept()
 
     def thread_resize_rows(self, start: int, stop: int):
         for row in range(start, stop):
+            print(row)
             self.resizeRowToContents(row)
         for row in range(start, stop):
             height = self.rowHeight(row)
@@ -952,6 +955,10 @@ class HeaderView(QtWidgets.QTableView):
     def showEvent(self, a0: QtGui.QShowEvent) -> None:
         super(HeaderView, self).showEvent(a0)
         self.initial_size = self.size()
+
+        # Fix index header so it does not get adjusted when drag resizing
+        if self.orientation == Qt.Vertical:
+            self.setFixedWidth(self.initial_size.width())
 
     def mouseDoubleClickEvent(self, event):
         point = event.pos()
@@ -1278,7 +1285,6 @@ class HeaderView(QtWidgets.QTableView):
                     self.dataframe_viewer.dataView.updateGeometry()
                 return True
             elif self.header_being_resized:
-                print("header")
                 # if self.orientation == Qt.Horizontal:
                 #     size = orthogonal_mouse_position - self.geometry().top()
                 #     self.setFixedHeight(max(size, self.initial_size.height()))
