@@ -1253,11 +1253,14 @@ class HeaderView(QtWidgets.QTableView):
         if event.type() == QtCore.QEvent.MouseMove:
             # If this is None, there is no drag resize happening
             if self.header_cell_being_resized is not None:
-                # size = self.header_cell_being_resized.rowHeight()
-                size = mouse_position - self.rowViewportPosition(
-                    self.header_cell_being_resized
-                )
-                print(size, self.header_cell_being_resized)
+                if self.orientation == Qt.Vertical:
+                    size = mouse_position - self.rowViewportPosition(
+                        self.header_cell_being_resized
+                    )
+                if self.orientation == Qt.Horizontal:
+                    size = mouse_position - self.columnViewportPosition(
+                        self.header_cell_being_resized
+                    )
                 if size > 10:
                     if self.orientation == Qt.Horizontal:
                         self.setColumnWidth(self.header_cell_being_resized, size)
@@ -1270,19 +1273,21 @@ class HeaderView(QtWidgets.QTableView):
                             self.header_cell_being_resized, size
                         )
 
+                    # Resizes the table in its entirety
                     self.updateGeometry()
                     self.dataframe_viewer.dataView.updateGeometry()
                 return True
             elif self.header_being_resized:
-                if self.orientation == Qt.Horizontal:
-                    size = orthogonal_mouse_position - self.geometry().top()
-                    self.setFixedHeight(max(size, self.initial_size.height()))
+                print("header")
+                # if self.orientation == Qt.Horizontal:
+                #     size = orthogonal_mouse_position - self.geometry().top()
+                #     self.setFixedHeight(max(size, self.initial_size.height()))
                 if self.orientation == Qt.Vertical:
                     size = orthogonal_mouse_position - self.geometry().left()
                     self.setFixedWidth(max(size, self.initial_size.width()))
 
-                self.updateGeometry()
-                self.dataframe_viewer.dataView.updateGeometry()
+                # self.updateGeometry()
+                # self.dataframe_viewer.dataView.updateGeometry()
                 return True
         return False
 
