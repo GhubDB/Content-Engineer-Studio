@@ -713,6 +713,9 @@ class DataTableView(QtWidgets.QTableView):
         self.dataframe_viewer: DataFrameViewer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
 
+        # Store if dataframe has already been adjusted to contents
+        self.already_resized = False
+
         # Create and set model
         model = DataTableModel(parent)
         self.setModel(model)
@@ -739,22 +742,22 @@ class DataTableView(QtWidgets.QTableView):
         """
         Handles resizing of all rows on show event
         """
-        for row in range(0, 40):
-            print(row)
-            self.resizeRowToContents(row)
-        for row in range(0, 40):
-            height = self.rowHeight(row)
-            self.dataframe_viewer.indexHeader.setRowHeight(row, height)
+        if not self.already_resized:
+            for row in range(0, 40):
+                self.resizeRowToContents(row)
+            for row in range(0, 40):
+                height = self.rowHeight(row)
+                self.dataframe_viewer.indexHeader.setRowHeight(row, height)
 
-        # Hand the rest of the resizing off to a thread
-        # so the application does not stay unresponsive for long
-        threadpool = QThreadPool.globalInstance()
-        resizer = Worker(
-            lambda start=40, end=self.pgdf.df.shape[0]: self.thread_resize_rows(
-                start, end
-            ),
-        )
-        threadpool.start(resizer)
+            # Hand the rest of the resizing off to a thread
+            # so the application does not stay unresponsive for long
+            threadpool = QThreadPool.globalInstance()
+            resizer = Worker(
+                lambda start=40, end=self.pgdf.df.shape[0]: self.thread_resize_rows(
+                    start, end
+                ),
+            )
+            threadpool.start(resizer)
 
         event.accept()
 
@@ -765,6 +768,8 @@ class DataTableView(QtWidgets.QTableView):
         for row in range(start, stop):
             height = self.rowHeight(row)
             self.dataframe_viewer.indexHeader.setRowHeight(row, height)
+
+        self.already_resized = True
 
     def resize_header_to_contents(self, index):
         # row = index.row()
