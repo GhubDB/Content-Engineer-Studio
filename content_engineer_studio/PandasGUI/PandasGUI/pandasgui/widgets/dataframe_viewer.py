@@ -739,29 +739,29 @@ class DataTableView(QtWidgets.QTableView):
         """
         Handles resizing of all rows on show event
         """
-
-        # threadpool = QThreadPool.globalInstance()
-        # resizer = Worker(QTimer.singleShot(0, self.resizeRowsToContents))
-        # resizer.signals.finished.connect(
-        #     lambda self=self: self.dataframe_viewer.indexHeader.manage_resizing(
-        #         object=self
-        #     )
-        # threadpool.start(resizer)
-        self.resizeRowsToContents()
-        for row in range(0, self.pgdf.df.shape[0]):
+        for row in range(0, 40):
+            self.resizeRowToContents(row)
+        for row in range(0, 40):
             height = self.rowHeight(row)
             self.dataframe_viewer.indexHeader.setRowHeight(row, height)
-            # print(
-            #     "row: ",
-            #     row,
-            #     "height: ",
-            #     height,
-            #     "header height: ",
-            #     self.dataframe_viewer.indexHeader.rowHeight(row),
-            # )
-            # if height != 28:
 
+        # Hand the rest of the resizing off to a thread
+        # so the application does not stay unresponsive for long
+        threadpool = QThreadPool.globalInstance()
+        resizer = Worker(
+            lambda start=40, end=self.pgdf.df.shape[0]: self.thread_resize_rows(
+                start, end
+            ),
+        )
+        threadpool.start(resizer)
         event.accept()
+
+    def thread_resize_rows(self, start: int, stop: int):
+        for row in range(start, stop):
+            self.resizeRowToContents(row)
+        for row in range(start, stop):
+            height = self.rowHeight(row)
+            self.dataframe_viewer.indexHeader.setRowHeight(row, height)
 
     def resize_header_to_contents(self, index):
         # row = index.row()
@@ -1253,9 +1253,11 @@ class HeaderView(QtWidgets.QTableView):
         if event.type() == QtCore.QEvent.MouseMove:
             # If this is None, there is no drag resize happening
             if self.header_cell_being_resized is not None:
-                size = mouse_position - self.columnViewportPosition(
+                # size = self.header_cell_being_resized.rowHeight()
+                size = mouse_position - self.rowViewportPosition(
                     self.header_cell_being_resized
                 )
+                print(size, self.header_cell_being_resized)
                 if size > 10:
                     if self.orientation == Qt.Horizontal:
                         self.setColumnWidth(self.header_cell_being_resized, size)

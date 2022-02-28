@@ -117,16 +117,17 @@ class WorkerSignals(QObject):
 class BackgroundRemover(QStandardItemModel):
     def __init__(self):
         super().__init__()
-        self.itemChanged.connect(self.itemData)
+        pass
 
-    def itemData(self, item):
-        # print(item.index())
-        roles = super().itemData(item.index())
-        if 8 in roles:
-            del roles[8]
-            return super().itemData(item.index())
-            return roles
-            print(roles)
+    #     self.itemChanged.connect(self.itemData)
+
+    # def itemData(self, item):
+    #     # print(item.index())
+    #     roles = super().itemData(item.index())
+    #     print(roles)
+    #     if 8 in roles:
+    #         del roles[8]
+    #     return self.setData(item.index(), None, Qt.BackgroundRole)
 
 
 class CESdialog(QDialog):

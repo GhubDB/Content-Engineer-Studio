@@ -32,8 +32,13 @@ class DataFrameExplorer(QtWidgets.QWidget):
         self.main_window = QtWidgets.QMainWindow()
         self.docks: List[DockWidget] = []
         self.main_window.setDockOptions(
-            self.main_window.GroupedDragging | self.main_window.AllowTabbedDocks | self.main_window.AllowNestedDocks)
-        self.main_window.setTabPosition(Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North)
+            self.main_window.GroupedDragging
+            | self.main_window.AllowTabbedDocks
+            | self.main_window.AllowNestedDocks
+        )
+        self.main_window.setTabPosition(
+            Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North
+        )
 
         self.dataframe_viewer = DataFrameViewer(pgdf)
         self.statistics_viewer = StatisticsViewer(pgdf)
@@ -54,7 +59,9 @@ class DataFrameExplorer(QtWidgets.QWidget):
         self.grapher_dock.activated.connect(lambda: set_active_tab("Grapher"))
         self.reshaper_dock.activated.connect(lambda: set_active_tab("Reshaper"))
 
-        self.dataframe_viewer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.dataframe_viewer.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
 
         ##################
         # Non-Dock widgets
@@ -106,7 +113,6 @@ class DataFrameExplorer(QtWidgets.QWidget):
 
 
 class ColumnArranger(ColumnViewer):
-
     def __init__(self, pgdf: PandasGuiDataFrameStore):
         super().__init__(pgdf)
         pgdf = PandasGuiDataFrameStore.cast(pgdf)
@@ -115,7 +121,7 @@ class ColumnArranger(ColumnViewer):
         self.tree.setAcceptDrops(True)
         self.tree.setDragEnabled(True)
         self.tree.setDefaultDropAction(Qt.MoveAction)
-        self.tree.setHeaderLabels(['Name'])
+        self.tree.setHeaderLabels(["Name"])
         self.refresh()
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -130,7 +136,10 @@ class ColumnArranger(ColumnViewer):
         self.pgdf.dataframe_viewer.scroll_to_column(ix)
 
     def columns_rearranged(self):
-        items = [self.tree.topLevelItem(x).text(0) for x in range(self.tree.topLevelItemCount())]
+        items = [
+            self.tree.topLevelItem(x).text(0)
+            for x in range(self.tree.topLevelItemCount())
+        ]
         self.pgdf.reorder_columns(items)
 
     def sizeHint(self) -> QtCore.QSize:
@@ -143,7 +152,9 @@ class ColumnArranger(ColumnViewer):
             pos = event.pos()
             item = self.tree.itemAt(pos)
             ix = self.tree.indexAt(pos)
-            ix_list = [self.tree.indexOfTopLevelItem(x) for x in self.tree.selectedItems()]
+            ix_list = [
+                self.tree.indexOfTopLevelItem(x) for x in self.tree.selectedItems()
+            ]
             if item:
                 menu = QtWidgets.QMenu(self.tree)
 
