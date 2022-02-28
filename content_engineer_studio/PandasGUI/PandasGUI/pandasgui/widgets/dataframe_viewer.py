@@ -20,7 +20,7 @@ from pandasgui.widgets.column_menu import ColumnMenu
 
 # from stylesheets import Stylesheet
 
-# from main import Worker, WorkerSignals
+from main import Worker, WorkerSignals
 
 logger = logging.getLogger(__name__)
 
@@ -684,6 +684,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             doc = QtGui.QTextDocument.clone(editor.document())
         else:
             doc = QtGui.QTextDocument()
+            doc.setDefaultFont(option.font)
             doc.setDocumentMargin(3)
             doc.setPlainText(option.text)
             doc.setTextWidth(option.rect.width())
