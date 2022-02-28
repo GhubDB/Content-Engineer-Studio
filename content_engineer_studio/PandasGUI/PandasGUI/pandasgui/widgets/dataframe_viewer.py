@@ -18,7 +18,9 @@ import logging
 
 from pandasgui.widgets.column_menu import ColumnMenu
 
-from main import Worker, WorkerSignals
+# from stylesheets import Stylesheet
+
+# from main import Worker, WorkerSignals
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +125,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         )
 
         # Default row height
-        default_row_height = 28
+        default_row_height = 30
         self.indexHeader.verticalHeader().setDefaultSectionSize(default_row_height)
         self.dataView.verticalHeader().setDefaultSectionSize(default_row_height)
 
@@ -512,7 +514,7 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
         self.setFrameShape(0)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.contentTimer = QtCore.QTimer(self, timeout=self.contentsChange, interval=0)
-        self.document().setDocumentMargin(3)
+        self.document().setDocumentMargin(2)
         self.document().contentsChange.connect(self.contentTimer.start)
 
     @QtCore.pyqtProperty(str, user=True)
@@ -572,7 +574,12 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         super().__init__(*args, **kwargs)
         self.editors = {}
 
-    def createEditor(self, parent, option, index):
+    def createEditor(
+        self,
+        parent: QtWidgets.QWidget,
+        option: "QStyleOptionViewItem",
+        index: QtCore.QModelIndex,
+    ) -> QtWidgets.QWidget:
         """
         Method override
         """
@@ -586,18 +593,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             self.editors[pIndex] = editor
         return editor
 
-    # def eventFilter(self, editor, event):
-    #     if (
-    #         event.type() == event.KeyPress
-    #         and event.modifiers() == QtCore.Qt.ControlModifier
-    #         and event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return)
-    #     ):
-    #         self.commitData.emit(editor)
-    #         self.closeEditor.emit(editor)
-    #         return True
-    #     return super().eventFilter(editor, event)
-
-    def destroyEditor(self, editor, index):
+    def destroyEditor(
+        self, editor: QtWidgets.QWidget, index: QtCore.QModelIndex
+    ) -> None:
         """
         Method override
         TODO: Check why the editors on the dict do not have the same index
@@ -613,7 +611,12 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         # Deleted this line because it kept collapsing the row
         # self.rowSizeHintChanged.emit(index.row())
 
-    def setModelData(self, editor, model, index):
+    def setModelData(
+        self,
+        editor: QtWidgets.QWidget,
+        model: QtCore.QAbstractItemModel,
+        index: QtCore.QModelIndex,
+    ) -> None:
         # self.commitData.emit(editor)
         self.closeEditor.emit(editor)
         row = index.row()
@@ -624,7 +627,20 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         except Exception as e:
             logger.exception(e)
 
-    def paint(self, painter, option, index):
+    # def initStyleOption(
+    #     self, option: "QStyleOptionViewItem", index: QtCore.QModelIndex
+    # ) -> None:
+    #     custom_font = option.font
+    #     custom_font.setPixelSize(18)
+    #     option.font = custom_font
+    #     return super().initStyleOption(option, index)
+
+    def paint(
+        self,
+        painter: QtGui.QPainter,
+        option: "QStyleOptionViewItem",
+        index: QtCore.QModelIndex,
+    ) -> None:
         """
         Method override
         """
@@ -635,6 +651,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         self.initStyleOption(option, index)
         painter.save()
         doc = QtGui.QTextDocument()
+        doc.setDefaultFont(option.font)
         doc.setDocumentMargin(3)
         doc.setTextWidth(option.rect.width())
         # changed to setPlainText from setHtml
@@ -645,27 +662,19 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         )
         painter.translate(option.rect.left(), option.rect.top())
 
-        # font = QFont("MS Shell Dlg 2", 30)
-        # painter.setFont(font)
-        # option.widget.setFont(font)
-        # option.font.setPointSize(30)
-        # option.font.setPixelSize(15)
-        # option.palette.setBrush(QPalette.Text, QtCore.Qt.red)
-        # font = painter.font()
-        # font.setPixelSize(15)
-
         """Add this if there are artifacts"""
         clip = QtCore.QRectF(0, 0, option.rect.width(), option.rect.height())
         painter.setClipRect(clip)
 
-        # doc.drawContents(painter)
         layout = doc.documentLayout()
         ctx = layout.PaintContext()
         ctx.palette = option.palette
         layout.draw(painter, ctx)
         painter.restore()
 
-    def sizeHint(self, option, index):
+    def sizeHint(
+        self, option: "QStyleOptionViewItem", index: QtCore.QModelIndex
+    ) -> None:
         """
         Method override
         """
@@ -690,7 +699,6 @@ class DataTableView(QtWidgets.QTableView):
     def __init__(self, parent: DataFrameViewer):
         super().__init__(parent)
         """
-        Insert
         https://stackoverflow.com/questions/69113867/make-row-of-qtableview-expand-as-editor-grows-in-height
         """
         delegate = SegmentsTableViewDelegate(self)
@@ -700,9 +708,6 @@ class DataTableView(QtWidgets.QTableView):
             delegate.rowSizeHintChanged.connect(x)
             for x in [self.resizeRowToContents, self.resize_header_to_contents]
         ]
-        """
-        End Insert
-        """
 
         self.dataframe_viewer: DataFrameViewer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
@@ -723,12 +728,13 @@ class DataTableView(QtWidgets.QTableView):
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
 
         self.setStyleSheet(
-            """font-size: 13px;
+            """font-size: 14px;
             gridline-color: rgb(60, 60, 60);"""
         )
+        # self.setTextElideMode(Qt.ElideNone)
         # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
 
-    def showEvent(self, event):
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
         """
         Handles resizing of all rows on show event
         """
@@ -741,10 +747,18 @@ class DataTableView(QtWidgets.QTableView):
         #     )
         # threadpool.start(resizer)
         self.resizeRowsToContents()
-        for row in range(0, self.model().rowCount()):
+        for row in range(0, self.pgdf.df.shape[0]):
             height = self.rowHeight(row)
-            if height != 28:
-                self.dataframe_viewer.indexHeader.setRowHeight(row, height)
+            self.dataframe_viewer.indexHeader.setRowHeight(row, height)
+            # print(
+            #     "row: ",
+            #     row,
+            #     "height: ",
+            #     height,
+            #     "header height: ",
+            #     self.dataframe_viewer.indexHeader.rowHeight(row),
+            # )
+            # if height != 28:
 
         event.accept()
 

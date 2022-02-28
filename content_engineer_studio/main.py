@@ -1856,7 +1856,6 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet(qtstylish.dark())
-    # app.setStyleSheet(elegantdark)
     win = MainWindow()
     win.show()
     sys.exit(app.exec_())
