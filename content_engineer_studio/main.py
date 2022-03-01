@@ -315,6 +315,10 @@ class MainWindow(QMainWindow):
         # URLs
         self.livechat_url = "https://www.cleverbot.com/"
 
+        # Dataframes
+        self.analysis_df = None
+        self.testing_df = None
+
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 6
         self.cell_selector_start_2 = 4
