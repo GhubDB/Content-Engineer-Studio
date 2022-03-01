@@ -1,4 +1,3 @@
-
 from PyQt5 import QtCore, QtGui, QtWidgets, sip
 from PyQt5.QtCore import Qt
 
@@ -14,15 +13,14 @@ from pandasgui.widgets.json_viewer import JsonViewer
 
 # Use win32api on Windows because the pynput and mouse packages cause lag with PyQt drag-n-drop
 # https://github.com/moses-palmer/pynput/issues/390
-if os.name == 'nt':
+if os.name == "nt":
     import win32api
-
 
     def mouse_pressed():
         return win32api.GetKeyState(0x01) not in [0, 1]
+
 else:
     from pynput import mouse
-
 
     class MouseState(mouse.Listener):
         def __init__(self):
@@ -33,17 +31,13 @@ else:
         def on_click(self, x, y, button, pressed):
             self.pressed = pressed
 
-
     mouse_state = MouseState()
-
 
     def mouse_pressed():
         return mouse_state.pressed
 
 
-
 class DelayedMimeData(QtCore.QMimeData):
-
     def __init__(self):
         super().__init__()
         self.callbacks = []
@@ -59,6 +53,7 @@ class DelayedMimeData(QtCore.QMimeData):
 
         return QtCore.QMimeData.retrieveData(self, mime_type, preferred_type)
 
+
 class Navigator(FlatDraggableTree):
     def __init__(self, store):
         super().__init__()
@@ -69,7 +64,7 @@ class Navigator(FlatDraggableTree):
         self.setDragEnabled(True)
         self.setDefaultDropAction(Qt.MoveAction)
 
-        self.setHeaderLabels(['Name', 'Shape'])
+        self.setHeaderLabels(["Name", "Shape"])
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
     def mouseReleaseEvent(self, event):
@@ -90,12 +85,39 @@ class Navigator(FlatDraggableTree):
 
         super().mouseReleaseEvent(event)
 
+    def dropEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.setDropAction(QtCore.Qt.CopyAction)
+            e.accept()
+            fpath_list = []
+            for url in e.mimeData().urls():
+                fpath_list.append(str(url.toLocalFile()))
+
+            for fpath in fpath_list:
+                self.store.import_file(fpath)
+        else:
+            e.ignore()
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
+    def dragMoveEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
     def remove_item(self, name):
         for item in traverse_tree_widget(self):
             if item.text(0) == name:
                 sip.delete(item)
 
-    def selectionChanged(self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection) -> None:
+    def selectionChanged(
+        self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection
+    ) -> None:
         """
         Show the DataFrameExplorer corresponding to the highlighted nav item.
         """
@@ -125,17 +147,18 @@ class Navigator(FlatDraggableTree):
                 raise ValueError
 
             file_name = name + extension
-            path = os.path.join(tempfile.gettempdir(), 'DragTest', file_name)
+            path = os.path.join(tempfile.gettempdir(), "DragTest", file_name)
             os.makedirs(os.path.dirname(path), exist_ok=True)
 
             def write_to_file(path=path, item=item, widget=self, file_name=file_name):
-                with widget.store.status_message_context(f'Exporting {file_name}...'):
+                with widget.store.status_message_context(f"Exporting {file_name}..."):
                     if isinstance(item, PandasGuiDataFrameStore):
                         item.df.to_csv(path, index=False)
 
                     elif isinstance(item, JsonViewer):
                         import json
-                        with open(path, 'w') as f:
+
+                        with open(path, "w") as f:
                             json.dump(item.jdata, f)
                     else:
                         pass
@@ -144,8 +167,12 @@ class Navigator(FlatDraggableTree):
             path_list.append(QtCore.QUrl.fromLocalFile(path))
 
         mime.setUrls(path_list)
-        mime.setData('application/x-qabstractitemmodeldatalist',
-                     self.mimeData(self.selectedItems()).data('application/x-qabstractitemmodeldatalist'))
+        mime.setData(
+            "application/x-qabstractitemmodeldatalist",
+            self.mimeData(self.selectedItems()).data(
+                "application/x-qabstractitemmodeldatalist"
+            ),
+        )
         drag.setMimeData(mime)
         drag.exec_(Qt.MoveAction)
         super().startDrag(actions)

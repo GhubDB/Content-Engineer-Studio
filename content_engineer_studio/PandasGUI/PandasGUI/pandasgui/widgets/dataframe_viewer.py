@@ -763,7 +763,6 @@ class DataTableView(QtWidgets.QTableView):
 
     def thread_resize_rows(self, start: int, stop: int):
         for row in range(start, stop):
-            print(row)
             self.resizeRowToContents(row)
         for row in range(start, stop):
             height = self.rowHeight(row)

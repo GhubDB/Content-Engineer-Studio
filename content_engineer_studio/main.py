@@ -483,18 +483,22 @@ class MainWindow(QMainWindow):
         settings = {}
 
         # Register IPython magic
-        # try:
-        #     @register_line_magic
-        #     def pg(line):
-        #         pandas_gui.store.eval_magic(line)
-        #         return line
+        try:
 
-        # except Exception as e:
-        #     # Let this silently fail if no IPython console exists
-        #     if e.args[0] == 'Decorator can only run in context where `get_ipython` exists':
-        #         pass
-        #     else:
-        #         raise e
+            @register_line_magic
+            def pg(line):
+                self.store.eval_magic(line)
+                return line
+
+        except Exception as e:
+            # Let this silently fail if no IPython console exists
+            if (
+                e.args[0]
+                == "Decorator can only run in context where `get_ipython` exists"
+            ):
+                pass
+            else:
+                raise e
 
         """Start viewer init"""
         self.navigator = None
@@ -518,7 +522,7 @@ class MainWindow(QMainWindow):
         # self.app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
 
         # Accept drops, for importing files. See methods below: dropEvent, dragEnterEvent, dragMoveEvent
-        self.setAcceptDrops(True)
+        # self.setAcceptDrops(True)
 
         # This holds the DataFrameExplorer for each DataFrame
         self.stacked_widget = QtWidgets.QStackedWidget()
@@ -656,7 +660,7 @@ class MainWindow(QMainWindow):
         self.faq_auto_search_model = QSortFilterProxyModel()
         self.faq_auto_search_model.setSourceModel(model)
         self.faq_auto_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.faq_auto_search_model.setFilterKeyColumn(-1)  # add this to method
+        self.faq_auto_search_model.setFilterKeyColumn(-1)
         self.search_box.installEventFilter(self)
         self.search_box_2.installEventFilter(self)
         self.search_box_3.installEventFilter(self)
@@ -744,31 +748,6 @@ class MainWindow(QMainWindow):
 
     def reorder_columns(self):
         self.store.selected_pgdf
-
-    def dropEvent(self, e):
-        if e.mimeData().hasUrls:
-            e.setDropAction(QtCore.Qt.CopyAction)
-            e.accept()
-            fpath_list = []
-            for url in e.mimeData().urls():
-                fpath_list.append(str(url.toLocalFile()))
-
-            for fpath in fpath_list:
-                self.store.import_file(fpath)
-        else:
-            e.ignore()
-
-    def dragEnterEvent(self, e):
-        if e.mimeData().hasUrls:
-            e.accept()
-        else:
-            e.ignore()
-
-    def dragMoveEvent(self, e):
-        if e.mimeData().hasUrls:
-            e.accept()
-        else:
-            e.ignore()
 
     def view_history(self):
         d = self.store.selected_pgdf.history

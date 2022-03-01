@@ -27,7 +27,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -443,6 +443,9 @@
                 <font>
                  <pointsize>10</pointsize>
                 </font>
+               </property>
+               <property name="acceptDrops">
+                <bool>false</bool>
                </property>
                <property name="frameShape">
                 <enum>QFrame::Panel</enum>
@@ -1040,6 +1043,9 @@
                 <font>
                  <pointsize>10</pointsize>
                 </font>
+               </property>
+               <property name="acceptDrops">
+                <bool>false</bool>
                </property>
                <property name="frameShape">
                 <enum>QFrame::Panel</enum>
