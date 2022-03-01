@@ -19,7 +19,22 @@ from PyQt5.QtCore import (
     QSortFilterProxyModel,
     QTimer,
 )
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
+    QVBoxLayout,
+    QTextEdit,
+    QLabel,
+    QPushButton,
+    QWidget,
+    QGridLayout,
+    QMainWindow,
+    QHeaderView,
+    QTableWidgetItem,
+    QButtonGroup,
+    QRadioButton,
+    QApplication,
+)
 from PyQt5.QtGui import (
     QStandardItemModel,
     QStandardItem,
@@ -33,6 +48,7 @@ from PyQt5.QtGui import (
 from excel_helpers import Excel
 from selenium_helpers import Browser
 from data_variables import *
+from widgets.drag_drop import DragDrop
 from stylesheets import Stylesheets
 from bs4 import BeautifulSoup
 import qtstylish
@@ -524,21 +540,30 @@ class MainWindow(QMainWindow):
         # Accept drops, for importing files. See methods below: dropEvent, dragEnterEvent, dragMoveEvent
         # self.setAcceptDrops(True)
 
+        # This adds the drag_drop area for testing/analysis dataframes
+        self.drag_drop = DragDrop()
+
         # This holds the DataFrameExplorer for each DataFrame
         self.stacked_widget = QtWidgets.QStackedWidget()
+
+        # Make the analys/testing df selection splitter
+        self.splitter_9 = QtWidgets.QSplitter(Qt.Vertical)
 
         # Make the navigation bar
         self.navigator = Navigator(self.store)
 
         # Make splitter to hold nav and DataFrameExplorers
         self.splitter = QtWidgets.QSplitter(Qt.Horizontal)
-        self.splitter.addWidget(self.navigator)
+        self.splitter.addWidget(self.splitter_9)
+        self.splitter_9.addWidget(self.drag_drop)
+        self.splitter_9.addWidget(self.navigator)
+        # self.splitter_9.setStretchFactor(999, 0)
         self.splitter.addWidget(self.stacked_widget)
 
-        self.splitter.setCollapsible(0, False)
-        self.splitter.setCollapsible(1, False)
-        self.splitter.setStretchFactor(0, 0)
-        self.splitter.setStretchFactor(1, 1)
+        # self.splitter.setCollapsible(0, False)
+        # self.splitter.setCollapsible(1, False)
+        # self.splitter.setStretchFactor(0, 0)
+        self.splitter.setStretchFactor(0, 1)
 
         """Addin to main_window"""
         self.verticalLayout_2.addWidget(self.splitter)
