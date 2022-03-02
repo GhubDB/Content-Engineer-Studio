@@ -110,10 +110,10 @@ class Navigator(FlatDraggableTree):
         else:
             e.ignore()
 
-    def remove_item(self, name):
-        for item in traverse_tree_widget(self):
-            if item.text(0) == name:
-                sip.delete(item)
+    # def remove_item(self, name):
+    #     for item in traverse_tree_widget(self):
+    #         if item.text(0) == name:
+    #             sip.delete(item)
 
     def selectionChanged(
         self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection

@@ -306,7 +306,8 @@ class PandasGuiStoreItem:
 
 class PandasGuiDataFrameStore(PandasGuiStoreItem):
     """
-    All methods that modify the data should modify self.df_unfiltered, then self.df gets computed from that
+    All methods that modify the data should modify self.df_unfiltered,
+    then self.df gets computed from that
     """
 
     def __init__(self, df: DataFrame, name: str = "Untitled"):

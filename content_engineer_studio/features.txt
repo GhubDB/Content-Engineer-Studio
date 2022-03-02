@@ -29,6 +29,9 @@ font-size inconsistencies
 #################################################################
 New features after revision 1
 
+allow for deleting cell contents with deleting
+allow for pasting cells in all selected cells
+
 jira connection make a new table for each story and index entries under the story number
 - add who, when, story number
 network database

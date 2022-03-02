@@ -617,7 +617,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         model: QtCore.QAbstractItemModel,
         index: QtCore.QModelIndex,
     ) -> None:
-        # self.commitData.emit(editor)
+        """
+        Save data to the Dataframe and the model
+        """
         self.closeEditor.emit(editor)
         row = index.row()
         col = index.column()
@@ -626,14 +628,6 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
             model.pgdf.edit_data(row, col, value)
         except Exception as e:
             logger.exception(e)
-
-    # def initStyleOption(
-    #     self, option: "QStyleOptionViewItem", index: QtCore.QModelIndex
-    # ) -> None:
-    #     custom_font = option.font
-    #     custom_font.setPixelSize(18)
-    #     option.font = custom_font
-    #     return super().initStyleOption(option, index)
 
     def paint(
         self,
@@ -717,8 +711,8 @@ class DataTableView(QtWidgets.QTableView):
         self.already_resized = False
 
         # Create and set model
-        model = DataTableModel(parent)
-        self.setModel(model)
+        self.df_model = DataTableModel(parent)
+        self.setModel(self.df_model)
 
         # Hide the headers. The DataFrame headers (index & columns) will be displayed in the DataFrameHeaderViews
         self.horizontalHeader().hide()

@@ -545,7 +545,7 @@ class MainWindow(QMainWindow):
         # self.setAcceptDrops(True)
 
         # This adds the drag_drop area for testing/analysis dataframes
-        self.drag_drop = DragDrop()
+        self.drag_drop = DragDrop(self)
 
         # This holds the DataFrameExplorer for each DataFrame
         self.stacked_widget = QtWidgets.QStackedWidget()
@@ -939,6 +939,20 @@ class MainWindow(QMainWindow):
     Main Methods
     """
     ################################################################################################
+
+    def set_df(self, df_title: str, mode: str):
+        """
+        Assigns dataframes to analysis and testing mode
+        """
+        if mode == "analysis":
+            self.analysis_df = df_title
+
+        self.store.data[self.analysis_df].edit_data(
+            row=1, col=1, text="this is a test text"
+        )
+
+        # self.store.add_dataframe(df, df_name)
+        # print(self.store.get_dataframes(df_title).keys())
 
     def row_selector(self, selected: QtCore.QObject):
         """
