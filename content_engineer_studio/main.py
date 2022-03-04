@@ -66,6 +66,8 @@ from PyQt5.QtCore import Qt
 
 # This needs to be pip -e filepath installed for development mode
 import pandasgui
+
+import pandasgui.widgets.dataframe_viewer  # import DataFrameViewer
 from pandasgui.store import PandasGuiStore
 from pandasgui.utility import as_dict, fix_ipython, get_figure_type, resize_widget
 from pandasgui.widgets.find_toolbar import FindToolbar
@@ -74,6 +76,7 @@ from pandasgui.widgets.navigator import Navigator
 from pandasgui.widgets.figure_viewer import FigureViewer
 from pandasgui.widgets.settings_editor import SettingsEditor
 from pandasgui.widgets.python_highlighter import PythonHighlighter
+
 from IPython.core.magic import register_line_magic
 import logging
 
@@ -316,8 +319,8 @@ class MainWindow(QMainWindow):
         self.livechat_url = "https://www.cleverbot.com/"
 
         # Dataframes
-        self.analysis_df = None
-        self.testing_df = None
+        self.working_viewers = {}
+        self.working_viewers_num = 0
 
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 6
@@ -359,6 +362,7 @@ class MainWindow(QMainWindow):
 
         # Load Ui file, set settings
         loadUi("main_window.ui", self)
+
         self.setWindowTitle("Content Engineer Studio")
         self.setContentsMargins(0, 0, 0, 0)
 
@@ -414,7 +418,7 @@ class MainWindow(QMainWindow):
         self.up_2.clicked.connect(self.btn_up_2)
         self.save.clicked.connect(self.btn_save)
         self.save_2.clicked.connect(self.btn_save_2)
-        self.switch_to_analysis_suite.clicked.connect(self.switchToAnalysis)
+        # self.switch_to_analysis_suite.clicked.connect(self.switchToAnalysis)
         self.export_to_testing_suite.clicked.connect(self.exportToTesting)
         self.switch_to_testing_suite.clicked.connect(self.switchToTesting)
         self.colorize.clicked.connect(self.btn_colorize)
@@ -459,6 +463,9 @@ class MainWindow(QMainWindow):
         )
         # self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
         self.test.clicked.connect(self.btn_test)
+        self.add_testing_dataframe.clicked.connect(
+            lambda: self.stackedWidget.setCurrentIndex(5)
+        )
 
         # Executed on excel.load
         self.df = self.analysis_excel.load("transcripts.xlsx", "Sheet1")
@@ -947,9 +954,47 @@ class MainWindow(QMainWindow):
         if mode == "analysis":
             self.analysis_df = df_title
 
-        self.store.data[self.analysis_df].edit_data(
-            row=1, col=1, text="this is a test text"
-        )
+        if mode == "testing":
+
+            # data: typing.OrderedDict[
+            # str, Union[PandasGuiStoreItem, PandasGuiDataFrameStore]
+
+            data_table_model = self.store.data[
+                df_title
+            ].dataframe_viewer.dataView.df_model
+            header_model = self.store.data[
+                df_title
+            ].dataframe_viewer.columnHeaderNames.model()
+
+            self.working_viewers[
+                self.working_viewers_num
+            ] = pandasgui.widgets.dataframe_viewer.DataFrameViewer(
+                pgdf=self.store.data[df_title],
+                isview=True,
+                data_table_model=data_table_model,
+                header_model=header_model,
+            )
+
+            try:
+                self.testing_dataframe_layout.replaceWidget(
+                    self.add_testing_dataframe,
+                    self.working_viewers[self.working_viewers_num],
+                )
+                self.add_testing_dataframe.deleteLater()
+            except RuntimeError:
+                self.testing_dataframe_layout.replaceWidget(
+                    self.working_viewers[self.working_viewers_num - 1],
+                    self.working_viewers[self.working_viewers_num],
+                )
+                self.self.working_viewers[self.working_viewers_num - 1].deleteLater()
+
+            self.working_viewers_num += 1
+
+            # self.testing_splitter.addWidget(self.testing_viewer)
+
+        # self.store.data[self.analysis_df].edit_data(
+        #     row=1, col=1, text="this is a test text"
+        # )
 
         # self.store.add_dataframe(df, df_name)
         # print(self.store.get_dataframes(df_title).keys())

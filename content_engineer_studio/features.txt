@@ -29,8 +29,11 @@ font-size inconsistencies
 #################################################################
 New features after revision 1
 
-allow for deleting cell contents with deleting
+allow for deleting cell contents with DEL
 allow for pasting cells in all selected cells
+
+implement qabstractitemmodeltester https://www.youtube.com/watch?v=Tm1nNyM6Upk
+implement qtestlib https://doc.qt.io/qt-5/qttestlib-tutorial1-example.html
 
 jira connection make a new table for each story and index entries under the story number
 - add who, when, story number
@@ -159,4 +162,4 @@ Notes:
 - use for message in messages:
     message.get_attribute('class') or message.get_property('class') for checking element attributes
 
-
+- Qt Designer custom widgets path has this format: pandasgui.widgets.dataframe_viewer

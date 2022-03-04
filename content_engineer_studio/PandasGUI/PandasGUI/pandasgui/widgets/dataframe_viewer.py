@@ -26,12 +26,23 @@ logger = logging.getLogger(__name__)
 
 
 class DataFrameViewer(QtWidgets.QWidget):
-    def __init__(self, pgdf: PandasGuiDataFrameStore):
+    def __init__(
+        self,
+        pgdf: PandasGuiDataFrameStore,
+        isview: Optional[bool] = False,
+        data_table_model: Optional[QtCore.QAbstractTableModel] = None,
+        header_model: Optional[QtCore.QAbstractTableModel] = None,
+    ):
         super().__init__()
 
         pgdf = PandasGuiDataFrameStore.cast(pgdf)
         pgdf.dataframe_viewer = self
         self.pgdf = pgdf
+        self.isview = isview
+
+        if isview:
+            self.data_table_model = data_table_model
+            self.header_model = header_model
 
         # Local state
         # How to color cells
@@ -705,14 +716,18 @@ class DataTableView(QtWidgets.QTableView):
         ]
 
         self.dataframe_viewer: DataFrameViewer = parent
+
+        # Create and set model if pandasgui or set parent model if testing/analysis view
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
+        if not parent.isview:
+            self.df_model = DataTableModel(parent)
+            self.setModel(self.df_model)
+        else:
+            self.data_table_model: QtCore.QAbstractTableModel = parent.data_table_model
+            self.setModel(self.data_table_model)
 
         # Store if dataframe has already been adjusted to contents
         self.already_resized = False
-
-        # Create and set model
-        self.df_model = DataTableModel(parent)
-        self.setModel(self.df_model)
 
         # Hide the headers. The DataFrame headers (index & columns) will be displayed in the DataFrameHeaderViews
         self.horizontalHeader().hide()
@@ -890,7 +905,16 @@ class HeaderView(QtWidgets.QTableView):
     def __init__(self, parent: DataFrameViewer, orientation):
         super().__init__(parent)
         self.dataframe_viewer: DataFrameViewer = parent
+
+        # Create and set model
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
+        if not parent.isview:
+            df_model = DataTableModel(parent)
+            self.setModel(df_model)
+        else:
+            self.data_table_model: QtCore.QAbstractTableModel = parent.data_table_model
+            self.setModel(self.data_table_model)
+
         self.setProperty(
             "orientation", "horizontal" if orientation == 1 else "vertical"
         )  # Used in stylesheet
@@ -1394,7 +1418,10 @@ class HeaderNamesView(QtWidgets.QTableView):
 
         # Setup
         self.orientation = orientation
-        self.setModel(HeaderNamesModel(parent, orientation))
+        if not parent.isview:
+            self.setModel(HeaderNamesModel(parent, orientation))
+        else:
+            self.setModel(parent.header_model)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

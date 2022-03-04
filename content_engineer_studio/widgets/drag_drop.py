@@ -74,6 +74,8 @@ class DragDropLabel(QLabel):
             self.setFont(font)
             self.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
             self.setWordWrap(True)
+
+            # set up the working dataframe for analysis or testing
             self.parent.set_df(event.mimeData().text(), self.name)
 
     def eventFilter(self, source: "QObject", event: QEvent) -> bool:
