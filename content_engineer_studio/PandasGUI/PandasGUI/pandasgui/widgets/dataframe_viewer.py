@@ -29,7 +29,7 @@ class DataFrameViewer(QtWidgets.QWidget):
     def __init__(
         self,
         pgdf: PandasGuiDataFrameStore,
-        isview: Optional[bool] = False,
+        replace_model: Optional[bool] = False,
         data_table_model: Optional[QtCore.QAbstractTableModel] = None,
         header_model: Optional[QtCore.QAbstractTableModel] = None,
     ):
@@ -38,9 +38,9 @@ class DataFrameViewer(QtWidgets.QWidget):
         pgdf = PandasGuiDataFrameStore.cast(pgdf)
         pgdf.dataframe_viewer = self
         self.pgdf = pgdf
-        self.isview = isview
+        self.replace_model = replace_model
 
-        if isview:
+        if replace_model:
             self.data_table_model = data_table_model
             self.header_model = header_model
 
@@ -143,6 +143,19 @@ class DataFrameViewer(QtWidgets.QWidget):
         # Set column widths
         for column_index in range(self.columnHeader.model().columnCount()):
             self.auto_size_column(column_index)
+
+    def replace_models(
+        self,
+        pgdf: PandasGuiDataFrameStore,
+        data_table_model: QtCore.QAbstractTableModel,
+        header_model: QtCore.QAbstractTableModel,
+    ):
+        # replaces models with new selected working view models and refreshes UI
+        self.pgdf = pgdf
+        self.dataView.setModel(data_table_model)
+        self.columnHeaderNames.setModel(header_model)
+        self.indexHeaderNames.setModel(header_model)
+        self.refresh_ui()
 
     def set_styles(self):
         for item in [
@@ -719,12 +732,11 @@ class DataTableView(QtWidgets.QTableView):
 
         # Create and set model if pandasgui or set parent model if testing/analysis view
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-        if not parent.isview:
-            self.df_model = DataTableModel(parent)
-            self.setModel(self.df_model)
+        if not parent.replace_model:
+            self.orig_model = DataTableModel(parent)
+            self.setModel(self.orig_model)
         else:
-            self.data_table_model: QtCore.QAbstractTableModel = parent.data_table_model
-            self.setModel(self.data_table_model)
+            self.setModel(parent.data_table_model)
 
         # Store if dataframe has already been adjusted to contents
         self.already_resized = False
@@ -908,7 +920,7 @@ class HeaderView(QtWidgets.QTableView):
 
         # Create and set model
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-        if not parent.isview:
+        if not parent.replace_model:
             df_model = DataTableModel(parent)
             self.setModel(df_model)
         else:
@@ -1418,8 +1430,9 @@ class HeaderNamesView(QtWidgets.QTableView):
 
         # Setup
         self.orientation = orientation
-        if not parent.isview:
-            self.setModel(HeaderNamesModel(parent, orientation))
+        if not parent.replace_model:
+            self.orig_model = HeaderNamesModel(parent, orientation)
+            self.setModel(self.orig_model)
         else:
             self.setModel(parent.header_model)
 

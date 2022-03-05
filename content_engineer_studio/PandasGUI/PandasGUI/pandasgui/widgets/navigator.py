@@ -50,7 +50,6 @@ class DelayedMimeData(QtCore.QMimeData):
             for callback in self.callbacks.copy():
                 self.callbacks.remove(callback)
                 callback()
-
         return QtCore.QMimeData.retrieveData(self, mime_type, preferred_type)
 
 
@@ -68,6 +67,7 @@ class Navigator(FlatDraggableTree):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
 
     def mouseReleaseEvent(self, event):
+        # Context menu
         if event.button() == Qt.RightButton:
             pos = event.pos()
             item = self.itemAt(pos)
@@ -85,6 +85,12 @@ class Navigator(FlatDraggableTree):
 
         super().mouseReleaseEvent(event)
 
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasUrls:
+            e.accept()
+        else:
+            e.ignore()
+
     def dropEvent(self, e):
         if e.mimeData().hasUrls:
             e.setDropAction(QtCore.Qt.CopyAction)
@@ -98,22 +104,16 @@ class Navigator(FlatDraggableTree):
         else:
             e.ignore()
 
-    def dragEnterEvent(self, e):
-        if e.mimeData().hasUrls:
-            e.accept()
-        else:
-            e.ignore()
-
     def dragMoveEvent(self, e):
         if e.mimeData().hasUrls:
             e.accept()
         else:
             e.ignore()
 
-    # def remove_item(self, name):
-    #     for item in traverse_tree_widget(self):
-    #         if item.text(0) == name:
-    #             sip.delete(item)
+    def remove_item(self, name):
+        for item in traverse_tree_widget(self):
+            if item.text(0) == name:
+                sip.delete(item)
 
     def selectionChanged(
         self, selected: QtCore.QItemSelection, deselected: QtCore.QItemSelection
@@ -122,7 +122,6 @@ class Navigator(FlatDraggableTree):
         Show the DataFrameExplorer corresponding to the highlighted nav item.
         """
         super().selectionChanged(selected, deselected)
-
         if len(self.selectedItems()) != 1:
             # Don't change view if user is selecting multiple things using ExtendedSelection (shift / ctrl)
             return

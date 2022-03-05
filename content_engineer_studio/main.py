@@ -318,13 +318,13 @@ class MainWindow(QMainWindow):
         # URLs
         self.livechat_url = "https://www.cleverbot.com/"
 
-        # Dataframes
-        self.working_viewers = {}
-        self.working_viewers_num = 0
-
         # Sets the starting column number for the cell selector combo box
         self.cell_selector_start = 6
         self.cell_selector_start_2 = 4
+
+        # Initialize viewers
+        self.testing_viewer = None
+        self.analysis_viewer = None
 
         # Sets the number of prebuffered windows for auto mode
         self.buffer_len = 3
@@ -346,7 +346,7 @@ class MainWindow(QMainWindow):
         self.row = 0
         self.row_2 = 0
         # Stores what view the user has worked in last
-        self.workingViewNum = 0
+        self.current_work_area = 0
         self.header_len = 0
         self.header_len_2 = 0
         self.index_len = 0
@@ -444,13 +444,13 @@ class MainWindow(QMainWindow):
         self.clear.clicked.connect(lambda: self.auto_queue_model.clear())
         self.stackedWidget.currentChanged.connect(self.workingView)
         self.close_faq.clicked.connect(
-            lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum)
+            lambda: self.stackedWidget.setCurrentIndex(self.current_work_area)
         )
         self.close_settings.clicked.connect(
-            lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum)
+            lambda: self.stackedWidget.setCurrentIndex(self.current_work_area)
         )
         self.close_excel.clicked.connect(
-            lambda: self.stackedWidget.setCurrentIndex(self.workingViewNum)
+            lambda: self.stackedWidget.setCurrentIndex(self.current_work_area)
         )
         self.analysis_menu.triggered.connect(self.switchToAnalysis)
         self.testing_menu.triggered.connect(self.switchToTesting)
@@ -955,40 +955,46 @@ class MainWindow(QMainWindow):
             self.analysis_df = df_title
 
         if mode == "testing":
+            print(self.store.data[df_title].dataframe_viewer.dataView)
+            # print(
+            #     df_title,
+            #     self.store.data[df_title].dataframe_viewer.dataView.model(),
+            #     self.store.data[df_title].dataframe_viewer.columnHeaderNames.model(),
+            # )
+            # Get models from dataframe_viewer
+            dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
 
-            # data: typing.OrderedDict[
-            # str, Union[PandasGuiStoreItem, PandasGuiDataFrameStore]
-
-            data_table_model = self.store.data[
+            h_model = self.store.data[
                 df_title
-            ].dataframe_viewer.dataView.df_model
-            header_model = self.store.data[
-                df_title
-            ].dataframe_viewer.columnHeaderNames.model()
+            ].dataframe_viewer.columnHeaderNames.orig_model
 
-            self.working_viewers[
-                self.working_viewers_num
-            ] = pandasgui.widgets.dataframe_viewer.DataFrameViewer(
-                pgdf=self.store.data[df_title],
-                isview=True,
-                data_table_model=data_table_model,
-                header_model=header_model,
-            )
+            # If there is no preexisting viewer, make a new one and pass in models
+            if self.testing_viewer == None:
+                self.testing_viewer = (
+                    pandasgui.widgets.dataframe_viewer.DataFrameViewer(
+                        pgdf=self.store.data[df_title],
+                        replace_model=True,
+                        data_table_model=dfv_model,
+                        header_model=h_model,
+                    )
+                )
 
-            try:
                 self.testing_dataframe_layout.replaceWidget(
                     self.add_testing_dataframe,
-                    self.working_viewers[self.working_viewers_num],
+                    self.testing_viewer,
                 )
                 self.add_testing_dataframe.deleteLater()
-            except RuntimeError:
-                self.testing_dataframe_layout.replaceWidget(
-                    self.working_viewers[self.working_viewers_num - 1],
-                    self.working_viewers[self.working_viewers_num],
+            else:
+                self.testing_viewer.replace_models(
+                    pgdf=self.store.data[df_title],
+                    data_table_model=dfv_model,
+                    header_model=h_model,
                 )
-                self.self.working_viewers[self.working_viewers_num - 1].deleteLater()
 
-            self.working_viewers_num += 1
+            # self.testing_dataframe_layout.removeWidget(
+            #     self.self.working_viewers[self.working_viewers_num - 1]
+            # )
+            # self.self.working_viewers[self.working_viewers_num - 1].deleteLater()
 
             # self.testing_splitter.addWidget(self.testing_viewer)
 
@@ -1090,8 +1096,8 @@ class MainWindow(QMainWindow):
                 self.search_column_select_3.setCurrentIndex(index.column())
                 self.searchbar.setText(
                     value
-                ) if self.workingViewNum == 0 else self.searchbar_2.setText(value)
-                self.stackedWidget.setCurrentIndex(self.workingViewNum)
+                ) if self.current_work_area == 0 else self.searchbar_2.setText(value)
+                self.stackedWidget.setCurrentIndex(self.current_work_area)
                 self.populate_search_box()
                 self.search_box.setMinimumHeight(100)
                 self.search_box_2.setMinimumHeight(100)
@@ -1472,7 +1478,7 @@ class MainWindow(QMainWindow):
 
     def workingView(self, idx):
         if idx == 0 | idx == 1:
-            self.workingViewNum = idx
+            self.current_work_area = idx
 
     def btn_test(self):
         index = self.history_model.index(3, 0)
