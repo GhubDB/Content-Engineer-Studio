@@ -747,11 +747,10 @@ class DataTableView(QtWidgets.QTableView):
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
 
         self.setStyleSheet(
-            """font-size: 14px;
+            """font-size: 15px;
             gridline-color: rgb(60, 60, 60);"""
         )
         # self.setTextElideMode(Qt.ElideNone)
-        # self.verticalHeader().setResizeMode(QHeaderView.ResizeToContents)
 
     def showEvent(self, event: QtGui.QShowEvent) -> None:
         """

@@ -1,21 +1,21 @@
-class Stylesheets():
-	bot = '''font-size: 11pt;
-			text-align: right; 
+class Stylesheets:
+    bot = """font-size: 11pt;
+			text-align: right;
 			border-style: outset;
 			border-right-width: 5px;
 			border-right-color: rgb(45, 136, 45);
-			padding-left: 4px;'''
-	
-	customer = '''font-size: 11pt; 
-			border-style: outset; 
-			border-left-width: 5px; 
-			border-left-color: rgb(83, 43, 114); 
-			padding-left: 4px; 
-			background-color: rgb(90, 90, 90);'''
-	
-	bot_selected = '''font-size: 11pt; 
-			font-weight: bold; 
-			text-align: right; 
+			padding-left: 4px;"""
+
+    customer = """font-size: 11pt;
+			border-style: outset;
+			border-left-width: 5px;
+			border-left-color: rgb(83, 43, 114);
+			padding-left: 4px;
+			background-color: rgb(90, 90, 90);"""
+
+    bot_selected = """font-size: 11pt;
+			font-weight: bold;
+			text-align: right;
 			border-style: outset;
 			border-right-width: 10px;
 			border-right-color: rgb(45, 136, 45);
@@ -26,24 +26,24 @@ class Stylesheets():
 			border-bottom-width: 2px;
 			border-bottom-color: rgb(45, 136, 45);
 			background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(40, 40, 40, 255), stop:1 rgba(57, 57, 57, 255));
-			padding-right: 4px;'''
-						
-	customer_selected = '''font-size: 11pt; 
-			font-weight: bold; 
-			border-style: outset; 
-			border-left-width: 10px; 
-			border-left-color: rgb(83, 43, 114); 
-			border-right-width: 2px; 
-			border-right-color: rgb(83, 43, 114); 
-			border-top-width: 2px; 
-			border-top-color: rgb(83, 43, 114); 
-			border-bottom-width: 2px; 
-			border-bottom-color: rgb(83, 43, 114); 
-			padding-left: 4px; 
-			background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));
-			'''
+			padding-right: 4px;"""
 
-	custom_dark = '''
+    customer_selected = """font-size: 11pt;
+			font-weight: bold;
+			border-style: outset;
+			border-left-width: 10px;
+			border-left-color: rgb(83, 43, 114);
+			border-right-width: 2px;
+			border-right-color: rgb(83, 43, 114);
+			border-top-width: 2px;
+			border-top-color: rgb(83, 43, 114);
+			border-bottom-width: 2px;
+			border-bottom-color: rgb(83, 43, 114);
+			padding-left: 4px;
+			background-color: qlineargradient(spread:pad, x1:0.5, y1:1, x2:0.5, y2:0, stop:0 rgba(77, 77, 77, 255), stop:1 rgba(97, 97, 97, 255));
+			"""
+
+    custom_dark = """
 			QTableView {
 				selection-color: rgb(255, 255, 255);
 				selection-background-color: rgb(55, 92, 123);
@@ -94,10 +94,9 @@ class Stylesheets():
 			}
 			QLineEdit:focus {
 				border: 2px solid #007ce5;
-			}'''
+			}"""
 
-
-	elegantdark = '''
+    elegantdark = """
 	/*
 	ElegantDark Style Sheet for QT Applications
 	Author: Jaime A. Quiroga P.
@@ -116,7 +115,7 @@ class Stylesheets():
 		color: rgb(230, 230, 230);
 		selection-color: rgb(255, 255, 255);
 		selection-background-color: rgb(55, 92, 123);
-	
+
 	}
 	/*
 	#actions {
@@ -328,7 +327,7 @@ class Stylesheets():
 		border: 2px solid #007ce5;
 	}
 	QLabel {
-		color:rgb(255,255,255);	
+		color:rgb(255,255,255);
 	}
 	QRadioButton {
 		color: rgb(230, 230, 230);
@@ -347,7 +346,7 @@ class Stylesheets():
 	QProgressBar {
 		text-align: center;
 		color: rgb(240, 240, 240);
-		border-width: 1px; 
+		border-width: 1px;
 		border-radius: 10px;
 		border-color: rgb(58, 58, 58);
 		border-style: inset;
@@ -461,4 +460,4 @@ class Stylesheets():
 	QStatusBar {
 		color:rgb(240,240,240);
 	}
-	'''
+	"""

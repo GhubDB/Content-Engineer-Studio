@@ -367,8 +367,8 @@ class MainWindow(QMainWindow):
 
         # Set analysis and testing splitter stretch
         sizes = [99999, 1]
-        self.splitter_5.setSizes(sizes)
-        self.splitter_2.setSizes(sizes)
+        self.analysis_splitter.setSizes(sizes)
+        self.testing_splitter.setSizes(sizes)
 
         # Apply custom stylesheets
         self.setStyleSheet(Stylesheets.custom_dark)
@@ -463,6 +463,9 @@ class MainWindow(QMainWindow):
         # self.auto_queue_model.rowsInserted.connect(self.auto_queue_model.itemData)
         self.test.clicked.connect(self.btn_test)
         self.add_testing_dataframe.clicked.connect(
+            lambda: self.stackedWidget.setCurrentIndex(5)
+        )
+        self.add_analysis_dataframe.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(5)
         )
 
@@ -948,9 +951,14 @@ class MainWindow(QMainWindow):
     ################################################################################################
 
     def keyPressEvent(self, event):
+        """
+        Hotkeys
+        """
         QtWidgets.QWidget.keyPressEvent(self, event)
         mods = event.modifiers()
-        # Hotkeys
+        if event.key() == Qt.Key_G and (mods & Qt.ControlModifier):
+            # Switch to Analysis
+            self.stackedWidget.setCurrentIndex(0)
         if event.key() == Qt.Key_T and (mods & Qt.ControlModifier):
             # Switch to Testing
             self.stackedWidget.setCurrentIndex(1)
@@ -962,19 +970,36 @@ class MainWindow(QMainWindow):
         """
         Assigns dataframes to analysis and testing mode
         """
+        # Get models from dataframe_viewer
+        dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
+
+        h_model = self.store.data[
+            df_title
+        ].dataframe_viewer.columnHeaderNames.orig_model
+
+        # If there is no preexisting viewer,
+        # make a new one and pass in pgdf of selected Dataframe
         if mode == "analysis":
-            self.analysis_df = df_title
+            if self.analysis_viewer == None:
+                self.analysis_viewer = (
+                    pandasgui.widgets.dataframe_viewer.DataFrameViewer(
+                        pgdf=self.store.data[df_title]
+                    )
+                )
 
-        if mode == "testing":
-            # Get models from dataframe_viewer
-            dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
-
-            h_model = self.store.data[
-                df_title
-            ].dataframe_viewer.columnHeaderNames.orig_model
-
-            # If there is no preexisting viewer,
-            # make a new one and pass in pgdf of selected Dataframe
+                self.analysis_dataframe_layout.replaceWidget(
+                    self.add_analysis_dataframe,
+                    self.analysis_viewer,
+                )
+                self.add_analysis_dataframe.deleteLater()
+            # If viewer exists, replace models
+            else:
+                self.analysis_viewer.replace_models(
+                    pgdf=self.store.data[df_title],
+                    data_table_model=dfv_model,
+                    header_model=h_model,
+                )
+        elif mode == "testing":
             if self.testing_viewer == None:
                 self.testing_viewer = (
                     pandasgui.widgets.dataframe_viewer.DataFrameViewer(
@@ -1257,10 +1282,6 @@ class MainWindow(QMainWindow):
             self.cell_selector.addItem(item)
 
     def populate_analysis(self):
-        # '''Bugfix for number only entries on the excel sheet needed.
-        # self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
-        # TypeError: setText(self, str): argument 1 has unexpected type numpy.float64'''
-        # print(self.row, 'no1', self.cell_selector.currentIndex() + self.cell_selector_start)
         self.analysis.setPlainText(
             self.df.loc[self.row][
                 self.cell_selector.currentIndex() + self.cell_selector_start
@@ -1460,7 +1481,7 @@ class MainWindow(QMainWindow):
         customer = self.getChatText(export=True)
         if customer:
             for message in customer:
-                print(message)
+                # print(message)
                 item = QtGui.QStandardItem(message)
                 self.auto_queue_model.appendRow(item)
         self.stackedWidget.setCurrentWidget(self.testing_suite)
@@ -1524,7 +1545,6 @@ class MainWindow(QMainWindow):
         # print(self.canned_states_2)
 
         # Saving chat messages
-        print(len(self.marked_messages_2))
         if self.chat_2.rowCount() > 0:
             customer, bot = self.getChatText_2()
             self.testing_excel.updateCells(customer, self.row_2 + 2, 3)
