@@ -29,20 +29,12 @@ class DataFrameViewer(QtWidgets.QWidget):
     def __init__(
         self,
         pgdf: PandasGuiDataFrameStore,
-        replace_model: Optional[bool] = False,
-        data_table_model: Optional[QtCore.QAbstractTableModel] = None,
-        header_model: Optional[QtCore.QAbstractTableModel] = None,
     ):
         super().__init__()
 
         pgdf = PandasGuiDataFrameStore.cast(pgdf)
         pgdf.dataframe_viewer = self
         self.pgdf = pgdf
-        self.replace_model = replace_model
-
-        if replace_model:
-            self.data_table_model = data_table_model
-            self.header_model = header_model
 
         # Local state
         # How to color cells
@@ -281,6 +273,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         # Get the bounds using the top left and bottom right selected cells
 
         # Copy from data, columns, or index depending which has focus
+        print(header, self.dataView.hasFocus())
         if header or self.dataView.hasFocus():
             indexes = self.dataView.selectionModel().selection().indexes()
             rows = [ix.row() for ix in indexes]
@@ -732,11 +725,8 @@ class DataTableView(QtWidgets.QTableView):
 
         # Create and set model if pandasgui or set parent model if testing/analysis view
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-        if not parent.replace_model:
-            self.orig_model = DataTableModel(parent)
-            self.setModel(self.orig_model)
-        else:
-            self.setModel(parent.data_table_model)
+        self.orig_model = DataTableModel(parent)
+        self.setModel(self.orig_model)
 
         # Store if dataframe has already been adjusted to contents
         self.already_resized = False
@@ -920,12 +910,9 @@ class HeaderView(QtWidgets.QTableView):
 
         # Create and set model
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-        if not parent.replace_model:
-            df_model = DataTableModel(parent)
-            self.setModel(df_model)
-        else:
-            self.data_table_model: QtCore.QAbstractTableModel = parent.data_table_model
-            self.setModel(self.data_table_model)
+
+        df_model = DataTableModel(parent)
+        self.setModel(df_model)
 
         self.setProperty(
             "orientation", "horizontal" if orientation == 1 else "vertical"
@@ -1430,11 +1417,9 @@ class HeaderNamesView(QtWidgets.QTableView):
 
         # Setup
         self.orientation = orientation
-        if not parent.replace_model:
-            self.orig_model = HeaderNamesModel(parent, orientation)
-            self.setModel(self.orig_model)
-        else:
-            self.setModel(parent.header_model)
+
+        self.orig_model = HeaderNamesModel(parent, orientation)
+        self.setModel(self.orig_model)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

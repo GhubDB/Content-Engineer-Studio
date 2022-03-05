@@ -955,12 +955,6 @@ class MainWindow(QMainWindow):
             self.analysis_df = df_title
 
         if mode == "testing":
-            print(self.store.data[df_title].dataframe_viewer.dataView)
-            # print(
-            #     df_title,
-            #     self.store.data[df_title].dataframe_viewer.dataView.model(),
-            #     self.store.data[df_title].dataframe_viewer.columnHeaderNames.model(),
-            # )
             # Get models from dataframe_viewer
             dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
 
@@ -968,14 +962,12 @@ class MainWindow(QMainWindow):
                 df_title
             ].dataframe_viewer.columnHeaderNames.orig_model
 
-            # If there is no preexisting viewer, make a new one and pass in models
+            # If there is no preexisting viewer,
+            # make a new one and pass in pgdf of selected Dataframe
             if self.testing_viewer == None:
                 self.testing_viewer = (
                     pandasgui.widgets.dataframe_viewer.DataFrameViewer(
-                        pgdf=self.store.data[df_title],
-                        replace_model=True,
-                        data_table_model=dfv_model,
-                        header_model=h_model,
+                        pgdf=self.store.data[df_title]
                     )
                 )
 
@@ -984,26 +976,13 @@ class MainWindow(QMainWindow):
                     self.testing_viewer,
                 )
                 self.add_testing_dataframe.deleteLater()
+            # If viewer exists, replace models
             else:
                 self.testing_viewer.replace_models(
                     pgdf=self.store.data[df_title],
                     data_table_model=dfv_model,
                     header_model=h_model,
                 )
-
-            # self.testing_dataframe_layout.removeWidget(
-            #     self.self.working_viewers[self.working_viewers_num - 1]
-            # )
-            # self.self.working_viewers[self.working_viewers_num - 1].deleteLater()
-
-            # self.testing_splitter.addWidget(self.testing_viewer)
-
-        # self.store.data[self.analysis_df].edit_data(
-        #     row=1, col=1, text="this is a test text"
-        # )
-
-        # self.store.add_dataframe(df, df_name)
-        # print(self.store.get_dataframes(df_title).keys())
 
     def row_selector(self, selected: QtCore.QObject):
         """
