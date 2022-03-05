@@ -11,7 +11,6 @@ from PyQt5.QtCore import (
     QItemSelectionModel,
     Qt,
     QObject,
-    QEvent,
     pyqtSignal,
     QRunnable,
     pyqtSlot,
@@ -614,13 +613,13 @@ class MainWindow(QMainWindow):
                 MenuItem(
                     name="Find", func=self.find_bar.show_find_bar, shortcut="Ctrl+F"
                 ),
-                MenuItem(name="Copy", func=self.copy, shortcut="Ctrl+C"),
-                MenuItem(
-                    name="Copy With Headers",
-                    func=self.copy_with_headers,
-                    shortcut="Ctrl+Shift+C",
-                ),
-                MenuItem(name="Paste", func=self.paste, shortcut="Ctrl+V"),
+                # MenuItem(name="Copy", func=self.copy, shortcut="Ctrl+C"),
+                # MenuItem(
+                #     name="Copy With Headers",
+                #     func=self.copy_with_headers,
+                #     shortcut="Ctrl+Shift+C",
+                # ),
+                # MenuItem(name="Paste", func=self.paste, shortcut="Ctrl+V"),
                 MenuItem(name="Import", func=self.import_dialog),
                 MenuItem(name="Import From Clipboard", func=self.import_from_clipboard),
                 MenuItem(name="Export", func=self.export_dialog),
@@ -754,23 +753,24 @@ class MainWindow(QMainWindow):
             self.setStyleSheet(qtstylish.light())
             self.store.settings.theme.value = "light"
 
-    def copy(self):
-        if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
-            self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.copy()
-        elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
-            self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy()
+    # def copy(self):
+    #     print("other copy")
+    #     if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
+    #         self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.copy()
+    #     elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
+    #         self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy()
 
-    def copy_with_headers(self):
-        if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
-            self.store.selected_pgdf.dataframe_viewer.copy(header=True)
-        elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
-            self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy(
-                header=True
-            )
+    # def copy_with_headers(self):
+    #     if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
+    #         self.store.selected_pgdf.dataframe_viewer.copy(header=True)
+    #     elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
+    #         self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy(
+    #             header=True
+    #         )
 
-    def paste(self):
-        if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
-            self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.paste()
+    # def paste(self):
+    #     if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
+    #         self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.paste()
 
     def show_code_export(self):
         self.store.selected_pgdf.dataframe_explorer.code_history_viewer.show()
@@ -946,6 +946,17 @@ class MainWindow(QMainWindow):
     Main Methods
     """
     ################################################################################################
+
+    def keyPressEvent(self, event):
+        QtWidgets.QWidget.keyPressEvent(self, event)
+        mods = event.modifiers()
+        # Hotkeys
+        if event.key() == Qt.Key_T and (mods & Qt.ControlModifier):
+            # Switch to Testing
+            self.stackedWidget.setCurrentIndex(1)
+        if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
+            # Switch to Dataframe Viewer
+            self.stackedWidget.setCurrentIndex(5)
 
     def set_df(self, df_title: str, mode: str):
         """

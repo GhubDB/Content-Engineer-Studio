@@ -7,8 +7,8 @@ from typing import Union, Optional
 import numpy as np
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt, QTimer, QThreadPool
-from PyQt5.QtGui import QColor, QBrush, QPalette, QFont
+from PyQt5.QtCore import Qt, QTimer, QThreadPool, QEvent
+from PyQt5.QtGui import QColor, QBrush, QPalette, QFont, QKeySequence
 
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
@@ -136,6 +136,34 @@ class DataFrameViewer(QtWidgets.QWidget):
         for column_index in range(self.columnHeader.model().columnCount()):
             self.auto_size_column(column_index)
 
+        self.installEventFilter(self)
+
+    def eventFilter(self, source: "QObject", event: QEvent) -> bool:
+        # mods = event.modifiers()
+
+        # print(dir(event))
+        if event.type() == QEvent.KeyPress:
+            modifiers = event.modifiers()
+            # Ctrl+C
+            if event.matches(QtGui.QKeySequence.Copy):
+                # print("copy")
+                self.copy()
+
+            # Ctrl+Shift+C
+            if (
+                modifiers & QtCore.Qt.ControlModifier
+                and modifiers & QtCore.Qt.ShiftModifier
+                and event.key() == Qt.Key_C
+            ):
+                # print("copy headers")
+                self.copy(header=True)
+
+            if event.matches(QtGui.QKeySequence.Paste):
+                # print("paste")
+                self.paste()
+
+        return super().eventFilter(source, event)
+
     def replace_models(
         self,
         pgdf: PandasGuiDataFrameStore,
@@ -148,6 +176,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         self.columnHeaderNames.setModel(header_model)
         self.indexHeaderNames.setModel(header_model)
         self.refresh_ui()
+        self.dataView.already_resized = False
 
     def set_styles(self):
         for item in [
@@ -241,31 +270,6 @@ class DataFrameViewer(QtWidgets.QWidget):
         self.columnHeader.selectColumn(column)
         self.columnHeader.on_selectionChanged(force=True)
 
-    def keyPressEvent(self, event):
-        # Disabling this and moving hotkeys to main GUI
-        if self.pgdf.gui is not None:
-            super(DataFrameViewer, self).keyPressEvent(event)
-
-        QtWidgets.QWidget.keyPressEvent(self, event)
-        mods = event.modifiers()
-
-        # Ctrl+C
-        if event.key() == Qt.Key_C and (mods & Qt.ControlModifier):
-            self.copy()
-        # Ctrl+Shift+C
-        if (
-            event.key() == Qt.Key_C
-            and (mods & Qt.ShiftModifier)
-            and (mods & Qt.ControlModifier)
-        ):
-            self.copy(header=True)
-        if event.matches(QtGui.QKeySequence.Paste):
-            self.paste()
-        if event.key() == Qt.Key_P and (mods & Qt.ControlModifier):
-            pass
-        if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
-            pass
-
     def copy(self, header=False):
         """
         Copy the selected cells to clipboard in an Excel-pasteable format
@@ -273,7 +277,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         # Get the bounds using the top left and bottom right selected cells
 
         # Copy from data, columns, or index depending which has focus
-        print(header, self.dataView.hasFocus())
+        # print(header, self.dataView.hasFocus())
         if header or self.dataView.hasFocus():
             indexes = self.dataView.selectionModel().selection().indexes()
             rows = [ix.row() for ix in indexes]
