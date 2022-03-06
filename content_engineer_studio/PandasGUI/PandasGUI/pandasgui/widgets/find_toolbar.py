@@ -4,6 +4,7 @@ import time
 import pkg_resources
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+import qtstylish
 
 
 class FindToolbar(QtWidgets.QToolBar):
@@ -37,6 +38,7 @@ class FindToolbar(QtWidgets.QToolBar):
         self.find_textbox = ButtonLineEdit(content_margins=(0, 0, 5, 0))
         self.find_textbox.setPlaceholderText("Find")
         self.find_textbox.textChanged.connect(self.query)
+        # self.find_textbox.setStyleSheet(qtstylish.dark())
 
         ####################
         # add match modification
@@ -93,7 +95,8 @@ class FindToolbar(QtWidgets.QToolBar):
         previous_match_button = QtWidgets.QPushButton()
         up_arrow_icon_raw_path = self.image_folder + "/arrow-up.svg"
         up_arrow_icon_path = pkg_resources.resource_filename(
-            __name__, up_arrow_icon_raw_path)
+            __name__, up_arrow_icon_raw_path
+        )
         up_arrow_icon = QtGui.QIcon(up_arrow_icon_path)
         previous_match_button.setIcon(up_arrow_icon)
         previous_match_button.setToolTip("Previous match")
@@ -188,7 +191,7 @@ class FindToolbar(QtWidgets.QToolBar):
     def show_find_bar(self):
         if self.height() == 0:
             animation_duration = 200
-            full_toolbar_height = 30
+            full_toolbar_height = 40
 
             showAnimation = QtCore.QVariantAnimation(self)
             showAnimation.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
@@ -205,9 +208,9 @@ class FindToolbar(QtWidgets.QToolBar):
 
     @QtCore.pyqtSlot()
     def hide_find_bar(self):
-        if self.height() == 30:
+        if self.height() == 40:
             animation_duration = 200
-            full_toolbar_height = 30
+            full_toolbar_height = 40
 
             hideAnimation = QtCore.QVariantAnimation(self)
             hideAnimation.setEasingCurve(QtCore.QEasingCurve.InOutQuad)
@@ -371,7 +374,7 @@ class FindThread(QtCore.QThread):
             while len(column) > 0:
                 chunk = column.iloc[: self.max_chunk_size]
                 chunks.append(chunk)
-                column = column.iloc[self.max_chunk_size:]
+                column = column.iloc[self.max_chunk_size :]
         return chunks
 
     def get_matches(self, chunk):
@@ -387,7 +390,7 @@ class FindThread(QtCore.QThread):
             else:
                 rows_with_match = chunk[
                     chunk.astype(str).str.lower() == self.text.lower()
-                    ]
+                ]
         else:
             pd_match_flags = self.match_flags.copy()
             pd_match_flags.pop("whole word")

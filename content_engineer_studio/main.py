@@ -299,7 +299,6 @@ class AddVariant(QWidget):
         self.layout.addWidget(add_variant, 1, 0, 1, 1)
         self.layout.addWidget(self.cancel_variant, 1, 1, 1, 1)
         self.setLayout(self.layout)
-        self.setStyleSheet(Stylesheets.elegantdark)
         self.show()
 
 
@@ -1184,9 +1183,7 @@ class MainWindow(QMainWindow):
         """
         # TODO: add to save_analysis_2
         self.store.data[self.analysis_df].edit_data(
-            self.row,
-            self.cell_selector.currentText(),
-            self.analysis.toPlainText()
+            self.row, self.cell_selector.currentText(), self.analysis.toPlainText()
         )
         # self.store.data[self.analysis_df].df.loc[self.row][
         #     self.cell_selector.currentText()

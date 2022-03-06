@@ -94,7 +94,8 @@ class Stylesheets:
 			}
 			QLineEdit:focus {
 				border: 2px solid #007ce5;
-			}"""
+			}
+            """
 
     elegantdark = """
 	/*

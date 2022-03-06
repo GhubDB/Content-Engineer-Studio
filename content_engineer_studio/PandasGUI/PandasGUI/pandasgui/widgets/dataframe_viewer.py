@@ -173,9 +173,8 @@ class DataFrameViewer(QtWidgets.QWidget):
         header_model_horizontal: QtCore.QAbstractTableModel,
         header_model_vertical: QtCore.QAbstractTableModel,
     ):
-        # replaces models with new selected working view models and refreshes UI
+        # Replaces models with new selected working view models and refreshes UI
         self.pgdf = pgdf
-        print("replaced: ", self.pgdf.df.shape[0])
         self.dataView.setModel(data_table_model)
         self.columnHeaderNames.setModel(orig_model_horizontal)
         self.indexHeaderNames.setModel(orig_model_vertical)
