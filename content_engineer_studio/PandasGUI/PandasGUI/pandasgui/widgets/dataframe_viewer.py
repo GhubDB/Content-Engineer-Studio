@@ -138,7 +138,7 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         self.installEventFilter(self)
 
-    def eventFilter(self, source: "QObject", event: QEvent) -> bool:
+    def eventFilter(self, source, event: QEvent) -> bool:
         # mods = event.modifiers()
 
         # print(dir(event))
@@ -168,13 +168,21 @@ class DataFrameViewer(QtWidgets.QWidget):
         self,
         pgdf: PandasGuiDataFrameStore,
         data_table_model: QtCore.QAbstractTableModel,
-        header_model: QtCore.QAbstractTableModel,
+        orig_model_horizontal: QtCore.QAbstractTableModel,
+        orig_model_vertical: QtCore.QAbstractTableModel,
+        header_model_horizontal: QtCore.QAbstractTableModel,
+        header_model_vertical: QtCore.QAbstractTableModel,
     ):
         # replaces models with new selected working view models and refreshes UI
         self.pgdf = pgdf
+        print("replaced: ", self.pgdf.df.shape[0])
         self.dataView.setModel(data_table_model)
-        self.columnHeaderNames.setModel(header_model)
-        self.indexHeaderNames.setModel(header_model)
+        self.columnHeaderNames.setModel(orig_model_horizontal)
+        self.indexHeaderNames.setModel(orig_model_vertical)
+        self.columnHeader.setModel(header_model_horizontal)
+        self.indexHeader.setModel(header_model_vertical)
+        for column_index in range(self.columnHeader.model().columnCount()):
+            self.auto_size_column(column_index)
         self.refresh_ui()
         self.dataView.already_resized = False
 
@@ -766,10 +774,9 @@ class DataTableView(QtWidgets.QTableView):
             # Hand the rest of the resizing off to a thread
             # so the application does not stay unresponsive for long
             threadpool = QThreadPool.globalInstance()
+            end = self.model().rowCount()
             resizer = Worker(
-                lambda start=40, end=self.pgdf.df.shape[0]: self.thread_resize_rows(
-                    start, end
-                ),
+                lambda start=40, end=end: self.thread_resize_rows(start, end),
             )
             threadpool.start(resizer)
 
@@ -910,13 +917,7 @@ class HeaderView(QtWidgets.QTableView):
     def __init__(self, parent: DataFrameViewer, orientation):
         super().__init__(parent)
         self.dataframe_viewer: DataFrameViewer = parent
-
-        # Create and set model
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-
-        df_model = DataTableModel(parent)
-        self.setModel(df_model)
-
         self.setProperty(
             "orientation", "horizontal" if orientation == 1 else "vertical"
         )  # Used in stylesheet
@@ -924,7 +925,14 @@ class HeaderView(QtWidgets.QTableView):
         # Setup
         self.orientation = orientation
         self.table = parent.dataView
-        self.setModel(HeaderModel(parent, orientation))
+
+        if orientation == 1:
+            self.header_model_horizontal = HeaderModel(parent, orientation)
+            self.setModel(self.header_model_horizontal)
+        else:
+            self.header_model_vertical = HeaderModel(parent, orientation)
+            self.setModel(self.header_model_vertical)
+
         self.padding = 90
 
         ###############
@@ -1002,7 +1010,7 @@ class HeaderView(QtWidgets.QTableView):
         point = event.pos()
         ix = self.indexAt(point)
         col = ix.column()
-        col_name = self.pgdf.df.columns[col]
+        # col_name = self.pgdf.df.columns[col]
         if (
             event.button() == QtCore.Qt.RightButton
             and self.orientation == Qt.Horizontal
@@ -1420,9 +1428,12 @@ class HeaderNamesView(QtWidgets.QTableView):
 
         # Setup
         self.orientation = orientation
-
-        self.orig_model = HeaderNamesModel(parent, orientation)
-        self.setModel(self.orig_model)
+        if orientation == 1:
+            self.orig_model_horizontal = HeaderNamesModel(parent, orientation)
+            self.setModel(self.orig_model_horizontal)
+        else:
+            self.orig_model_vertical = HeaderNamesModel(parent, orientation)
+            self.setModel(self.orig_model_vertical)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

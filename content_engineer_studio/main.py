@@ -322,8 +322,10 @@ class MainWindow(QMainWindow):
         self.cell_selector_start_2 = 4
 
         # Initialize viewers
-        self.testing_viewer = None
         self.analysis_viewer = None
+        self.analysis_df = None
+        self.testing_viewer = None
+        self.testing_df = None
 
         # Sets the number of prebuffered windows for auto mode
         self.buffer_len = 3
@@ -973,13 +975,24 @@ class MainWindow(QMainWindow):
         # Get models from dataframe_viewer
         dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
 
-        h_model = self.store.data[
+        orig_model_horizontal = self.store.data[
             df_title
-        ].dataframe_viewer.columnHeaderNames.orig_model
+        ].dataframe_viewer.columnHeaderNames.orig_model_horizontal
+        orig_model_vertical = self.store.data[
+            df_title
+        ].dataframe_viewer.indexHeaderNames.orig_model_vertical
+
+        header_model_horizontal = self.store.data[
+            df_title
+        ].dataframe_viewer.columnHeader.header_model_horizontal
+        header_model_vertical = self.store.data[
+            df_title
+        ].dataframe_viewer.indexHeader.header_model_vertical
 
         # If there is no preexisting viewer,
         # make a new one and pass in pgdf of selected Dataframe
         if mode == "analysis":
+            self.analysis_df = df_title
             if self.analysis_viewer == None:
                 self.analysis_viewer = (
                     pandasgui.widgets.dataframe_viewer.DataFrameViewer(
@@ -997,9 +1010,13 @@ class MainWindow(QMainWindow):
                 self.analysis_viewer.replace_models(
                     pgdf=self.store.data[df_title],
                     data_table_model=dfv_model,
-                    header_model=h_model,
+                    orig_model_horizontal=orig_model_horizontal,
+                    orig_model_vertical=orig_model_vertical,
+                    header_model_horizontal=header_model_horizontal,
+                    header_model_vertical=header_model_vertical,
                 )
         elif mode == "testing":
+            self.testing_df = df_title
             if self.testing_viewer == None:
                 self.testing_viewer = (
                     pandasgui.widgets.dataframe_viewer.DataFrameViewer(
@@ -1017,7 +1034,10 @@ class MainWindow(QMainWindow):
                 self.testing_viewer.replace_models(
                     pgdf=self.store.data[df_title],
                     data_table_model=dfv_model,
-                    header_model=h_model,
+                    orig_model_horizontal=orig_model_horizontal,
+                    orig_model_vertical=orig_model_vertical,
+                    header_model_horizontal=header_model_horizontal,
+                    header_model_vertical=header_model_vertical,
                 )
 
     def row_selector(self, selected: QtCore.QObject):
@@ -1162,9 +1182,15 @@ class MainWindow(QMainWindow):
         """
         Saves current analysis text to dataframe
         """
-        self.df.loc[self.row][
-            self.cell_selector.currentText()
-        ] = self.analysis.toPlainText()
+        # TODO: add to save_analysis_2
+        self.store.data[self.analysis_df].edit_data(
+            self.row,
+            self.cell_selector.currentText(),
+            self.analysis.toPlainText()
+        )
+        # self.store.data[self.analysis_df].df.loc[self.row][
+        #     self.cell_selector.currentText()
+        # ] = self.analysis.toPlainText()
 
     def getChatlog(self, output):
         """
@@ -1283,7 +1309,7 @@ class MainWindow(QMainWindow):
 
     def populate_analysis(self):
         self.analysis.setPlainText(
-            self.df.loc[self.row][
+            self.store.data[self.analysis_df].df.loc[self.row][
                 self.cell_selector.currentIndex() + self.cell_selector_start
             ]
         )
@@ -1567,7 +1593,7 @@ class MainWindow(QMainWindow):
         """
         Saves current analysis text to dataframe
         """
-        self.df_2.loc[self.row_2][
+        self.store.data[self.testing_df].df.loc[self.row_2][
             self.cell_selector_2.currentText()
         ] = self.analysis_2.toPlainText()
 
@@ -1710,8 +1736,8 @@ class MainWindow(QMainWindow):
             self.cell_selector_2.addItem(item)
 
     def populate_analysis_2(self):
-        self.analysis_2.setText(
-            self.df_2.loc[self.row_2][
+        self.analysis_2.setPlainText(
+            self.store.data[self.testing_df].df.loc[self.row_2][
                 self.cell_selector_2.currentIndex() + self.cell_selector_start_2
             ]
         )

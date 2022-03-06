@@ -17,8 +17,17 @@ from pandas import DataFrame
 from PyQt5 import QtCore, QtWidgets
 import traceback
 from datetime import datetime
-from pandasgui.utility import unique_name, in_interactive_console, refactor_variable, clean_dataframe, nunique, \
-    parse_cell, parse_all_dates, parse_date, get_movements
+from pandasgui.utility import (
+    unique_name,
+    in_interactive_console,
+    refactor_variable,
+    clean_dataframe,
+    nunique,
+    parse_cell,
+    parse_all_dates,
+    parse_date,
+    get_movements,
+)
 from pandasgui.constants import LOCAL_DATA_DIR
 import os
 from enum import Enum
@@ -30,7 +39,7 @@ import contextlib
 logger = logging.getLogger(__name__)
 
 # JSON file that stores persistent user preferences
-preferences_path = os.path.join(LOCAL_DATA_DIR, 'preferences.json')
+preferences_path = os.path.join(LOCAL_DATA_DIR, "preferences.json")
 
 
 def read_saved_settings():
@@ -39,18 +48,21 @@ def read_saved_settings():
         return {}
     else:
         try:
-            with open(preferences_path, 'r') as f:
+            with open(preferences_path, "r") as f:
                 saved_settings = json.load(f)
             return saved_settings
         except Exception as e:
 
-            logger.warning("Error occurred reading preferences. Resetting to defaults\n" + traceback.format_exc())
+            logger.warning(
+                "Error occurred reading preferences. Resetting to defaults\n"
+                + traceback.format_exc()
+            )
             write_saved_settings({})
             return {}
 
 
 def write_saved_settings(settings):
-    with open(preferences_path, 'w') as f:
+    with open(preferences_path, "w") as f:
         json.dump(settings, f)
 
 
@@ -83,17 +95,17 @@ class Setting(DictLike):
         super().__setattr__(key, value)
 
 
-DEFAULT_SETTINGS = {'editable': True,
-                    'block': None,
-                    'theme': 'light',
-                    'auto_finish': True,
-                    'refresh_statistics': True,
-                    'render_mode': 'auto',
-                    'aggregation': 'mean',
-                    'title_format': "{name}: {title_columns}{title_dimensions}{names}{title_y}{title_z}{over_by}"
-                                    "{title_x} {selection}<br><sub>{groupings}{filters} {title_trendline}</sub>"
-
-                    }
+DEFAULT_SETTINGS = {
+    "editable": True,
+    "block": None,
+    "theme": "light",
+    "auto_finish": True,
+    "refresh_statistics": True,
+    "render_mode": "auto",
+    "aggregation": "mean",
+    "title_format": "{name}: {title_columns}{title_dimensions}{names}{title_y}{title_z}{over_by}"
+    "{title_x} {selection}<br><sub>{groupings}{filters} {title_trendline}</sub>",
+}
 
 
 @dataclass
@@ -123,82 +135,98 @@ class SettingsStore(DictLike, QtCore.QObject):
 
         if in_interactive_console():
             # Don't block if in an interactive console (so you can view GUI and still continue running commands)
-            settings['block'] = False
+            settings["block"] = False
         else:
             # If in a script, block or else the script will continue and finish without allowing GUI interaction
-            settings['block'] = True
+            settings["block"] = True
 
-        self.block = Setting(label="block",
-                             value=settings['block'],
-                             description="Should GUI block code execution until closed?",
-                             dtype=bool,
-                             persist=False)
+        self.block = Setting(
+            label="block",
+            value=settings["block"],
+            description="Should GUI block code execution until closed?",
+            dtype=bool,
+            persist=False,
+        )
 
-        self.editable = Setting(label="editable",
-                                value=settings['editable'],
-                                description="Are table cells editable?",
-                                dtype=bool,
-                                persist=True)
+        self.editable = Setting(
+            label="editable",
+            value=settings["editable"],
+            description="Are table cells editable?",
+            dtype=bool,
+            persist=True,
+        )
 
-        self.theme = Setting(label="theme",
-                             value=settings['theme'],
-                             description="UI theme",
-                             dtype=Literal['light', 'dark', 'classic'],
-                             persist=True)
+        self.theme = Setting(
+            label="theme",
+            value=settings["theme"],
+            description="UI theme",
+            dtype=Literal["light", "dark", "classic"],
+            persist=True,
+        )
 
-        self.refresh_statistics = Setting(label="refresh_statistics",
-                                          value=settings['refresh_statistics'],
-                                          description="Recalculate statistics when data changes",
-                                          dtype=bool,
-                                          persist=True)
+        self.refresh_statistics = Setting(
+            label="refresh_statistics",
+            value=settings["refresh_statistics"],
+            description="Recalculate statistics when data changes",
+            dtype=bool,
+            persist=True,
+        )
 
         # Settings related to Grapher
 
-        self.auto_finish = Setting(label="auto_finish",
-                                   value=settings['auto_finish'],
-                                   description="Automatically renders plot after each drag and drop",
-                                   dtype=bool,
-                                   persist=True)
+        self.auto_finish = Setting(
+            label="auto_finish",
+            value=settings["auto_finish"],
+            description="Automatically renders plot after each drag and drop",
+            dtype=bool,
+            persist=True,
+        )
 
-        self.render_mode = Setting(label="render_mode",
-                                   value=settings['render_mode'],
-                                   description="render_mode",
-                                   dtype=Literal['auto', 'webgl', 'svg'],
-                                   persist=True)
+        self.render_mode = Setting(
+            label="render_mode",
+            value=settings["render_mode"],
+            description="render_mode",
+            dtype=Literal["auto", "webgl", "svg"],
+            persist=True,
+        )
 
-        self.aggregation = Setting(label="aggregation",
-                                   value=settings['aggregation'],
-                                   description="aggregation",
-                                   dtype=Literal['mean', 'median', 'min', 'max', 'sum', None],
-                                   persist=True)
+        self.aggregation = Setting(
+            label="aggregation",
+            value=settings["aggregation"],
+            description="aggregation",
+            dtype=Literal["mean", "median", "min", "max", "sum", None],
+            persist=True,
+        )
 
-        self.title_format = Setting(label="title_format",
-                                    value=settings['title_format'],
-                                    description="title_format",
-                                    dtype=dict,
-                                    persist=True)
+        self.title_format = Setting(
+            label="title_format",
+            value=settings["title_format"],
+            description="title_format",
+            dtype=dict,
+            persist=True,
+        )
 
     def reset_to_defaults(self):
         for setting_name, setting_value in DEFAULT_SETTINGS.items():
             self[setting_name].value = setting_value
 
     def copy(self):
-            """
-            Create a copy of the settings with a new QObject. Intended as a workaround
-            to this bug: https://github.com/adamerose/PandasGUI/issues/166
-            """
-            # Create new settings instance
-            new_settings = SettingsStore()
+        """
+        Create a copy of the settings with a new QObject. Intended as a workaround
+        to this bug: https://github.com/adamerose/PandasGUI/issues/166
+        """
+        # Create new settings instance
+        new_settings = SettingsStore()
 
-            # Copy every attribute that's a Setting
-            for attr, value in self.__dict__.items():
-                if isinstance(value, Setting):
-                    setattr(new_settings, attr, value)
+        # Copy every attribute that's a Setting
+        for attr, value in self.__dict__.items():
+            if isinstance(value, Setting):
+                setattr(new_settings, attr, value)
 
-            return new_settings
+        return new_settings
 
     def __repr__(self):
-        return '\n'.join([f"{key} = {val.value}" for key, val in self.__dict__.items()])
+        return "\n".join([f"{key} = {val.value}" for key, val in self.__dict__.items()])
 
 
 @dataclass
@@ -225,7 +253,10 @@ def status_message_decorator(message):
     def decorator(function):
         def status_message_wrapper(self, *args, **kwargs):
 
-            if not (issubclass(type(self), PandasGuiStore) or issubclass(type(self), PandasGuiDataFrameStore)):
+            if not (
+                issubclass(type(self), PandasGuiStore)
+                or issubclass(type(self), PandasGuiDataFrameStore)
+            ):
                 raise ValueError
 
             full_kwargs = kwargs.copy()
@@ -239,7 +270,9 @@ def status_message_decorator(message):
             new_message = message
 
             for arg_name in full_kwargs.keys():
-                new_message = new_message.replace('{' + arg_name + '}', str(full_kwargs[arg_name]))
+                new_message = new_message.replace(
+                    "{" + arg_name + "}", str(full_kwargs[arg_name])
+                )
 
             if self.gui is not None:
                 original_status = self.gui.statusBar().currentMessage()
@@ -276,7 +309,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     All methods that modify the data should modify self.df_unfiltered, then self.df gets computed from that
     """
 
-    def __init__(self, df: DataFrame, name: str = 'Untitled'):
+    def __init__(self, df: DataFrame, name: str = "Untitled"):
         super().__init__()
         df = df.copy()
 
@@ -298,7 +331,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.sorted_column_name: Union[str, None] = None
         self.sorted_index_level: Union[int, None] = None
-        self.sort_state: Literal['Asc', 'Desc', 'None'] = 'None'
+        self.sort_state: Literal["Asc", "Desc", "None"] = "None"
 
         self.filters: List[Filter] = []
         self.filtered_index_map = df.reset_index().index
@@ -318,7 +351,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             return None
 
     def __setattr__(self, name, value):
-        if name == 'df':
+        if name == "df":
             value.pgdf = self
         super().__setattr__(name, value)
 
@@ -329,28 +362,32 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     def refresh_statistics(self, force=False):
         if force or self.settings.refresh_statistics.value:
             df = self.df
-            self.column_statistics = pd.DataFrame({
-                "Type": df.dtypes.astype(str),
-                "Count": df.count(),
-                "N Unique": nunique(df),
-                "Mean": df.mean(numeric_only=True),
-                "StdDev": df.std(numeric_only=True),
-                "Min": df.min(numeric_only=True),
-                "Max": df.max(numeric_only=True),
-            }, index=df.columns
+            self.column_statistics = pd.DataFrame(
+                {
+                    "Type": df.dtypes.astype(str),
+                    "Count": df.count(),
+                    "N Unique": nunique(df),
+                    "Mean": df.mean(numeric_only=True),
+                    "StdDev": df.std(numeric_only=True),
+                    "Min": df.min(numeric_only=True),
+                    "Max": df.max(numeric_only=True),
+                },
+                index=df.columns,
             )
 
             df = self.df.transpose()
-            df_numeric = self.df.select_dtypes('number').transpose()
-            self.row_statistics = pd.DataFrame({
-                # "Type": df.dtypes.astype(str),
-                # "Count": df.count(),
-                # "N Unique": nunique(df),
-                # "Mean": df_numeric.mean(numeric_only=True),
-                # "StdDev": df_numeric.std(numeric_only=True),
-                # "Min": df_numeric.min(numeric_only=True),
-                "Max": df_numeric.max(numeric_only=True),
-            }, index=df.columns
+            df_numeric = self.df.select_dtypes("number").transpose()
+            self.row_statistics = pd.DataFrame(
+                {
+                    # "Type": df.dtypes.astype(str),
+                    # "Count": df.count(),
+                    # "N Unique": nunique(df),
+                    # "Mean": df_numeric.mean(numeric_only=True),
+                    # "StdDev": df_numeric.std(numeric_only=True),
+                    # "Min": df_numeric.min(numeric_only=True),
+                    "Max": df_numeric.max(numeric_only=True),
+                },
+                index=df.columns,
             )
 
             if self.dataframe_explorer is not None:
@@ -363,15 +400,17 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     def code_export(self):
 
         if len(self.history) == 0 and not any([filt.enabled for filt in self.filters]):
-            return f"# No actions have been recorded yet on this DataFrame ({self.name})"
+            return (
+                f"# No actions have been recorded yet on this DataFrame ({self.name})"
+            )
 
         code_history = "# 'df' refers to the DataFrame passed into 'pandasgui.show'\n\n"
 
         # Add imports to setup
-        code_history += '\n'.join(self.history_imports) + '\n\n'
+        code_history += "\n".join(self.history_imports) + "\n\n"
 
         for history_item in self.history:
-            code_history += f'# {history_item.comment}\n'
+            code_history += f"# {history_item.comment}\n"
             code_history += history_item.code
             code_history += "\n\n"
 
@@ -407,8 +446,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             self.df_unfiltered.iat[row, col] = value
             self.apply_filters()
 
-            self.add_history_item("edit_data",
-                                  f"df.iat[{row}, {col}] = {repr(value)}")
+            self.add_history_item("edit_data", f"df.iat[{row}, {col}] = {repr(value)}")
 
     @status_message_decorator("Pasting data...")
     def paste_data(self, top_row, left_col, df_to_paste):
@@ -418,21 +456,26 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         for i in range(df_to_paste.shape[0]):
             for j in range(df_to_paste.shape[1]):
                 value = df_to_paste.iloc[i, j]
-                new_df.at[self.df.index[top_row + i],
-                          self.df.columns[left_col + j]] = value
+                new_df.at[
+                    self.df.index[top_row + i], self.df.columns[left_col + j]
+                ] = value
 
         self.df_unfiltered = new_df
         self.apply_filters()
 
-        self.add_history_item("paste_data", inspect.cleandoc(
-            f"""
+        self.add_history_item(
+            "paste_data",
+            inspect.cleandoc(
+                f"""
             df_to_paste = pd.DataFrame({df_to_paste.to_dict(orient='list')})
             for i in range(df_to_paste.shape[0]):
                 for j in range(df_to_paste.shape[1]):
                     value = df_to_paste.iloc[i, j]
                     df.at[df.index[{top_row} + i],
                           df.columns[{left_col} + j]] = value
-            """))
+            """
+            ),
+        )
 
     ###################################
     # Changing columns
@@ -445,8 +488,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         # Need to inform the PyQt model too so column widths properly shift
         self.dataframe_viewer._remove_column(ix)
 
-        self.add_history_item("delete_column",
-                              f"df = df.drop('{col_name}', axis=1)")
+        self.add_history_item("delete_column", f"df = df.drop('{col_name}', axis=1)")
 
         self.apply_filters()
 
@@ -456,10 +498,14 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         cols.insert(dest, cols.pop(src))
         self.df_unfiltered = self.df_unfiltered.reindex(cols, axis=1)
 
-        self.add_history_item("move_column",
-                              (f"cols = list(df.columns)"
-                               f"cols.insert({dest}, cols.pop({src}))"
-                               f"df = df.reindex(cols, axis=1)"))
+        self.add_history_item(
+            "move_column",
+            (
+                f"cols = list(df.columns)"
+                f"cols.insert({dest}, cols.pop({src}))"
+                f"df = df.reindex(cols, axis=1)"
+            ),
+        )
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Need to inform the PyQt model too so column widths properly shift
@@ -483,51 +529,63 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
-        self.add_history_item("reorder_columns",
-                              f"df = df.reindex(columns={columns})")
+        self.add_history_item("reorder_columns", f"df = df.reindex(columns={columns})")
 
     ###################################
     # Sorting
 
     @status_message_decorator("Sorting column...")
-    def sort_column(self, ix: int, next_sort_state: Literal['Asc', 'Desc', 'None'] = None):
+    def sort_column(
+        self, ix: int, next_sort_state: Literal["Asc", "Desc", "None"] = None
+    ):
         col_name = self.df_unfiltered.columns[ix]
 
         # Determine next sorting state by current state
         if next_sort_state is None:
             # Clicked an unsorted column
             if ix != self.sorted_column_ix:
-                next_sort_state = 'Asc'
+                next_sort_state = "Asc"
             # Clicked a sorted column
-            elif ix == self.sorted_column_ix and self.sort_state == 'Asc':
-                next_sort_state = 'Desc'
+            elif ix == self.sorted_column_ix and self.sort_state == "Asc":
+                next_sort_state = "Desc"
             # Clicked a reverse sorted column - reset to sorted by index
             elif ix == self.sorted_column_ix:
-                next_sort_state = 'None'
+                next_sort_state = "None"
 
-        if next_sort_state == 'Asc':
-            self.df_unfiltered = self.df_unfiltered.sort_values(col_name, ascending=True, kind='mergesort')
+        if next_sort_state == "Asc":
+            self.df_unfiltered = self.df_unfiltered.sort_values(
+                col_name, ascending=True, kind="mergesort"
+            )
             self.sorted_column_name = self.df_unfiltered.columns[ix]
-            self.sort_state = 'Asc'
+            self.sort_state = "Asc"
 
-            self.add_history_item("sort_column",
-                                  f"df = df.sort_values('{self.df_unfiltered.columns[ix]}', ascending=True, kind='mergesort')")
+            self.add_history_item(
+                "sort_column",
+                f"df = df.sort_values('{self.df_unfiltered.columns[ix]}', ascending=True, kind='mergesort')",
+            )
 
-        elif next_sort_state == 'Desc':
-            self.df_unfiltered = self.df_unfiltered.sort_values(col_name, ascending=False, kind='mergesort')
+        elif next_sort_state == "Desc":
+            self.df_unfiltered = self.df_unfiltered.sort_values(
+                col_name, ascending=False, kind="mergesort"
+            )
             self.sorted_column_name = self.df_unfiltered.columns[ix]
-            self.sort_state = 'Desc'
+            self.sort_state = "Desc"
 
-            self.add_history_item("sort_column",
-                                  f"df = df.sort_values('{self.df_unfiltered.columns[ix]}', ascending=False, kind='mergesort')")
+            self.add_history_item(
+                "sort_column",
+                f"df = df.sort_values('{self.df_unfiltered.columns[ix]}', ascending=False, kind='mergesort')",
+            )
 
-        elif next_sort_state == 'None':
-            self.df_unfiltered = self.df_unfiltered.sort_index(ascending=True, kind='mergesort')
+        elif next_sort_state == "None":
+            self.df_unfiltered = self.df_unfiltered.sort_index(
+                ascending=True, kind="mergesort"
+            )
             self.sorted_column_name = None
-            self.sort_state = 'None'
+            self.sort_state = "None"
 
-            self.add_history_item("sort_column",
-                                  "df = df.sort_index(ascending=True, kind='mergesort')")
+            self.add_history_item(
+                "sort_column", "df = df.sort_index(ascending=True, kind='mergesort')"
+            )
 
         self.sorted_index_level = None
         self.apply_filters()
@@ -536,31 +594,42 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     def sort_index(self, ix: int):
         # Clicked an unsorted index level
         if ix != self.sorted_index_level:
-            self.df_unfiltered = self.df_unfiltered.sort_index(level=ix, ascending=True, kind='mergesort')
+            self.df_unfiltered = self.df_unfiltered.sort_index(
+                level=ix, ascending=True, kind="mergesort"
+            )
             self.sorted_index_level = ix
-            self.sort_state = 'Asc'
+            self.sort_state = "Asc"
 
-            self.add_history_item("sort_index",
-                                  f"df = df.sort_index(level={ix}, ascending=True, kind='mergesort')")
+            self.add_history_item(
+                "sort_index",
+                f"df = df.sort_index(level={ix}, ascending=True, kind='mergesort')",
+            )
 
         # Clicked a sorted index level
-        elif ix == self.sorted_index_level and self.sort_state == 'Asc':
-            self.df_unfiltered = self.df_unfiltered.sort_index(level=ix, ascending=False, kind='mergesort')
+        elif ix == self.sorted_index_level and self.sort_state == "Asc":
+            self.df_unfiltered = self.df_unfiltered.sort_index(
+                level=ix, ascending=False, kind="mergesort"
+            )
             self.sorted_index_level = ix
-            self.sort_state = 'Desc'
+            self.sort_state = "Desc"
 
-            self.add_history_item("sort_index",
-                                  f"df = df.sort_index(level={ix}, ascending=False, kind='mergesort')")
+            self.add_history_item(
+                "sort_index",
+                f"df = df.sort_index(level={ix}, ascending=False, kind='mergesort')",
+            )
 
         # Clicked a reverse sorted index level - reset to sorted by full index
         elif ix == self.sorted_index_level:
-            self.df_unfiltered = self.df_unfiltered.sort_index(ascending=True, kind='mergesort')
+            self.df_unfiltered = self.df_unfiltered.sort_index(
+                ascending=True, kind="mergesort"
+            )
 
             self.sorted_index_level = None
-            self.sort_state = 'None'
+            self.sort_state = "None"
 
-            self.add_history_item("sort_index",
-                                  "df = df.sort_index(ascending=True, kind='mergesort')")
+            self.add_history_item(
+                "sort_index", "df = df.sort_index(ascending=True, kind='mergesort')"
+            )
 
         self.sorted_column = None
         self.apply_filters()
@@ -570,8 +639,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.df_unfiltered[name] = self.df_unfiltered[name].astype(type)
         self.apply_filters()
 
-        self.add_history_item("change_column_type",
-                              f"df[{name}] = df[{name}].astype({type})")
+        self.add_history_item(
+            "change_column_type", f"df[{name}] = df[{name}].astype({type})"
+        )
 
     ###################################
     # Filters
@@ -601,7 +671,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     @status_message_decorator("Applying filters...")
     def apply_filters(self):
         df = self.df_unfiltered.copy()
-        df['_temp_range_index'] = df.reset_index().index
+        df["_temp_range_index"] = df.reset_index().index
 
         for ix, filt in enumerate(self.filters):
             if filt.enabled and not filt.failed:
@@ -615,8 +685,8 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
                     logger.exception(e)
 
         # self.filtered_index_map is used elsewhere to map unfiltered index to filtered index
-        self.filtered_index_map = df['_temp_range_index'].reset_index(drop=True)
-        df = df.drop('_temp_range_index', axis=1)
+        self.filtered_index_map = df["_temp_range_index"].reset_index(drop=True)
+        df = df.drop("_temp_range_index", axis=1)
 
         self.df = df
         self.data_changed()
@@ -640,7 +710,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
                 pass
 
         if converted_names:
-            logger.info(f"In {self.name}, converted columns to datetime: {', '.join(converted_names)}")
+            logger.info(
+                f"In {self.name}, converted columns to datetime: {', '.join(converted_names)}"
+            )
         else:
             logger.warning(f"In {self.name}, unable to parse any columns as datetime")
 
@@ -718,7 +790,9 @@ class PandasGuiStore:
     """
 
     settings: Union[SettingsStore, None] = None
-    data: typing.OrderedDict[str, Union[PandasGuiStoreItem, PandasGuiDataFrameStore]] = field(default_factory=dict)
+    data: typing.OrderedDict[
+        str, Union[PandasGuiStoreItem, PandasGuiDataFrameStore]
+    ] = field(default_factory=dict)
     gui: Union[PandasGui, None] = None
     navigator: Union[Navigator, None] = None
     selected_pgdf: Union[PandasGuiDataFrameStore, None] = None
@@ -733,7 +807,9 @@ class PandasGuiStore:
         dataframes_affected = []
         command = line
         for name in self.data.keys():
-            command = refactor_variable(command, name, f"self.data['{name}'].df_unfiltered")
+            command = refactor_variable(
+                command, name, f"self.data['{name}'].df_unfiltered"
+            )
             if name in command:
                 dataframes_affected.append(name)
 
@@ -741,8 +817,9 @@ class PandasGuiStore:
 
         for name in dataframes_affected:
             self.data[name].apply_filters()
-            self.data[name].add_history_item("iPython magic",
-                                             refactor_variable(line, name, 'df'))
+            self.data[name].add_history_item(
+                "iPython magic", refactor_variable(line, name, "df")
+            )
 
         return line
 
@@ -765,8 +842,9 @@ class PandasGuiStore:
 
     ###################################
 
-    def add_item(self, item: PandasGuiStoreItem,
-                 name: str = "Untitled", shape: str = ""):
+    def add_item(
+        self, item: PandasGuiStoreItem, name: str = "Untitled", shape: str = ""
+    ):
 
         # Add it to store and create widgets
         self.data[name] = item
@@ -798,11 +876,14 @@ class PandasGuiStore:
         self.gui.stacked_widget.removeWidget(widget)
 
     @status_message_decorator("Adding DataFrame...")
-    def add_dataframe(self, pgdf: Union[DataFrame, PandasGuiDataFrameStore],
-                      name: str = "Untitled"):
+    def add_dataframe(
+        self, pgdf: Union[DataFrame, PandasGuiDataFrameStore], name: str = "Untitled"
+    ):
 
         name = unique_name(name, self.get_dataframes().keys())
-        with self.status_message_context("Adding DataFrame (Creating DataFrame store)..."):
+        with self.status_message_context(
+            "Adding DataFrame (Creating DataFrame store)..."
+        ):
             pgdf = PandasGuiDataFrameStore.cast(pgdf)
         pgdf.settings = self.settings
         pgdf.name = name
@@ -815,6 +896,7 @@ class PandasGuiStore:
 
         if pgdf.dataframe_explorer is None:
             from pandasgui.widgets.dataframe_explorer import DataFrameExplorer
+
             pgdf.dataframe_explorer = DataFrameExplorer(pgdf)
 
         # Add to nav
@@ -831,32 +913,35 @@ class PandasGuiStore:
         if not os.path.isfile(path):
             logger.warning("Path is not a file: " + path)
         elif path.endswith(".csv"):
-            filename = os.path.split(path)[1].split('.csv')[0]
-            df = pd.read_csv(path, engine='python')
+            filename = os.path.split(path)[1].split(".csv")[0]
+            df = pd.read_csv(path, engine="python")
             self.add_dataframe(df, filename)
         elif path.endswith(".xlsx"):
-            filename = os.path.split(path)[1].split('.csv')[0]
+            filename = os.path.split(path)[1].split(".csv")[0]
             df_dict = pd.read_excel(path, sheet_name=None)
             for sheet_name in df_dict.keys():
                 df_name = f"{filename} - {sheet_name}"
                 self.add_dataframe(df_dict[sheet_name], df_name)
         elif path.endswith(".parquet"):
-            filename = os.path.split(path)[1].split('.parquet')[0]
-            df = pd.read_parquet(path, engine='pyarrow')
+            filename = os.path.split(path)[1].split(".parquet")[0]
+            df = pd.read_parquet(path, engine="pyarrow")
             self.add_dataframe(df, filename)
         elif path.endswith(".json"):
-            filename = os.path.split(path)[1].split('.json')[0]
+            filename = os.path.split(path)[1].split(".json")[0]
             with open(path) as f:
                 data = json.load(f)
             from pandasgui.widgets.json_viewer import JsonViewer
+
             jv = JsonViewer(data)
             self.add_item(jv, filename)
         elif path.endswith(".pkl"):
-            filename = os.path.split(path)[1].split('.pkl')[0]
+            filename = os.path.split(path)[1].split(".pkl")[0]
             df = pd.read_pickle(path)
             self.add_dataframe(df, filename)
         else:
-            logger.warning("Can only import csv / xlsx / parquet. Invalid file: " + path)
+            logger.warning(
+                "Can only import csv / xlsx / parquet. Invalid file: " + path
+            )
 
     def get_dataframes(self, names: Union[None, str, list, int] = None):
         if type(names) == str:
@@ -865,7 +950,11 @@ class PandasGuiStore:
             return self.data.items()[names]
 
         df_dict = {}
-        for pgdf in [item for item in self.data.values() if isinstance(item, PandasGuiDataFrameStore)]:
+        for pgdf in [
+            item
+            for item in self.data.values()
+            if isinstance(item, PandasGuiDataFrameStore)
+        ]:
             if names is None or pgdf.name in names:
                 df_dict[pgdf.name] = pgdf.df
 
@@ -878,6 +967,7 @@ class PandasGuiStore:
 
     def to_dict(self):
         import json
+
         return json.loads(json.dumps(self, default=lambda o: o.__dict__))
 
 

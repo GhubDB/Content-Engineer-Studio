@@ -9,6 +9,7 @@ add resizeRowsToContents button to Dataframe Viewer
 check if store -> def remove_item(self, name_or_index): actually deletes the widget.
 turn sidebar from tablewidget into tableview
 remove background color from drag & drop rows
+add a way to import and set working viewer at the same time
 add logging
 add unittests
 
