@@ -237,7 +237,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             and (mods & Qt.ControlModifier)
         ):
             self.copy(header=True)
-        if event.matches(QtGui.QKeySequence.Paste):
+        if event.matches(QKeySequence.Paste):
             self.paste()
         if event.key() == Qt.Key_P and (mods & Qt.ControlModifier):
             pass

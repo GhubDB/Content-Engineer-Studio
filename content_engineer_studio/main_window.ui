@@ -245,7 +245,7 @@
             </layout>
            </widget>
           </widget>
-          <widget class="QTreeView" name="analysis_column_viewer">
+          <widget class="QTableView" name="analysis_column_viewer">
            <property name="frameShape">
             <enum>QFrame::Panel</enum>
            </property>
@@ -266,9 +266,6 @@
            </property>
            <property name="selectionBehavior">
             <enum>QAbstractItemView::SelectItems</enum>
-           </property>
-           <property name="indentation">
-            <number>10</number>
            </property>
           </widget>
           <widget class="QWidget" name="layoutWidget">

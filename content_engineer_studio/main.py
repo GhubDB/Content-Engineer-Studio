@@ -969,21 +969,15 @@ class MainWindow(QMainWindow):
 
     def set_df(self, df_title: str, mode: str):
         """
-        Assigns dataframes to analysis and testing mode
+        Assigns dataframes to analysis and testing mode viewer
         """
         # Get models from dataframe_viewer
         dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
 
-        orig_model_horizontal = self.store.data[
-            df_title
-        ].dataframe_viewer.columnHeaderNames.orig_model_horizontal
-        orig_model_vertical = self.store.data[
-            df_title
-        ].dataframe_viewer.indexHeaderNames.orig_model_vertical
-
         header_model_horizontal = self.store.data[
             df_title
         ].dataframe_viewer.columnHeader.header_model_horizontal
+
         header_model_vertical = self.store.data[
             df_title
         ].dataframe_viewer.indexHeader.header_model_vertical
@@ -1009,8 +1003,6 @@ class MainWindow(QMainWindow):
                 self.analysis_viewer.replace_models(
                     pgdf=self.store.data[df_title],
                     data_table_model=dfv_model,
-                    orig_model_horizontal=orig_model_horizontal,
-                    orig_model_vertical=orig_model_vertical,
                     header_model_horizontal=header_model_horizontal,
                     header_model_vertical=header_model_vertical,
                 )
@@ -1032,8 +1024,6 @@ class MainWindow(QMainWindow):
                 self.testing_viewer.replace_models(
                     pgdf=self.store.data[df_title],
                     data_table_model=dfv_model,
-                    orig_model_horizontal=orig_model_horizontal,
-                    orig_model_vertical=orig_model_vertical,
                     header_model_horizontal=header_model_horizontal,
                     header_model_vertical=header_model_vertical,
                 )
