@@ -6,9 +6,24 @@ from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt, QTimer, QThreadPool, QEvent
-from PyQt5.QtGui import QColor, QBrush, QPalette, QFont, QKeySequence
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt, QTimer, QThreadPool, QEvent, QModelIndex
+from PyQt5.QtGui import (
+    QColor,
+    QBrush,
+    QPalette,
+    QFont,
+    QKeySequence,
+    QPainter,
+    QTextDocument,
+    QShowEvent,
+    QIcon,
+    QCursor,
+    QFontMetrics,
+)
+
+# from PyQt5.QtCore import QAbstractItemModel, QFile, QIODevice, QModelIndex, Qt
+# from PyQt5.QtWidgets import QApplication, QTreeView
 
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
@@ -146,7 +161,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         if event.type() == QEvent.KeyPress:
             modifiers = event.modifiers()
             # Ctrl+C
-            if event.matches(QtGui.QKeySequence.Copy):
+            if event.matches(QKeySequence.Copy):
                 # print("copy")
                 self.copy()
 
@@ -159,7 +174,7 @@ class DataFrameViewer(QtWidgets.QWidget):
                 # print("copy headers")
                 self.copy(header=True)
 
-            if event.matches(QtGui.QKeySequence.Paste):
+            if event.matches(QKeySequence.Paste):
                 # print("paste")
                 self.paste()
 
@@ -169,16 +184,12 @@ class DataFrameViewer(QtWidgets.QWidget):
         self,
         pgdf: PandasGuiDataFrameStore,
         data_table_model: QtCore.QAbstractTableModel,
-        orig_model_horizontal: QtCore.QAbstractTableModel,
-        orig_model_vertical: QtCore.QAbstractTableModel,
         header_model_horizontal: QtCore.QAbstractTableModel,
         header_model_vertical: QtCore.QAbstractTableModel,
     ):
         # Replaces models with new selected working view models and refreshes UI
         self.pgdf = pgdf
         self.dataView.setModel(data_table_model)
-        self.columnHeaderNames.setModel(orig_model_horizontal)
-        self.indexHeaderNames.setModel(orig_model_vertical)
         self.columnHeader.setModel(header_model_horizontal)
         self.indexHeader.setModel(header_model_vertical)
         for column_index in range(self.columnHeader.model().columnCount()):
@@ -504,7 +515,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
             if pd.isna(percentile):
                 return None
             else:
-                return QtGui.QColor(QtGui.QColor(255, 0, 0, int(255 * percentile)))
+                return QColor(QColor(255, 0, 0, int(255 * percentile)))
 
     def flags(self, index):
         if self.dataframe_viewer.pgdf.settings.editable:
@@ -575,10 +586,10 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
                 self.commit.emit(self)
                 return
             elif event.key() == QtCore.Qt.Key_B:
-                if self.fontWeight() == QtGui.QFont.Bold:
-                    self.setFontWeight(QtGui.QFont.Normal)
+                if self.fontWeight() == QFont.Bold:
+                    self.setFontWeight(QFont.Normal)
                 else:
-                    self.setFontWeight(QtGui.QFont.Bold)
+                    self.setFontWeight(QFont.Bold)
             elif event.key() == QtCore.Qt.Key_I:
                 self.setFontItalic(not self.fontItalic())
             elif event.key() == QtCore.Qt.Key_U:
@@ -660,7 +671,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
 
     def paint(
         self,
-        painter: QtGui.QPainter,
+        painter: QPainter,
         option: "QStyleOptionViewItem",
         index: QtCore.QModelIndex,
     ) -> None:
@@ -673,7 +684,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
 
         self.initStyleOption(option, index)
         painter.save()
-        doc = QtGui.QTextDocument()
+        doc = QTextDocument()
         doc.setDefaultFont(option.font)
         doc.setDocumentMargin(3)
         doc.setTextWidth(option.rect.width())
@@ -707,9 +718,9 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         self.initStyleOption(option, index)
         editor = self.editors.get(QtCore.QPersistentModelIndex(index))
         if editor:
-            doc = QtGui.QTextDocument.clone(editor.document())
+            doc = QTextDocument.clone(editor.document())
         else:
-            doc = QtGui.QTextDocument()
+            doc = QTextDocument()
             doc.setDefaultFont(option.font)
             doc.setDocumentMargin(3)
             doc.setPlainText(option.text)
@@ -761,15 +772,9 @@ class DataTableView(QtWidgets.QTableView):
             """font-size: 15px;
             gridline-color: rgb(60, 60, 60);"""
         )
-        # self.setStyleSheet(
-        #     """font-size: 15px;
-        #     gridline-color: rgb(60, 60, 60);
-        #     selection-color: rgb(255, 255, 255);
-        #     selection-background-color: rgb(55, 92, 123);"""
-        # )
 
     # @status_message_decorator("Resizing rows...")
-    def showEvent(self, event: QtGui.QShowEvent) -> None:
+    def showEvent(self, event: QShowEvent) -> None:
         """
         Handles resizing of all rows on show event
         """
@@ -891,13 +896,13 @@ class HeaderModel(QtCore.QAbstractTableModel):
 
         if role == QtCore.Qt.DecorationRole:
             if self.pgdf.sort_state == "Asc":
-                icon = QtGui.QIcon(
+                icon = QIcon(
                     os.path.join(
                         pandasgui.__path__[0], "resources/images/sort-ascending.svg"
                     )
                 )
             elif self.pgdf.sort_state == "Desc":
-                icon = QtGui.QIcon(
+                icon = QIcon(
                     os.path.join(
                         pandasgui.__path__[0], "resources/images/sort-descending.svg"
                     )
@@ -969,7 +974,7 @@ class HeaderView(QtWidgets.QTableView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
-        font = QtGui.QFont()
+        font = QFont()
         font.setBold(True)
         self.setFont(font)
 
@@ -993,7 +998,7 @@ class HeaderView(QtWidgets.QTableView):
         # Set initial size
         self.resize(self.sizeHint())
 
-    def showEvent(self, a0: QtGui.QShowEvent) -> None:
+    def showEvent(self, a0: QShowEvent) -> None:
         super(HeaderView, self).showEvent(a0)
         self.initial_size = self.size()
 
@@ -1251,9 +1256,9 @@ class HeaderView(QtWidgets.QTableView):
         # Set the cursor shape
         if over_header_cell_edge(mouse_position) is not None:
             if self.orientation == Qt.Horizontal:
-                self.viewport().setCursor(QtGui.QCursor(Qt.SplitHCursor))
+                self.viewport().setCursor(QCursor(Qt.SplitHCursor))
             elif self.orientation == Qt.Vertical:
-                self.viewport().setCursor(QtGui.QCursor(Qt.SplitVCursor))
+                self.viewport().setCursor(QCursor(Qt.SplitVCursor))
 
         elif over_header_edge(orthogonal_mouse_position):
             if self.orientation == Qt.Horizontal:
@@ -1261,10 +1266,10 @@ class HeaderView(QtWidgets.QTableView):
                 pass
                 # self.viewport().setCursor(QtGui.QCursor(Qt.SplitVCursor))
             elif self.orientation == Qt.Vertical:
-                self.viewport().setCursor(QtGui.QCursor(Qt.SplitHCursor))
+                self.viewport().setCursor(QCursor(Qt.SplitHCursor))
 
         else:
-            self.viewport().setCursor(QtGui.QCursor(Qt.ArrowCursor))
+            self.viewport().setCursor(QCursor(Qt.ArrowCursor))
 
         # If mouse is on an edge, start the drag resize process
         if event.type() == QtCore.QEvent.MouseButtonPress:
@@ -1340,7 +1345,7 @@ class HeaderView(QtWidgets.QTableView):
 
     # Return the size of the header needed to match the corresponding DataTableView
     def sizeHint(self):
-        fm = QtGui.QFontMetrics(self.font())
+        fm = QFontMetrics(self.font())
 
         # Columm headers
         if self.orientation == Qt.Horizontal:
@@ -1408,13 +1413,13 @@ class HeaderNamesModel(QtCore.QAbstractTableModel):
 
         if role == QtCore.Qt.DecorationRole:
             if self.pgdf.sort_state == "Asc":
-                icon = QtGui.QIcon(
+                icon = QIcon(
                     os.path.join(
                         pandasgui.__path__[0], "resources/images/sort-ascending.svg"
                     )
                 )
             elif self.pgdf.sort_state == "Desc":
-                icon = QtGui.QIcon(
+                icon = QIcon(
                     os.path.join(
                         pandasgui.__path__[0], "resources/images/sort-descending.svg"
                     )
@@ -1427,6 +1432,10 @@ class HeaderNamesModel(QtCore.QAbstractTableModel):
 
 
 class HeaderNamesView(QtWidgets.QTableView):
+    """
+    Probably used in Reshaper
+    """
+
     def __init__(self, parent: DataFrameViewer, orientation):
         super().__init__(parent)
         self.dataframe_viewer = parent
@@ -1438,11 +1447,11 @@ class HeaderNamesView(QtWidgets.QTableView):
         # Setup
         self.orientation = orientation
         if orientation == 1:
-            self.orig_model_horizontal = HeaderNamesModel(parent, orientation)
-            self.setModel(self.orig_model_horizontal)
+            self.horizontal_header_names_model = HeaderNamesModel(parent, orientation)
+            self.setModel(self.horizontal_header_names_model)
         else:
-            self.orig_model_vertical = HeaderNamesModel(parent, orientation)
-            self.setModel(self.orig_model_vertical)
+            self.vertical_header_names_model = HeaderNamesModel(parent, orientation)
+            self.setModel(self.vertical_header_names_model)
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -1465,7 +1474,7 @@ class HeaderNamesView(QtWidgets.QTableView):
                 QtWidgets.QHeaderView.ResizeMode.Stretch
             )
 
-        font = QtGui.QFont()
+        font = QFont()
         font.setBold(True)
         self.setFont(font)
         self.init_size()
@@ -1527,6 +1536,154 @@ class TrackingSpacer(QtWidgets.QFrame):
             height = self.ref_y.height()
 
         return QtCore.QSize(width, height)
+
+
+class TreeItem(object):
+    def __init__(self, data, parent=None):
+        self.parentItem = parent
+        self.itemData = data
+        self.childItems = []
+
+    def appendChild(self, item):
+        self.childItems.append(item)
+
+    def child(self, row):
+        return self.childItems[row]
+
+    def childCount(self):
+        return len(self.childItems)
+
+    def columnCount(self):
+        return len(self.itemData)
+
+    def data(self, column):
+        try:
+            return self.itemData[column]
+        except IndexError:
+            return None
+
+    def parent(self):
+        return self.parentItem
+
+    def row(self):
+        if self.parentItem:
+            return self.parentItem.childItems.index(self)
+
+        return 0
+
+
+class HeaderRolesModel(QtCore.QAbstractItemModel):
+    def __init__(self, parent):
+        super(HeaderRolesModel, self).__init__(parent)
+        self.dataframe_viewer: DataFrameViewer = parent
+        self.pgdf: PandasGuiDataFrameStore = parent.pgdf
+
+        self.rootItem = TreeItem(("Title", "Summary"))
+        self.setupModelData(data.split("\n"), self.rootItem)
+
+    def columnCount(self, parent):
+        if parent.isValid():
+            return parent.internalPointer().columnCount()
+        else:
+            return self.rootItem.columnCount()
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        if role != Qt.DisplayRole:
+            return None
+
+        item = index.internalPointer()
+
+        return item.data(index.column())
+
+    def flags(self, index):
+        if not index.isValid():
+            return Qt.NoItemFlags
+
+        return Qt.ItemIsEnabled | Qt.ItemIsSelectable
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.rootItem.data(section)
+
+        return None
+
+    def index(self, row, column, parent):
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        childItem = parentItem.child(row)
+        if childItem:
+            return self.createIndex(row, column, childItem)
+        else:
+            return QModelIndex()
+
+    def parent(self, index):
+        if not index.isValid():
+            return QModelIndex()
+
+        childItem = index.internalPointer()
+        parentItem = childItem.parent()
+
+        if parentItem == self.rootItem:
+            return QModelIndex()
+
+        return self.createIndex(parentItem.row(), 0, parentItem)
+
+    def rowCount(self, parent):
+        if parent.column() > 0:
+            return 0
+
+        if not parent.isValid():
+            parentItem = self.rootItem
+        else:
+            parentItem = parent.internalPointer()
+
+        return parentItem.childCount()
+
+    def setupModelData(self, lines, parent):
+        parents = [parent]
+        indentations = [0]
+
+        number = 0
+
+        while number < len(lines):
+            position = 0
+            while position < len(lines[number]):
+                if lines[number][position] != b" ":
+                    break
+                position += 1
+
+            lineData = lines[number][position:].trimmed()
+
+            if lineData:
+                # Read the column data from the rest of the line.
+                columnData = [s for s in lineData.split("\t") if s]
+
+                if position > indentations[-1]:
+                    # The last child of the current parent is now the new
+                    # parent unless the current parent has no children.
+
+                    if parents[-1].childCount() > 0:
+                        parents.append(parents[-1].child(parents[-1].childCount() - 1))
+                        indentations.append(position)
+
+                else:
+                    while position < indentations[-1] and len(parents) > 0:
+                        parents.pop()
+                        indentations.pop()
+
+                # Append a new item to the current parent's list of children.
+                parents[-1].appendChild(TreeItem(columnData, parents[-1]))
+
+            number += 1
 
 
 # Examples
