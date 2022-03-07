@@ -52,7 +52,11 @@ class FlatDraggableTree(base_widgets.QTreeWidget):
             child = root.child(i)
             child.setExpanded(True)
 
-            child.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable | Qt.ItemIsDragEnabled & ~Qt.ItemIsDropEnabled)
+            child.setFlags(
+                Qt.ItemIsEnabled
+                | Qt.ItemIsSelectable
+                | Qt.ItemIsDragEnabled & ~Qt.ItemIsDropEnabled
+            )
 
     def mimeData(self, indexes):
         mimedata = super().mimeData(indexes)
@@ -70,7 +74,7 @@ class ColumnViewer(QtWidgets.QWidget):
         super().__init__()
 
         self.tree: FlatDraggableTree = FlatDraggableTree()
-        self.tree.setHeaderLabels(['Name'])
+        self.tree.setHeaderLabels(["Name"])
         self.tree.setDragEnabled(True)
         self.tree.setDefaultDropAction(Qt.CopyAction)
 
@@ -97,14 +101,16 @@ class ColumnViewer(QtWidgets.QWidget):
         source_types = self.pgdf.df_unfiltered.dtypes.values.astype(str)
 
         # Ensure no duplicates
-        assert (len(sources) == len(set(sources)))
-        assert (len(sources) == len(source_nunique))
-        assert (len(sources) == len(source_types))
+        assert len(sources) == len(set(sources))
+        assert len(sources) == len(source_nunique)
+        assert len(sources) == len(source_types)
 
         self.tree.clear()
         for i in range(len(sources)):
-            item = base_widgets.QTreeWidgetItem(self.tree,
-                                                [str(sources[i]), str(source_nunique[i]), str(source_types[i])])
+            item = base_widgets.QTreeWidgetItem(
+                self.tree,
+                [str(sources[i]), str(source_nunique[i]), str(source_types[i])],
+            )
 
         # Depends on Search Box and Source list
         self.filter()
@@ -116,14 +122,14 @@ class ColumnViewer(QtWidgets.QWidget):
             child = root.child(i)
             child.setHidden(True)
 
-        items = self.tree.findItems(f".*{self.search_bar.text()}.*",
-                                    Qt.MatchRegExp | Qt.MatchRecursive)
+        items = self.tree.findItems(
+            f".*{self.search_bar.text()}.*", Qt.MatchRegExp | Qt.MatchRecursive
+        )
         for item in items:
             item.setHidden(False)
 
 
 class SortableColumnViewer(ColumnViewer):
-
     def __init__(self, pgdf: PandasGuiDataFrameStore):
         super().__init__(pgdf)
         self.tree.setSortingEnabled(True)

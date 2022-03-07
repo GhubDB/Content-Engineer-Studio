@@ -273,7 +273,6 @@ def status_message_decorator(message):
                 new_message = new_message.replace(
                     "{" + arg_name + "}", str(full_kwargs[arg_name])
                 )
-
             if self.gui is not None:
                 original_status = self.gui.statusBar().currentMessage()
                 self.gui.statusBar().showMessage(new_message)

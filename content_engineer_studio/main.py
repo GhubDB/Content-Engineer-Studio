@@ -998,12 +998,12 @@ class MainWindow(QMainWindow):
                         pgdf=self.store.data[df_title]
                     )
                 )
-
                 self.analysis_dataframe_layout.replaceWidget(
                     self.add_analysis_dataframe,
                     self.analysis_viewer,
                 )
                 self.add_analysis_dataframe.deleteLater()
+                self.analysis_column_viewer.setModel(header_model_horizontal)
             # If viewer exists, replace models
             else:
                 self.analysis_viewer.replace_models(
@@ -1022,7 +1022,6 @@ class MainWindow(QMainWindow):
                         pgdf=self.store.data[df_title]
                     )
                 )
-
                 self.testing_dataframe_layout.replaceWidget(
                     self.add_testing_dataframe,
                     self.testing_viewer,
@@ -1964,5 +1963,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet(qtstylish.dark())
     win = MainWindow()
+    win.resize(1920, 180)
     win.show()
     sys.exit(app.exec_())
