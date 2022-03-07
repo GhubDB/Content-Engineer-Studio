@@ -12,6 +12,7 @@ from PyQt5.QtGui import QColor, QBrush, QPalette, QFont, QKeySequence
 
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
+from pandasgui.store import status_message_decorator
 import pandasgui
 
 import logging
@@ -679,8 +680,11 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         # changed to setPlainText from setHtml
         doc.setPlainText(option.text)
         option.text = ""
+
+        """https://stackoverflow.com/questions/69388179/setting-the-highlight-color-within-a-qstyleditemdelegate-on-a-qtablewidget"""
+        options = QtWidgets.QStyleOptionViewItem(option)
         option.widget.style().drawControl(
-            QtWidgets.QStyle.CE_ItemViewItem, option, painter
+            QtWidgets.QStyle.CE_ItemViewItem, option, painter, options.widget
         )
         painter.translate(option.rect.left(), option.rect.top())
 
@@ -757,8 +761,14 @@ class DataTableView(QtWidgets.QTableView):
             """font-size: 15px;
             gridline-color: rgb(60, 60, 60);"""
         )
-        # self.setTextElideMode(Qt.ElideNone)
+        # self.setStyleSheet(
+        #     """font-size: 15px;
+        #     gridline-color: rgb(60, 60, 60);
+        #     selection-color: rgb(255, 255, 255);
+        #     selection-background-color: rgb(55, 92, 123);"""
+        # )
 
+    # @status_message_decorator("Resizing rows...")
     def showEvent(self, event: QtGui.QShowEvent) -> None:
         """
         Handles resizing of all rows on show event
