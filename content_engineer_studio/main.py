@@ -66,7 +66,6 @@ from PyQt5.QtCore import Qt
 # This needs to be pip -e filepath installed for development mode
 import pandasgui
 
-import pandasgui.widgets.dataframe_viewer  # import DataFrameViewer
 from pandasgui.store import PandasGuiStore
 from pandasgui.utility import as_dict, fix_ipython, get_figure_type, resize_widget
 from pandasgui.widgets.find_toolbar import FindToolbar
@@ -75,6 +74,7 @@ from pandasgui.widgets.navigator import Navigator
 from pandasgui.widgets.figure_viewer import FigureViewer
 from pandasgui.widgets.settings_editor import SettingsEditor
 from pandasgui.widgets.python_highlighter import PythonHighlighter
+import pandasgui.widgets.dataframe_viewer  # import DataFrameViewer
 
 from IPython.core.magic import register_line_magic
 import logging
@@ -373,8 +373,6 @@ class MainWindow(QMainWindow):
 
         # Apply custom stylesheets
         self.setStyleSheet(Stylesheets.custom_dark)
-        # self.colorize_2.setStyleSheet(style_colorize_2)
-        # self.setStyleSheet(style_QLineEdit)
 
         # Create model for auto_queue and history
         self.history_model = QStandardItemModel()
@@ -392,6 +390,12 @@ class MainWindow(QMainWindow):
         self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue.installEventFilter(self)
 
+        # Adding column viewers
+        self.analysis_column_viewer = (
+            pandasgui.widgets.dataframe_viewer.HeaderRolesView()
+        )
+        self.analysis_column_viewer_layout.addWidget(self.analysis_column_viewer)
+
         # Installing Event filters
         self.analysis.installEventFilter(self)
         self.analysis_2.installEventFilter(self)
@@ -404,8 +408,8 @@ class MainWindow(QMainWindow):
             for x in [self.row_selector, self.clear_selections]
         ]
         self.sidebar_2.selectionModel().selectionChanged.connect(self.row_selector_2)
-        self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
-        self.cell_selector_2.currentIndexChanged.connect(self.populate_analysis_2)
+        # self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
+        # self.cell_selector_2.currentIndexChanged.connect(self.populate_analysis_2)
         self.analysis.textChanged.connect(self.save_analysis)
         self.analysis_2.textChanged.connect(self.save_analysis_2)
         self.left.clicked.connect(self.btn_left)
@@ -469,6 +473,8 @@ class MainWindow(QMainWindow):
         self.add_analysis_dataframe.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(5)
         )
+        self.add_column.clicked.connect(self.btn_add_column)
+        # self.add_column_2.clicked.connect(self.btn_add_column_2)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load("transcripts.xlsx", "Sheet1")
@@ -1027,6 +1033,19 @@ class MainWindow(QMainWindow):
                     header_model_horizontal=header_model_horizontal,
                     header_model_vertical=header_model_vertical,
                 )
+        self.populate_column_viewer(mode, df_title)
+
+    def populate_column_viewer(self, mode: str, df_title: str):
+        if mode == "analysis":
+            model = pandasgui.widgets.dataframe_viewer.HeaderRolesModel(
+                self.store.data[df_title].dataframe_viewer
+            )
+            self.analysis_column_viewer.setModel(model)
+        if mode == "testing":
+            model = pandasgui.widgets.dataframe_viewer.HeaderRolesModel(
+                self.store.data[df_title].dataframe_viewer
+            )
+            self.testing_column_viewer.setModel(model)
 
     def row_selector(self, selected: QtCore.QObject):
         """
@@ -1061,8 +1080,8 @@ class MainWindow(QMainWindow):
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
 
-        self.populate_canned()
-        self.populate_analysis()
+        # self.populate_canned()
+        # self.populate_analysis()
 
     def saveOnRowChange(self):
         """
@@ -1293,12 +1312,12 @@ class MainWindow(QMainWindow):
         for item in list(self.df.columns.values)[start:end]:
             self.cell_selector.addItem(item)
 
-    def populate_analysis(self):
-        self.analysis.setPlainText(
-            self.store.data[self.analysis_df].df.loc[self.row][
-                self.cell_selector.currentIndex() + self.cell_selector_start
-            ]
-        )
+    # def populate_analysis(self):
+    #     self.analysis.setPlainText(
+    #         self.store.data[self.analysis_df].df.loc[self.row][
+    #             self.cell_selector.currentIndex() + self.cell_selector_start
+    #         ]
+    #     )
 
     def populate_search_column_select(self):
         """
@@ -1508,6 +1527,12 @@ class MainWindow(QMainWindow):
         # print(index)
         print(self.history_model.itemData(index))
 
+    def btn_add_column(self):
+        n = self.add_column_count.value()
+        index = self.analysis_column_viewer.currentIndex()
+        index = index.row()
+        self.store.data[self.analysis_df].add_column(index, index + n)
+
     #####################################################################
     """
     Test Suite
@@ -1540,8 +1565,8 @@ class MainWindow(QMainWindow):
         # Autoscrolling to the selection on the sidebar
         self.sidebar_2.scrollToItem(self.sidebar.item(self.row, 0))
 
-        self.populate_canned_2()
-        self.populate_analysis_2()
+        # self.populate_canned_2()
+        # self.populate_analysis_2()
 
     def saveOnRowChange_2(self):
         """
@@ -1721,12 +1746,12 @@ class MainWindow(QMainWindow):
         for item in list(self.df_2.columns.values)[start:end]:
             self.cell_selector_2.addItem(item)
 
-    def populate_analysis_2(self):
-        self.analysis_2.setPlainText(
-            self.store.data[self.testing_df].df.loc[self.row_2][
-                self.cell_selector_2.currentIndex() + self.cell_selector_start_2
-            ]
-        )
+    # def populate_analysis_2(self):
+    #     self.analysis_2.setPlainText(
+    #         self.store.data[self.testing_df].df.loc[self.row_2][
+    #             self.cell_selector_2.currentIndex() + self.cell_selector_start_2
+    #         ]
+    #     )
 
     def populate_canned_2(self):
         # Radiobuttons
