@@ -5,14 +5,12 @@ import traceback
 from threading import Thread
 from warnings import filters
 from PyQt5.uic import loadUi
-from PyQt5 import QtCore, QtGui
 from PyQt5.QtCore import (
     QEvent,
     QItemSelectionModel,
     Qt,
     QObject,
     pyqtSignal,
-    QRunnable,
     pyqtSlot,
     QThreadPool,
     QSortFilterProxyModel,
@@ -44,11 +42,7 @@ from PyQt5.QtGui import (
     QTextCharFormat,
     QTextCursor,
 )
-from excel_helpers import Excel
-from selenium_helpers import Browser
-from data_variables import *
-from widgets.drag_drop import DragDrop
-from stylesheets import Stylesheets
+
 from bs4 import BeautifulSoup
 import qtstylish
 
@@ -74,62 +68,24 @@ from pandasgui.widgets.navigator import Navigator
 from pandasgui.widgets.figure_viewer import FigureViewer
 from pandasgui.widgets.settings_editor import SettingsEditor
 from pandasgui.widgets.python_highlighter import PythonHighlighter
-import pandasgui.widgets.dataframe_viewer  # import DataFrameViewer
+from pandasgui.widgets.dataframe_viewer import (
+    DataFrameViewer,
+    HeaderRolesView,
+    HeaderRolesModel,
+)
+
+# import pandasgui.widgets.dataframe_viewer
 
 from IPython.core.magic import register_line_magic
 import logging
 
-
-class Worker(QRunnable):
-    """
-    Inherits from QRunnable to handler worker thread setup, signals and wrap-up.
-    :param callback: The function callback to run on this worker thread. Supplied args and
-    kwargs will be passed through to the runner.
-    :type callback: function
-    :param args: Arguments to pass to the callback function
-    :param kwargs: Keywords to pass to the callback function
-    """
-
-    def __init__(self, fn, *args, **kwargs):
-        super(Worker, self).__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        self.signals = WorkerSignals()
-
-        # Add callback to kwargs where necessary.
-        if "activate_output" in args:
-            self.kwargs["output"] = self.signals.output
-            self.args = self.args[:-2]
-
-    @pyqtSlot()
-    def run(self):
-        try:
-            result = self.fn(*self.args, **self.kwargs)
-        except:
-            traceback.print_exc()
-            exctype, value = sys.exc_info()[:2]
-            self.signals.error.emit((exctype, value, traceback.format_exc()))
-        else:
-            self.signals.result.emit(result)
-        finally:
-            self.signals.finished.emit()
-
-
-class WorkerSignals(QObject):
-    """
-    Defines the signals available from a running worker thread.
-    Supported signals are:
-    finished - No data
-    error - tuple (exctype, value, traceback.format_exc() )
-    result - object data returned from processing, anything
-    """
-
-    finished = pyqtSignal()
-    error = pyqtSignal(tuple)
-    result = pyqtSignal(object)
-    output = pyqtSignal(object)
-    progress = pyqtSignal(int)
+# My packages
+from excel_helpers import Excel
+from selenium_helpers import Browser
+from data_variables import *
+from widgets.drag_drop import DragDrop
+from stylesheets import Stylesheets
+from utils.worker_thread import Worker, WorkerSignals
 
 
 class BackgroundRemover(QStandardItemModel):
@@ -391,9 +347,7 @@ class MainWindow(QMainWindow):
         self.auto_queue.installEventFilter(self)
 
         # Adding column viewers
-        self.analysis_column_viewer = (
-            pandasgui.widgets.dataframe_viewer.HeaderRolesView()
-        )
+        self.analysis_column_viewer = HeaderRolesView()
         self.analysis_column_viewer_layout.addWidget(self.analysis_column_viewer)
 
         # Installing Event filters
@@ -993,11 +947,7 @@ class MainWindow(QMainWindow):
         if mode == "analysis":
             self.analysis_df = df_title
             if self.analysis_viewer == None:
-                self.analysis_viewer = (
-                    pandasgui.widgets.dataframe_viewer.DataFrameViewer(
-                        pgdf=self.store.data[df_title]
-                    )
-                )
+                self.analysis_viewer = DataFrameViewer(pgdf=self.store.data[df_title])
                 self.analysis_dataframe_layout.replaceWidget(
                     self.add_analysis_dataframe,
                     self.analysis_viewer,
@@ -1015,11 +965,7 @@ class MainWindow(QMainWindow):
         elif mode == "testing":
             self.testing_df = df_title
             if self.testing_viewer == None:
-                self.testing_viewer = (
-                    pandasgui.widgets.dataframe_viewer.DataFrameViewer(
-                        pgdf=self.store.data[df_title]
-                    )
-                )
+                self.testing_viewer = DataFrameViewer(pgdf=self.store.data[df_title])
                 self.testing_dataframe_layout.replaceWidget(
                     self.add_testing_dataframe,
                     self.testing_viewer,
@@ -1037,14 +983,10 @@ class MainWindow(QMainWindow):
 
     def populate_column_viewer(self, mode: str, df_title: str):
         if mode == "analysis":
-            model = pandasgui.widgets.dataframe_viewer.HeaderRolesModel(
-                self.store.data[df_title].dataframe_viewer
-            )
+            model = HeaderRolesModel(self.store.data[df_title].dataframe_viewer)
             self.analysis_column_viewer.setModel(model)
         if mode == "testing":
-            model = pandasgui.widgets.dataframe_viewer.HeaderRolesModel(
-                self.store.data[df_title].dataframe_viewer
-            )
+            model = HeaderRolesModel(self.store.data[df_title].dataframe_viewer)
             self.testing_column_viewer.setModel(model)
 
     def row_selector(self, selected: QtCore.QObject):

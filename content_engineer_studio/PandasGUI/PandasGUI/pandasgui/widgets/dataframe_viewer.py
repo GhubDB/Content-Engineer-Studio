@@ -25,9 +25,6 @@ from PyQt5.QtGui import (
     QDragEnterEvent,
 )
 
-# from PyQt5.QtCore import QAbstractItemModel, QFile, QIODevice, QModelIndex, Qt
-# from PyQt5.QtWidgets import QApplication, QTreeView
-
 from typing_extensions import Literal
 from pandasgui.store import PandasGuiDataFrameStore
 from pandasgui.store import status_message_decorator
@@ -37,9 +34,7 @@ import logging
 
 from pandasgui.widgets.column_menu import ColumnMenu
 
-# from stylesheets import Stylesheet
-
-from main import Worker, WorkerSignals
+from utils.worker_thread import Worker, WorkerSignals
 
 logger = logging.getLogger(__name__)
 
@@ -417,22 +412,37 @@ class DataFrameViewer(QtWidgets.QWidget):
             self.refresh_ui()
 
     def _add_column(self, first, last, refresh=True):
-        for model in [self.dataView.model(), self.columnHeader.model()]:
+        # TODO: Add viewer in DataFrameViewer to this
+        for model in [
+            self.dataView.model(),
+            self.columnHeader.model(),
+        ]:
             parent = QtCore.QModelIndex()
             model.beginInsertColumns(parent, first, last)
-            cols = list(self.pgdf.df_unfiltered.columns)
-            # Insert list of generated columnn headers into column index list
-            cols[first:first] = [
-                self.column_generator() for _ in range(0, last - first)
-            ]
-            self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
-            self.pgdf.df
+
+        # TODO: Fix index issuse
+        model = self.pgdf.store.gui.analysis_column_viewer.model()
+        model.beginInsertRows(parent, first, last)
+
+        cols = list(self.pgdf.df_unfiltered.columns)
+        # Insert list of generated columnn headers into column index list
+        cols[first:first] = [next(self.pgdf.column_gen) for _ in range(0, last - first)]
+        self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
+        # self.pgdf.df
+
+        for model in [
+            self.dataView.model(),
+            self.columnHeader.model(),
+        ]:
             model.endInsertColumns()
 
-    def column_generator(self):
-        n = 0
-        while True:
-            yield "Column_" + n
+        model = self.pgdf.store.gui.analysis_column_viewer.model()
+        model.endInsertRows()
+
+        # TODO fix column widths to be analogous to the move rows function
+
+        if refresh:
+            self.refresh_ui()
 
     def refresh_ui(self):
 

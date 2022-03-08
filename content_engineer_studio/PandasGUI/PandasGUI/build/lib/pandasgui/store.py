@@ -492,23 +492,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.apply_filters()
 
-    @status_message_decorator("Adding column(s)...")
-    def add_column(self, first: int, last: int, refresh=True):
-        self.add_history_item(
-            "add_column(s)",
-            (
-                f"cols = list(df.columns)"
-                f"cols[{first}:{first}] = [self.column_generator() for _ in range(0, {last} - {first})]"
-                f"df = df.reindex(cols, axis=1)"
-            ),
-        )
-
-        self.dataframe_viewer.setUpdatesEnabled(False)
-        # Need to inform the PyQt model too so column widths properly shift
-        self.dataframe_viewer._add_columns(first, last)
-        self.apply_filters()
-        self.dataframe_viewer.setUpdatesEnabled(True)
-
     @status_message_decorator("Moving columns...")
     def move_column(self, src: int, dest: int):
         cols = list(self.df_unfiltered.columns)
