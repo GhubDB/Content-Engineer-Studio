@@ -497,7 +497,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
 
     @status_message_decorator("Adding column(s)...")
-    def add_column(self, first: int, last: int, refresh=True):
+    def add_column(
+        self, parent_index: QtCore.QModelIndex, first: int, last: int, refresh=True
+    ):
         self.add_history_item(
             "add_column(s)",
             (
@@ -509,7 +511,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Need to inform the PyQt model too so column widths properly shift
-        self.dataframe_viewer._add_column(first, last)
+        self.dataframe_viewer._add_column(parent_index, first, last)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 

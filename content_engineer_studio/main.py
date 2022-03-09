@@ -4,6 +4,7 @@ import time
 import traceback
 from threading import Thread
 from warnings import filters
+
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import (
     QEvent,
@@ -42,9 +43,10 @@ from PyQt5.QtGui import (
     QTextCharFormat,
     QTextCursor,
 )
+from utils.model_test import ModelTest
+import qtstylish
 
 from bs4 import BeautifulSoup
-import qtstylish
 
 # PandasGUI imports
 import inspect
@@ -73,8 +75,6 @@ from pandasgui.widgets.dataframe_viewer import (
     HeaderRolesView,
     HeaderRolesModel,
 )
-
-# import pandasgui.widgets.dataframe_viewer
 
 from IPython.core.magic import register_line_magic
 import logging
@@ -983,8 +983,11 @@ class MainWindow(QMainWindow):
 
     def populate_column_viewer(self, mode: str, df_title: str):
         if mode == "analysis":
-            model = HeaderRolesModel(self.store.data[df_title].dataframe_viewer)
-            self.analysis_column_viewer.setModel(model)
+            self.analysis_column_viewer.orig_model = HeaderRolesModel(
+                self.store.data[df_title].dataframe_viewer
+            )
+            self.analysis_column_viewer.setModel(self.analysis_column_viewer.orig_model)
+            test = ModelTest(self.analysis_column_viewer.orig_model, self)
         if mode == "testing":
             model = HeaderRolesModel(self.store.data[df_title].dataframe_viewer)
             self.testing_column_viewer.setModel(model)
@@ -1471,9 +1474,13 @@ class MainWindow(QMainWindow):
 
     def btn_add_column(self):
         n = self.add_column_count.value()
-        index = self.analysis_column_viewer.currentIndex()
-        index = index.row()
-        self.store.data[self.analysis_df].add_column(index, index + n)
+        parent_index = self.analysis_column_viewer.currentIndex()
+        index = parent_index.row()
+        if index == -1:
+            index += 1
+        self.store.data[self.analysis_df].add_column(
+            parent_index, index + 1, index + n + 1
+        )
 
     #####################################################################
     """

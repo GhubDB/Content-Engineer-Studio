@@ -411,18 +411,17 @@ class DataFrameViewer(QtWidgets.QWidget):
         if refresh:
             self.refresh_ui()
 
-    def _add_column(self, first, last, refresh=True):
-        # TODO: Add viewer in DataFrameViewer to this
+    def _add_column(self, parent_index: QtCore.QModelIndex, first, last, refresh=True):
         for model in [
-            self.dataView.model(),
-            self.columnHeader.model(),
+            self.dataView.orig_model,
+            self.columnHeader.header_model_horizontal,
+            # self.dataView.model(),
+            # self.columnHeader.model(),
         ]:
             parent = QtCore.QModelIndex()
             model.beginInsertColumns(parent, first, last)
-
-        # TODO: Fix index issuse
-        model = self.pgdf.store.gui.analysis_column_viewer.model()
-        model.beginInsertRows(parent, first, last)
+        model = self.pgdf.store.gui.analysis_column_viewer.orig_model
+        model.beginInsertRows(parent_index, first, last)
 
         cols = list(self.pgdf.df_unfiltered.columns)
         # Insert list of generated columnn headers into column index list
@@ -431,18 +430,20 @@ class DataFrameViewer(QtWidgets.QWidget):
         # self.pgdf.df
 
         for model in [
-            self.dataView.model(),
-            self.columnHeader.model(),
+            self.dataView.orig_model,
+            self.columnHeader.header_model_horizontal,
+            # self.dataView.model(),
+            # self.columnHeader.model(),
         ]:
             model.endInsertColumns()
 
-        model = self.pgdf.store.gui.analysis_column_viewer.model()
+        model = self.pgdf.store.gui.analysis_column_viewer.orig_model
         model.endInsertRows()
 
         # TODO fix column widths to be analogous to the move rows function
 
-        if refresh:
-            self.refresh_ui()
+        # if refresh:
+        #     self.refresh_ui()
 
     def refresh_ui(self):
 
@@ -1573,6 +1574,8 @@ class HeaderRolesView(QtWidgets.QTreeView):
     def __init__(self):
         super().__init__()
 
+        self.orig_model = None
+
         font = QFont()
         font.setPointSize(11)
         self.setFont(font)
@@ -1741,6 +1744,12 @@ class HeaderRolesModel(QtCore.QAbstractTableModel):
         parent: QModelIndex,
     ) -> bool:
         return super().canDropMimeData(data, action, row, column, parent)
+
+    def beginInsertRows(self, parent: QModelIndex, first: int, last: int) -> None:
+        return super().beginInsertRows(parent, first, last)
+
+    def endInsertRows(self) -> None:
+        return super().endInsertRows()
 
     # def headerData(self, section, orientation, role):
     #     if orientation == Qt.Horizontal and role == Qt.DisplayRole:

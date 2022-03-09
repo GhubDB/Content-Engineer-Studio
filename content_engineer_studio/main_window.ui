@@ -250,16 +250,22 @@
             <item>
              <layout class="QHBoxLayout" name="horizontalLayout_12">
               <item>
-               <widget class="QPushButton" name="add_column">
-                <property name="text">
-                 <string>Add Column</string>
+               <widget class="QSpinBox" name="add_column_count">
+                <property name="maximumSize">
+                 <size>
+                  <width>35</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QSpinBox" name="add_column_count">
-                <property name="minimum">
-                 <number>1</number>
+               <widget class="QPushButton" name="add_column">
+                <property name="text">
+                 <string>Add Column(s)</string>
                 </property>
                </widget>
               </item>
