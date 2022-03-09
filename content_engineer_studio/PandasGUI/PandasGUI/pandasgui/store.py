@@ -511,6 +511,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Need to inform the PyQt model too so column widths properly shift
+        # TODO: check if HeaderNamesModel also needs to be updated
         self.dataframe_viewer._add_column(parent_index, first, last)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)

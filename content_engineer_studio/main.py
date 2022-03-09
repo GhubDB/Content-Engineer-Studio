@@ -315,6 +315,7 @@ class MainWindow(QMainWindow):
         self.sent_messages = []
         self.filter_proxy_model = ""
         self.auto_anonymized = []
+        self.dummy_df = pd.DataFrame([0, 0])
 
         # Load Ui file, set settings
         loadUi("main_window.ui", self)
@@ -943,42 +944,39 @@ class MainWindow(QMainWindow):
         ].dataframe_viewer.indexHeader.header_model_vertical
 
         # If there is no preexisting viewer,
-        # make a new one and pass in pgdf of selected Dataframe
+        # make a new one and pass in a dummy Dataframe
         if mode == "analysis":
             self.analysis_df = df_title
             if self.analysis_viewer == None:
-                self.analysis_viewer = DataFrameViewer(pgdf=self.store.data[df_title])
+                self.analysis_viewer = DataFrameViewer(pgdf=self.dummy_df)
                 self.analysis_dataframe_layout.replaceWidget(
                     self.add_analysis_dataframe,
                     self.analysis_viewer,
                 )
                 self.add_analysis_dataframe.deleteLater()
-                self.analysis_column_viewer.setModel(header_model_horizontal)
-            # If viewer exists, replace models
-            else:
-                self.analysis_viewer.replace_models(
-                    pgdf=self.store.data[df_title],
-                    data_table_model=dfv_model,
-                    header_model_horizontal=header_model_horizontal,
-                    header_model_vertical=header_model_vertical,
-                )
+            # Switch out dummy df for a real one
+            self.analysis_viewer.replace_models(
+                pgdf=self.store.data[df_title],
+                data_table_model=dfv_model,
+                header_model_horizontal=header_model_horizontal,
+                header_model_vertical=header_model_vertical,
+            )
         elif mode == "testing":
             self.testing_df = df_title
             if self.testing_viewer == None:
-                self.testing_viewer = DataFrameViewer(pgdf=self.store.data[df_title])
+                self.testing_viewer = DataFrameViewer(pgdf=self.dummy_df)
                 self.testing_dataframe_layout.replaceWidget(
                     self.add_testing_dataframe,
                     self.testing_viewer,
                 )
                 self.add_testing_dataframe.deleteLater()
             # If viewer exists, replace models
-            else:
-                self.testing_viewer.replace_models(
-                    pgdf=self.store.data[df_title],
-                    data_table_model=dfv_model,
-                    header_model_horizontal=header_model_horizontal,
-                    header_model_vertical=header_model_vertical,
-                )
+            self.testing_viewer.replace_models(
+                pgdf=self.store.data[df_title],
+                data_table_model=dfv_model,
+                header_model_horizontal=header_model_horizontal,
+                header_model_vertical=header_model_vertical,
+            )
         self.populate_column_viewer(mode, df_title)
 
     def populate_column_viewer(self, mode: str, df_title: str):
