@@ -1,7 +1,7 @@
 import sys
 from typing import List, Union
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from pandasgui.widgets.code_history_viewer import CodeHistoryViewer
 
 from pandasgui.widgets.containers import Container
@@ -67,8 +67,7 @@ class DataFrameExplorer(QtWidgets.QWidget):
         # Non-Dock widgets
 
         self.filter_viewer = FilterViewer(pgdf)
-        self.column_viewer = HeaderRolesView(parent=self.dataframe_viewer)
-        # self.column_viewer = ColumnArranger(self.pgdf)
+        self.roles_view = HeaderRolesViewContainer(parent=self.dataframe_viewer)
 
         ##################
         # Set up overall layout
@@ -87,8 +86,7 @@ class DataFrameExplorer(QtWidgets.QWidget):
         self.splitter.addWidget(self.side_bar)
         self.splitter.addWidget(self.main_window)
         self.side_bar.addWidget(self.filter_viewer_container)
-        self.side_bar.addWidget(Container(self.column_viewer, "Columns"))
-        # self.side_bar.addWidget(Container(self.column_viewer, "Columns"))
+        self.side_bar.addWidget(self.roles_view)
 
     # Add a dock to the MainWindow widget
     def add_view(self, widget: QtWidgets.QWidget, title: str):
@@ -112,6 +110,94 @@ class DataFrameExplorer(QtWidgets.QWidget):
 
         self.docks.append(dock)
         return dock
+
+
+class HeaderRolesViewContainer(QtWidgets.QWidget):
+    def __init__(self, parent: DataFrameViewer = None):
+        super().__init__(parent=None)
+        if parent is not None:
+            self.dataframe_viewer = parent
+            self.pgdf: DataFrameViewer = parent.pgdf
+
+        # Set up elements
+        self.main_layout = QtWidgets.QVBoxLayout()
+        self.button_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(self.button_layout)
+
+        self.add_column_count = QtWidgets.QSpinBox()
+        self.add_column_count.setMaximumSize(QtCore.QSize(35, 16777215))
+        self.add_column_count.setMinimum(1)
+        self.add_column = QtWidgets.QPushButton()
+        self.add_column.setText("Add Column(s)")
+        self.delete_column = QtWidgets.QPushButton()
+        self.delete_column.setText("Delete Column")
+
+        self.button_layout.addWidget(self.add_column_count)
+        self.button_layout.addWidget(self.add_column)
+        self.button_layout.addWidget(self.delete_column)
+
+        self.search_columns = QtWidgets.QLineEdit()
+        self.main_layout.addWidget(self.search_columns)
+
+        self.column_viewer = HeaderRolesView(parent=self.dataframe_viewer)
+        self.main_layout.addWidget(self.column_viewer)
+        self.setLayout(self.main_layout)
+
+        # Connecting buttons and filters
+        self.add_column.clicked.connect(self.btn_add_column)
+        self.delete_column.clicked.connect(self.btn_delete_column)
+
+        # Initializing models
+
+        self.orig_model = HeaderRolesModel(parent=self.dataframe_viewer)
+
+        self.column_search_model = QtCore.QSortFilterProxyModel()
+        self.column_search_model.setSourceModel(self.orig_model)
+        self.column_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.column_search_model.setFilterKeyColumn(-1)
+        self.search_columns.textChanged.connect(
+            self.column_search_model.setFilterRegExp
+        )
+        self.column_viewer.setModel(self.column_search_model)
+        self.installEventFilter(self)
+
+    @pyqtSlot(QtCore.QItemSelection)
+    def get_source_from_selection(self):
+        """
+        Map Proxy model selection to source model selection and return list of selected rows
+        https://stackoverflow.com/questions/61268687/access-original-index-in-qabstracttablemodel-from-selected-row-in-qtableview
+        """
+        hasSelection = self.column_viewer.selectionModel().hasSelection()
+        if hasSelection:
+            selectedRows = self.column_viewer.selectionModel().selectedRows()
+            return sorted(
+                [
+                    self.column_search_model.mapToSource(row).row()
+                    for row in selectedRows
+                ]
+            )
+        return False
+
+    def btn_add_column(self):
+        n = self.add_column_count.value()
+        rows = self.get_source_from_selection()
+        if not rows:
+            # TODO: add tooltip saying that a column needs to be selected
+            return
+        self.dataframe_viewer.pgdf.add_column(first=rows[-1] + 1, last=rows[-1] + n + 1)
+
+    def btn_delete_column(self):
+        rows = self.get_source_from_selection()
+        if not rows:
+            return
+        self.dataframe_viewer.pgdf.delete_column(rows)
+
+    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        # Enable deleting selected rows with DEL
+        if event.type() == QtCore.QEvent.KeyPress:
+            if event.key() == Qt.Key_Delete:
+                self.btn_delete_column()
+        return super().eventFilter(source, event)
 
 
 class HeaderRolesModel(QtCore.QAbstractListModel):
@@ -204,8 +290,8 @@ class HeaderRolesView(QtWidgets.QListView):
             self.dataframe_viewer = parent
             self.pgdf: DataFrameViewer = parent.pgdf
 
-            self.orig_model = HeaderRolesModel(parent=self.dataframe_viewer)
-            self.setModel(self.orig_model)
+            # self.orig_model = HeaderRolesModel(parent=self.dataframe_viewer)
+            # self.setModel(self.orig_model)
 
         font = QtGui.QFont()
         font.setPointSize(11)
