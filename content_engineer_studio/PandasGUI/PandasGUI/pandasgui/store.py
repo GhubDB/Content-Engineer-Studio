@@ -483,16 +483,21 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
     ###################################
     # Changing columns
-    @status_message_decorator("Deleting column...")
+    @status_message_decorator("Deleting column(s)...")
     def delete_column(self, ix: int):
+        if not hasattr(ix, "__iter__"):
+            ix = [ix]
 
-        col_name = self.df_unfiltered.columns[ix]
-        self.df_unfiltered = self.df_unfiltered.drop(col_name, axis=1)
+        for idx, i in enumerate(ix):
+            col_name = self.df_unfiltered.columns[i - idx]
+            self.df_unfiltered = self.df_unfiltered.drop(col_name, axis=1)
 
-        # Need to inform the PyQt model too so column widths properly shift
-        self.dataframe_viewer._remove_column(ix)
+            # Need to inform the PyQt model too so column widths properly shift
+            self.dataframe_viewer._remove_column(i - idx)
 
-        self.add_history_item("delete_column", f"df = df.drop('{col_name}', axis=1)")
+            self.add_history_item(
+                "delete_column", f"df = df.drop('{col_name}', axis=1)"
+            )
 
         self.apply_filters()
 

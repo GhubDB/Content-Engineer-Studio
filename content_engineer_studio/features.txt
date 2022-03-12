@@ -10,15 +10,26 @@ improve pandasgui performance
 add status_messsage_decorator to methods in all views
 add a way to view pandasgui on second monitor
 add resizeRowsToContents button to Dataframe Viewer
+make links clickable
 limit thread_resize_rows resource usage
 implement undo/redo for row deletion, move_row and so on
 check if store -> def remove_item(self, name_or_index): actually deletes the widget.
 turn sidebar from tablewidget into tableview
 remove background color from drag & drop rows
+fix drag drop duplication of dataframes
 add a way to import and set working viewer at the same time
 fix find_toolbar height
 add logging
 add unittests
+
+
+Performance optimization for large amounts of data¶
+https://doc.qt.io/qtforpython/overviews/model-view-programming.html?highlight=model
+The canFetchMore() function checks if the parent has more data available and returns true or false accordingly. The fetchMore() function fetches data based on the parent specified. Both these functions can be combined, for example, in a database query involving incremental data to populate a QAbstractItemModel . We reimplement canFetchMore() to indicate if there is more data to be fetched and fetchMore() to populate the model as required.
+
+Another example would be dynamically populated tree models, where we reimplement fetchMore() when a branch in the tree model is expanded.
+
+If your reimplementation of fetchMore() adds rows to the model, you need to call beginInsertRows() and endInsertRows() . Also, both canFetchMore() and fetchMore() must be reimplemented as their default implementation returns false and does nothing.
 
 #################################################################
 Bugs:

@@ -21,7 +21,12 @@
 ##
 #############################################################################
 
-import sip
+try:
+    # new location for sip
+    # https://www.riverbankcomputing.com/static/Docs/PyQt5/incompatibilities.html#pyqt-v5-11
+    from PyQt5 import sip
+except ImportError:
+    import sip
 from PyQt5 import QtCore, QtGui
 
 # This was originally a Trolltech file.  The QBzr folks did some work to

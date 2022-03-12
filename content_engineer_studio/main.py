@@ -2,7 +2,6 @@ import sys
 import re
 import time
 import traceback
-from threading import Thread
 from warnings import filters
 
 from PyQt5.uic import loadUi
@@ -70,7 +69,7 @@ from pandasgui.widgets.navigator import Navigator
 from pandasgui.widgets.figure_viewer import FigureViewer
 from pandasgui.widgets.settings_editor import SettingsEditor
 from pandasgui.widgets.python_highlighter import PythonHighlighter
-from pandasgui.widgets.dataframe_viewer import (
+from pandasgui.widgets.dataframe_explorer import (
     DataFrameViewer,
     HeaderRolesView,
     HeaderRolesModel,
@@ -324,7 +323,10 @@ class MainWindow(QMainWindow):
         self.setContentsMargins(0, 0, 0, 0)
 
         # Set analysis and testing splitter stretch
-        sizes = [99999, 1]
+        sizes = [99999, 1, 1]
+        self.analysis_layout.setSizes(sizes)
+        self.testing_layout.setSizes(sizes)
+        sizes = [1, 1]
         self.analysis_splitter.setSizes(sizes)
         self.testing_splitter.setSizes(sizes)
 
@@ -430,6 +432,7 @@ class MainWindow(QMainWindow):
         )
         self.add_column.clicked.connect(self.btn_add_column)
         # self.add_column_2.clicked.connect(self.btn_add_column_2)
+        self.delete_column.clicked.connect(self.btn_delete_column)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load("transcripts.xlsx", "Sheet1")
@@ -970,7 +973,6 @@ class MainWindow(QMainWindow):
                     self.testing_viewer,
                 )
                 self.add_testing_dataframe.deleteLater()
-            # If viewer exists, replace models
             self.testing_viewer.replace_models(
                 pgdf=self.store.data[df_title],
                 data_table_model=dfv_model,
@@ -981,11 +983,13 @@ class MainWindow(QMainWindow):
 
     def populate_column_viewer(self, mode: str, df_title: str):
         if mode == "analysis":
-            self.analysis_column_viewer.orig_model = HeaderRolesModel(
-                self.store.data[df_title].dataframe_viewer
+            self.analysis_column_viewer.setModel(
+                self.store.data[df_title].dataframe_explorer.column_viewer.orig_model
             )
-            self.analysis_column_viewer.setModel(self.analysis_column_viewer.orig_model)
-            test = ModelTest(self.analysis_column_viewer.orig_model, self)
+            test = ModelTest(
+                self.store.data[df_title].dataframe_explorer.column_viewer.orig_model,
+                self,
+            )
         if mode == "testing":
             model = HeaderRolesModel(self.store.data[df_title].dataframe_viewer)
             self.testing_column_viewer.setModel(model)
@@ -1475,10 +1479,19 @@ class MainWindow(QMainWindow):
         parent_index = self.analysis_column_viewer.currentIndex()
         index = parent_index.row()
         if index == -1:
-            index += 1
+            # TODO: add tooltip saying that a column needs to be selected
+            return
         self.store.data[self.analysis_df].add_column(
             parent_index, index + 1, index + n + 1
         )
+
+    def btn_delete_column(self):
+        indexes = self.analysis_column_viewer.selectionModel().selectedRows()
+        # index = self.analysis_column_viewer.currentIndex()
+        indexes = [index.row() for index in indexes]
+        if -1 in indexes:
+            return
+        self.store.data[self.analysis_df].delete_column(indexes)
 
     #####################################################################
     """

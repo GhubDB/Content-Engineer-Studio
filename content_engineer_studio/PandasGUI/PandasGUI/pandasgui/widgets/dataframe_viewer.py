@@ -415,29 +415,24 @@ class DataFrameViewer(QtWidgets.QWidget):
         for model in [
             self.dataView.orig_model,
             self.columnHeader.header_model_horizontal,
-            # self.dataView.model(),
-            # self.columnHeader.model(),
         ]:
-            parent = QtCore.QModelIndex()
-            model.beginInsertColumns(parent, first, last)
-        model = self.pgdf.store.gui.analysis_column_viewer.orig_model
+            model.beginInsertColumns(QtCore.QModelIndex(), first, last)
+
+        model = self.pgdf.dataframe_explorer.column_viewer.orig_model
         model.beginInsertRows(parent_index, first, last)
 
         cols = list(self.pgdf.df_unfiltered.columns)
         # Insert list of generated columnn headers into column index list
         cols[first:first] = [next(self.pgdf.column_gen) for _ in range(0, last - first)]
         self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
-        # self.pgdf.df
 
         for model in [
             self.dataView.orig_model,
             self.columnHeader.header_model_horizontal,
-            # self.dataView.model(),
-            # self.columnHeader.model(),
         ]:
             model.endInsertColumns()
 
-        model = self.pgdf.store.gui.analysis_column_viewer.orig_model
+        model = self.pgdf.dataframe_explorer.column_viewer.orig_model
         model.endInsertRows()
 
         # TODO fix column widths to be analogous to the move rows function
@@ -1568,258 +1563,6 @@ class TrackingSpacer(QtWidgets.QFrame):
             height = self.ref_y.height()
 
         return QtCore.QSize(width, height)
-
-
-class HeaderRolesView(QtWidgets.QTreeView):
-    def __init__(self):
-        super().__init__()
-
-        self.orig_model = None
-
-        font = QFont()
-        font.setPointSize(11)
-        self.setFont(font)
-        # self.header().setStretchLastSection(True)
-        self.setFrameShape(QtWidgets.QFrame.Panel)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.setAcceptDrops(True)
-        self.setDragEnabled(True)
-        self.setDropIndicatorShown(True)
-        self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
-        self.setDefaultDropAction(QtCore.Qt.MoveAction)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setRootIsDecorated(False)
-
-        self.expandAll()
-
-        # self.setMovement(QtWidgets.QListView.Snap)
-
-        # self.rootItem = TreeItem(("Title", "Summary"))
-        # self.setupModelData(data.split("\n"), self.rootItem)
-
-    def columnCount(self, parent=None):
-        return 1
-        if parent.isValid():
-            return parent.internalPointer().columnCount()
-        else:
-            return self.rootItem.columnCount()
-
-    def showEvent(self, event: QShowEvent):
-        for i in range(self.columnCount()):
-            self.resizeColumnToContents(i)
-        event.accept()
-
-    # def rowsInserted(self, parent: QtCore.QModelIndex, start: int, end: int):
-    #     super().rowsInserted(parent, start, end)
-    #     self.expandAll()
-
-    # def sizeHint(self) -> QtCore.QSize:
-    #     self.header().setStretchLastSection(False)
-    #     width = 5 + sum([self.columnWidth(i) for i in range(self.columnCount())])
-    #     self.header().setStretchLastSection(True)
-
-    # return QtCore.QSize(width, super().sizeHint().height())
-
-    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-            print(event.mimeData().formats(), len(event.mimeData().text()))
-            event.accept()
-        else:
-            event.ignore()
-
-    def startDrag(
-        self, supportedActions: Union[QtCore.Qt.DropActions, QtCore.Qt.DropAction]
-    ) -> None:
-        return super().startDrag(supportedActions)
-
-    def dragMoveEvent(self, event):
-        if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-            event.setDropAction(Qt.MoveAction)
-            event.accept()
-        else:
-            event.ignore()
-
-    def dropEvent(self, event: QDropEvent) -> None:
-        print(event.pos())
-        super().dropEvent(event)
-        # self.onDropSignal.emit()
-
-    # def mimeData(self, indexes):
-    #     mimedata = super().mimeData(indexes)
-    #     return mimedata
-
-
-class QTreeWidgetItem(QtWidgets.QTreeWidgetItem):
-    def __lt__(self, otherItem):
-        column = self.treeWidget().sortColumn()
-
-        try:
-            return float(self.text(column)) < float(otherItem.text(column))
-        except ValueError:
-            return self.text(column) < otherItem.text(column)
-
-
-class HeaderRolesModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent):
-        super(HeaderRolesModel, self).__init__(parent)
-        self.dataframe_viewer: DataFrameViewer = parent
-        self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-
-    def columnCount(self, parent):
-        return 1
-        if parent.isValid():
-            return parent.internalPointer().columnCount()
-        else:
-            return self.rootItem.columnCount()
-
-    def rowCount(self, parent):
-        return self.pgdf.df.columns.shape[0]
-
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-
-        if role == QtCore.Qt.DisplayRole or role == QtCore.Qt.EditRole:
-            # return None
-
-            row = index.row()
-            # print(str(self.pgdf.df.columns[row]))
-            return str(self.pgdf.df.columns[row])
-
-    def setData(self, index, value, role=None):
-        if role == QtCore.Qt.EditRole:
-            row = index.row()
-            # col = index.column()
-            try:
-                self.pgdf.df.rename(
-                    {self.pgdf.df.columns[row]: value}, axis="columns", inplace=True
-                )
-                self.dataframe_viewer.refresh_ui()
-            except Exception as e:
-                logger.exception(e)
-                return False
-            return True
-
-    def flags(self, index):
-        if not index.isValid():
-            return Qt.NoItemFlags
-
-        return (
-            Qt.ItemIsDragEnabled
-            | Qt.ItemIsDropEnabled
-            | Qt.ItemIsEnabled
-            | Qt.ItemIsSelectable
-            | Qt.ItemIsEditable
-        )
-
-    def removeRows(self, row: int, count: int, parent: QModelIndex = ...) -> bool:
-        self.dataframe_viewer._remove_column(row)
-        return super().removeRows(row, count, parent)
-
-    def supportedDropActions(self):
-        return Qt.MoveAction
-
-    def dropMimeData(
-        self,
-        data: "QMimeData",
-        action: Qt.DropAction,
-        row: int,
-        column: int,
-        parent: QModelIndex,
-    ) -> bool:
-
-        self.dataframe_viewer._move_column(
-            row,
-        )
-        return super().dropMimeData(data, action, row, column, parent)
-
-    def canDropMimeData(
-        self,
-        data: "QMimeData",
-        action: Qt.DropAction,
-        row: int,
-        column: int,
-        parent: QModelIndex,
-    ) -> bool:
-        return super().canDropMimeData(data, action, row, column, parent)
-
-    def beginInsertRows(self, parent: QModelIndex, first: int, last: int) -> None:
-        return super().beginInsertRows(parent, first, last)
-
-    def endInsertRows(self) -> None:
-        return super().endInsertRows()
-
-    # def headerData(self, section, orientation, role):
-    #     if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-    #         return self.rootItem.data(section)
-
-    #     return None
-
-    # def index(self, row, column, parent):
-    #     if not self.hasIndex(row, column, parent):
-    #         return QModelIndex()
-
-    # if not parent.isValid():
-    #     parentItem = self.rootItem
-    # else:
-    #     parentItem = parent.internalPointer()
-
-    # childItem = parentItem.child(row)
-    # if childItem:
-    #     return self.createIndex(row, column, childItem)
-    # else:
-    #     return QModelIndex()
-
-    # def parent(self, index):
-    #     if not index.isValid():
-    #         return QModelIndex()
-
-    #     childItem = index.internalPointer()
-    #     parentItem = childItem.parent()
-
-    #     if parentItem == self.rootItem:
-    #         return QModelIndex()
-
-    #     return self.createIndex(parentItem.row(), 0, parentItem)
-
-    # def setupModelData(self, lines, parent):
-    #     parents = [parent]
-    #     indentations = [0]
-
-    #     number = 0
-
-    #     while number < len(lines):
-    #         position = 0
-    #         while position < len(lines[number]):
-    #             if lines[number][position] != b" ":
-    #                 break
-    #             position += 1
-
-    #         lineData = lines[number][position:].trimmed()
-
-    #         if lineData:
-    #             # Read the column data from the rest of the line.
-    #             columnData = [s for s in lineData.split("\t") if s]
-
-    #             if position > indentations[-1]:
-    #                 # The last child of the current parent is now the new
-    #                 # parent unless the current parent has no children.
-
-    #                 if parents[-1].childCount() > 0:
-    #                     parents.append(parents[-1].child(parents[-1].childCount() - 1))
-    #                     indentations.append(position)
-
-    #             else:
-    #                 while position < indentations[-1] and len(parents) > 0:
-    #                     parents.pop()
-    #                     indentations.pop()
-
-    #             # Append a new item to the current parent's list of children.
-    #             parents[-1].appendChild(TreeItem(columnData, parents[-1]))
-
-    #         number += 1
 
 
 # Examples
