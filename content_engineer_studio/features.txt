@@ -18,7 +18,7 @@ turn sidebar from tablewidget into tableview
 remove background color from drag & drop rows
 fix drag drop duplication of dataframes
 add a way to import and set working viewer at the same time
-fix find_toolbar height
+add hotkey for adding columnns
 add logging
 add unittests
 

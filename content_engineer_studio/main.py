@@ -71,8 +71,7 @@ from pandasgui.widgets.settings_editor import SettingsEditor
 from pandasgui.widgets.python_highlighter import PythonHighlighter
 from pandasgui.widgets.dataframe_explorer import (
     DataFrameViewer,
-    HeaderRolesView,
-    HeaderRolesModel,
+    HeaderRolesViewContainer,
 )
 
 from IPython.core.magic import register_line_magic
@@ -349,10 +348,6 @@ class MainWindow(QMainWindow):
         self.auto_queue.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.auto_queue.installEventFilter(self)
 
-        # Adding column viewers
-        self.analysis_column_viewer = HeaderRolesView()
-        self.analysis_column_viewer_layout.addWidget(self.analysis_column_viewer)
-
         # Installing Event filters
         self.analysis.installEventFilter(self)
         self.analysis_2.installEventFilter(self)
@@ -410,9 +405,6 @@ class MainWindow(QMainWindow):
         self.close_settings.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(self.current_work_area)
         )
-        self.close_excel.clicked.connect(
-            lambda: self.stackedWidget.setCurrentIndex(self.current_work_area)
-        )
         self.analysis_menu.triggered.connect(self.switchToAnalysis)
         self.testing_menu.triggered.connect(self.switchToTesting)
         self.faq_menu.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(3))
@@ -430,9 +422,6 @@ class MainWindow(QMainWindow):
         self.add_analysis_dataframe.clicked.connect(
             lambda: self.stackedWidget.setCurrentIndex(5)
         )
-        self.add_column.clicked.connect(self.btn_add_column)
-        # self.add_column_2.clicked.connect(self.btn_add_column_2)
-        self.delete_column.clicked.connect(self.btn_delete_column)
 
         # Executed on excel.load
         self.df = self.analysis_excel.load("transcripts.xlsx", "Sheet1")
@@ -957,6 +946,10 @@ class MainWindow(QMainWindow):
                     self.analysis_viewer,
                 )
                 self.add_analysis_dataframe.deleteLater()
+                self.analysis_roles_view = HeaderRolesViewContainer(
+                    parent=self.store.data[df_title].dataframe_explorer
+                )
+                self.analysis_column_viewer_layout.addWidget(self.analysis_roles_view)
             # Switch out dummy df for a real one
             self.analysis_viewer.replace_models(
                 pgdf=self.store.data[df_title],
@@ -964,6 +957,20 @@ class MainWindow(QMainWindow):
                 header_model_horizontal=header_model_horizontal,
                 header_model_vertical=header_model_vertical,
             )
+            self.analysis_roles_view.replace_model(
+                orig_model=self.store.data[
+                    df_title
+                ].dataframe_explorer.roles_view.orig_model,
+                search_model=self.store.data[
+                    df_title
+                ].dataframe_explorer.roles_view.column_search_model,
+            )
+            # self.analysis_roles_view.replace_model(
+            #     model=self.store.data[
+            #         df_title
+            #     ].dataframe_explorer.roles_view.column_search_model,
+            # )
+
         elif mode == "testing":
             self.testing_df = df_title
             if self.testing_viewer == None:
@@ -979,20 +986,6 @@ class MainWindow(QMainWindow):
                 header_model_horizontal=header_model_horizontal,
                 header_model_vertical=header_model_vertical,
             )
-        self.populate_column_viewer(mode, df_title)
-
-    def populate_column_viewer(self, mode: str, df_title: str):
-        if mode == "analysis":
-            self.analysis_column_viewer.setModel(
-                self.store.data[df_title].dataframe_explorer.column_viewer.orig_model
-            )
-            test = ModelTest(
-                self.store.data[df_title].dataframe_explorer.column_viewer.orig_model,
-                self,
-            )
-        if mode == "testing":
-            model = HeaderRolesModel(self.store.data[df_title].dataframe_viewer)
-            self.testing_column_viewer.setModel(model)
 
     def row_selector(self, selected: QtCore.QObject):
         """
@@ -1473,25 +1466,6 @@ class MainWindow(QMainWindow):
         index = self.history_model.index(3, 0)
         # print(index)
         print(self.history_model.itemData(index))
-
-    def btn_add_column(self):
-        n = self.add_column_count.value()
-        parent_index = self.analysis_column_viewer.currentIndex()
-        index = parent_index.row()
-        if index == -1:
-            # TODO: add tooltip saying that a column needs to be selected
-            return
-        self.store.data[self.analysis_df].add_column(
-            parent_index, index + 1, index + n + 1
-        )
-
-    def btn_delete_column(self):
-        indexes = self.analysis_column_viewer.selectionModel().selectedRows()
-        # index = self.analysis_column_viewer.currentIndex()
-        indexes = [index.row() for index in indexes]
-        if -1 in indexes:
-            return
-        self.store.data[self.analysis_df].delete_column(indexes)
 
     #####################################################################
     """

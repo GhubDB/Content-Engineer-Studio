@@ -411,15 +411,15 @@ class DataFrameViewer(QtWidgets.QWidget):
         if refresh:
             self.refresh_ui()
 
-    def _add_column(self, parent_index: QtCore.QModelIndex, first, last, refresh=True):
+    def _add_column(self, first, last, refresh=True):
         for model in [
             self.dataView.orig_model,
             self.columnHeader.header_model_horizontal,
         ]:
             model.beginInsertColumns(QtCore.QModelIndex(), first, last)
 
-        model = self.pgdf.dataframe_explorer.column_viewer.orig_model
-        model.beginInsertRows(parent_index, first, last)
+        model = self.pgdf.dataframe_explorer.roles_view.orig_model
+        model.beginInsertRows(QtCore.QModelIndex(), first, last)
 
         cols = list(self.pgdf.df_unfiltered.columns)
         # Insert list of generated columnn headers into column index list
@@ -432,13 +432,13 @@ class DataFrameViewer(QtWidgets.QWidget):
         ]:
             model.endInsertColumns()
 
-        model = self.pgdf.dataframe_explorer.column_viewer.orig_model
+        model = self.pgdf.dataframe_explorer.roles_view.orig_model
         model.endInsertRows()
 
         # TODO fix column widths to be analogous to the move rows function
 
-        # if refresh:
-        #     self.refresh_ui()
+        if refresh:
+            self.refresh_ui()
 
     def refresh_ui(self):
 
@@ -450,6 +450,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             self.indexHeader.model(),
             self.columnHeaderNames.model(),
             self.indexHeaderNames.model(),
+            self.pgdf.dataframe_explorer.roles_view.orig_model,
         ]
 
         for model in self.models:

@@ -161,6 +161,11 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.column_viewer.setModel(self.column_search_model)
         self.installEventFilter(self)
 
+    def replace_model(self, orig_model, search_model):
+        self.orig_model = orig_model
+        self.column_search_model = search_model
+        self.column_viewer.setModel(self.column_search_model)
+
     @pyqtSlot(QtCore.QItemSelection)
     def get_source_from_selection(self):
         """
@@ -224,7 +229,7 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
             row = index.row()
             # col = index.column()
             try:
-                self.pgdf.df.rename(
+                self.pgdf.df_unfiltered.rename(
                     {self.pgdf.df_unfiltered.columns[row]: value},
                     axis="columns",
                     inplace=True,
@@ -234,6 +239,7 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
                 logger.exception(e)
                 return False
             return True
+        return False
 
     def flags(self, index):
         if not index.isValid():
@@ -259,9 +265,12 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
         parent: QtCore.QModelIndex,
     ) -> bool:
 
-        self.dataframe_viewer._move_column(
-            row,
+        selected = sorted(
+            self.dataframe_viewer.pgdf.dataframe_explorer.roles_view.get_source_from_selection()
         )
+        # self.pgdf.dataframe_explorer.roles_view.get_source_from_selection()
+        print(selected, row)
+        self.pgdf.reorder_columns(selected, row)
         return super().dropMimeData(data, action, row, column, parent)
 
     def canDropMimeData(
@@ -327,7 +336,7 @@ class HeaderRolesView(QtWidgets.QListView):
             event.ignore()
 
     def dropEvent(self, event: QtGui.QDropEvent) -> None:
-        print(event.pos())
+        # print(event.pos())
         super().dropEvent(event)
         # self.onDropSignal.emit()
 

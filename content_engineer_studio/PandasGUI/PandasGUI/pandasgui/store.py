@@ -502,9 +502,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
 
     @status_message_decorator("Adding column(s)...")
-    def add_column(
-        self, parent_index: QtCore.QModelIndex, first: int, last: int, refresh=True
-    ):
+    def add_column(self, first: int, last: int, refresh=True):
         self.add_history_item(
             "add_column(s)",
             (
@@ -517,7 +515,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Need to inform the PyQt model too so column widths properly shift
         # TODO: check if HeaderNamesModel also needs to be updated
-        self.dataframe_viewer._add_column(parent_index, first, last)
+        self.dataframe_viewer._add_column(first, last)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
@@ -543,22 +541,42 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.dataframe_viewer.setUpdatesEnabled(True)
 
     @status_message_decorator("Reordering columns...")
-    def reorder_columns(self, columns: List[str]):
-        if sorted(list(columns)) != sorted(list(self.df_unfiltered.columns)):
-            raise ValueError("Provided column names do not match DataFrame")
-
-        original_columns = list(self.df_unfiltered.columns)
-
-        self.df_unfiltered = self.df_unfiltered.reindex(columns=columns)
+    def reorder_columns(self, selected: List[int], row: int):
+        original = list(self.df_unfiltered.columns)
+        reordered = original[:]
+        moved = [reordered.pop(selected - i) for i, selected in enumerate(selected)]
+        insertion_point = reordered.index(original[row])
+        reordered[insertion_point:insertion_point] = moved
+        self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Move columns around in TableView to maintain column widths
-        for (src, dest) in get_movements(original_columns, columns):
+        for (src, dest) in get_movements(original, reordered):
             self.dataframe_viewer._move_column(src, dest, refresh=False)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
-        self.add_history_item("reorder_columns", f"df = df.reindex(columns={columns})")
+        self.add_history_item(
+            "reorder_columns", f"df = df.reindex(columns={reordered})"
+        )
+
+    # @status_message_decorator("Reordering columns...")
+    # def reorder_columns(self, columns: List[str]):
+    #     if sorted(list(columns)) != sorted(list(self.df_unfiltered.columns)):
+    #         raise ValueError("Provided column names do not match DataFrame")
+
+    #     original_columns = list(self.df_unfiltered.columns)
+
+    #     self.df_unfiltered = self.df_unfiltered.reindex(columns=columns)
+
+    #     self.dataframe_viewer.setUpdatesEnabled(False)
+    #     # Move columns around in TableView to maintain column widths
+    #     for (src, dest) in get_movements(original_columns, columns):
+    #         self.dataframe_viewer._move_column(src, dest, refresh=False)
+    #     self.apply_filters()
+    #     self.dataframe_viewer.setUpdatesEnabled(True)
+
+    #     self.add_history_item("reorder_columns", f"df = df.reindex(columns={columns})")
 
     ###################################
     # Sorting
