@@ -1,11 +1,5 @@
-def find_uniq(arr):
-    x, y = set(arr)
-    if x in arr[0:2]:
-        n = y
-    else: 
-        n = x
+import pandas as pd
 
-    return n   # n: unique number in the array
+df = pd.read_csv('C:\Users\Me\Dropbox\Python\content_engineer_studio\csv\Analysis.csv')
 
-arr = [1, 1, 1, 1, 0, 1, 1]
-print(find_uniq(arr))
+print(df)

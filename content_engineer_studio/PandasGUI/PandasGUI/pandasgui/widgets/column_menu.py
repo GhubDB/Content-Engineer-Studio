@@ -29,7 +29,15 @@ class ColumnMenu(QtWidgets.QMenu):
         # Header Role
 
         def assign_role(text):
-            df.columns = pd.MultiIndex.from_product([df.columns, [text]])
+            if df.columns.nlevels <= 1:
+                df.columns = pd.MultiIndex.from_product([df.columns, ["None"]])
+
+            updated_columns = list(df.columns.get_level_values(1))
+            print(updated_columns)
+            updated_columns[self.column_ix] = text
+            df.columns.set_levels(updated_columns, level=1, inplace=True)
+            print(df.columns.get_level_values(1))
+            self.pgdf.dataframe_viewer.refresh_ui()
 
         self.header_role_selector = QtWidgets.QComboBox()
         for item in roles:

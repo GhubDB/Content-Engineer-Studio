@@ -11,6 +11,7 @@ add status_messsage_decorator to methods in all views
 add a way to view pandasgui on second monitor
 add resizeRowsToContents button to Dataframe Viewer
 make links clickable
+fix column asc/desc sorting in working views
 limit thread_resize_rows resource usage
 implement undo/redo for row deletion, move_row and so on
 check if store -> def remove_item(self, name_or_index): actually deletes the widget.
@@ -184,6 +185,7 @@ Notes:
 - df.iloc[0:5, 0:3].values will give lists in the specified saveOnRowChange
 - a dataframe of the specified range will be returned if .values is not used
 - use self.df_2.columns.values to get header strings
+- use str(self.pgdf.df.columns.get_level_values(0)[row]) to get values from only one level of the mulit-index
 
 - use for message in messages:
     message.get_attribute('class') or message.get_property('class') for checking element attributes

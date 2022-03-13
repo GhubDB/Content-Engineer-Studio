@@ -230,6 +230,10 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
     def rowCount(self, parent):
         return self.pgdf.df_unfiltered.columns.shape[0]
 
+    def columnCount(self, parent: QtCore.QModelIndex) -> int:
+        print(self.pgdf.df_unfiltered.columns.nlevels)
+        return self.pgdf.df_unfiltered.columns.nlevels
+
     def data(self, index, role):
         if not index.isValid():
             return None
@@ -238,20 +242,22 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
             row = index.row()
             # print(row)
             # print(str(self.pgdf.df.columns[row]))
-            return str(self.pgdf.df_unfiltered.columns[row])
+            return str(self.pgdf.df_unfiltered.columns.get_level_values(0)[row])
 
     def setData(self, index, value, role=None):
         if role == QtCore.Qt.EditRole:
             row = index.row()
             # col = index.column()
             try:
+                print(row)
+                # self.pgdf.df_unfiltered.columns.values[row] = value
                 self.pgdf.df_unfiltered.rename(
-                    {self.pgdf.df_unfiltered.columns[row]: value},
+                    {self.pgdf.df_unfiltered.columns.get_level_values(0)[row]: value},
+                    level=0,
                     axis="columns",
                     inplace=True,
                 )
                 self.dataframe_explorer.pgdf.refresh_ui()
-                # self.dataframe_explorer.pgdf.dataframe_viewer.refresh_ui()
             except Exception as e:
                 logger.exception(e)
                 return False
