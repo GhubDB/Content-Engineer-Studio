@@ -67,7 +67,7 @@ class DataFrameExplorer(QtWidgets.QWidget):
         # Non-Dock widgets
 
         self.filter_viewer = FilterViewer(pgdf)
-        self.roles_view = HeaderRolesViewContainer(parent=self.dataframe_viewer)
+        self.roles_view = HeaderRolesViewContainer(parent=self)
 
         ##################
         # Set up overall layout
@@ -113,11 +113,10 @@ class DataFrameExplorer(QtWidgets.QWidget):
 
 
 class HeaderRolesViewContainer(QtWidgets.QWidget):
-    def __init__(self, parent: DataFrameViewer = None):
-        super().__init__(parent=None)
-        if parent is not None:
-            self.dataframe_viewer = parent
-            self.pgdf: DataFrameViewer = parent.pgdf
+    def __init__(self, parent: DataFrameExplorer):
+        super().__init__(parent)
+        self.dataframe_explorer = parent
+        self.pgdf: DataFrameViewer = parent.pgdf
 
         # Set up elements
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -139,7 +138,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.search_columns = QtWidgets.QLineEdit()
         self.main_layout.addWidget(self.search_columns)
 
-        self.column_viewer = HeaderRolesView(parent=self.dataframe_viewer)
+        self.column_viewer = HeaderRolesView(parent=self.dataframe_explorer)
         self.main_layout.addWidget(self.column_viewer)
         self.setLayout(self.main_layout)
 
@@ -149,7 +148,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
 
         # Initializing models
 
-        self.orig_model = HeaderRolesModel(parent=self.dataframe_viewer)
+        self.orig_model = HeaderRolesModel(parent=self.dataframe_explorer)
 
         self.column_search_model = QtCore.QSortFilterProxyModel()
         self.column_search_model.setSourceModel(self.orig_model)
@@ -165,6 +164,9 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.orig_model = orig_model
         self.column_search_model = search_model
         self.column_viewer.setModel(self.column_search_model)
+        self.search_columns.textChanged.connect(
+            self.column_search_model.setFilterRegExp
+        )
 
     @pyqtSlot(QtCore.QItemSelection)
     def get_source_from_selection(self):
@@ -172,16 +174,23 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         Map Proxy model selection to source model selection and return list of selected rows
         https://stackoverflow.com/questions/61268687/access-original-index-in-qabstracttablemodel-from-selected-row-in-qtableview
         """
-        hasSelection = self.column_viewer.selectionModel().hasSelection()
-        if hasSelection:
-            selectedRows = self.column_viewer.selectionModel().selectedRows()
-            return sorted(
-                [
-                    self.column_search_model.mapToSource(row).row()
-                    for row in selectedRows
-                ]
+        index = self.dataframe_explorer.pgdf.store.gui.stackedWidget.currentIndex()
+        if index == 0:
+            hasSelection = (
+                self.dataframe_explorer.pgdf.store.gui.analysis_roles_view.column_viewer.selectionModel().hasSelection()
             )
-        return False
+            if hasSelection:
+                selectedRows = (
+                    self.dataframe_explorer.pgdf.store.gui.analysis_roles_view.column_viewer.selectionModel().selectedRows()
+                )
+        # if index == 1:
+        if index == 5:
+            hasSelection = self.column_viewer.selectionModel().hasSelection()
+            if hasSelection:
+                selectedRows = self.column_viewer.selectionModel().selectedRows()
+        return sorted(
+            [self.column_search_model.mapToSource(row).row() for row in selectedRows]
+        )
 
     def btn_add_column(self):
         n = self.add_column_count.value()
@@ -189,13 +198,15 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         if not rows:
             # TODO: add tooltip saying that a column needs to be selected
             return
-        self.dataframe_viewer.pgdf.add_column(first=rows[-1] + 1, last=rows[-1] + n + 1)
+        self.dataframe_explorer.pgdf.add_column(
+            first=rows[-1] + 1, last=rows[-1] + n + 1
+        )
 
     def btn_delete_column(self):
         rows = self.get_source_from_selection()
         if not rows:
             return
-        self.dataframe_viewer.pgdf.delete_column(rows)
+        self.dataframe_explorer.pgdf.delete_column(rows)
 
     def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent) -> bool:
         # Enable deleting selected rows with DEL
@@ -208,7 +219,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
 class HeaderRolesModel(QtCore.QAbstractListModel):
     def __init__(self, parent):
         super(HeaderRolesModel, self).__init__(parent)
-        self.dataframe_viewer: DataFrameViewer = parent
+        self.dataframe_explorer: DataFrameExplorer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
 
     def rowCount(self, parent):
@@ -234,7 +245,7 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
                     axis="columns",
                     inplace=True,
                 )
-                self.dataframe_viewer.refresh_ui()
+                self.dataframe_explorer.pgdf.dataframe_viewer.refresh_ui()
             except Exception as e:
                 logger.exception(e)
                 return False
@@ -242,16 +253,36 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
         return False
 
     def flags(self, index):
-        if not index.isValid():
-            return Qt.NoItemFlags
+        """
+        https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
+        """
+        if index.isValid():
+            return (
+                Qt.ItemIsSelectable
+                | Qt.ItemIsDragEnabled
+                | Qt.ItemIsEnabled
+                | Qt.ItemIsEditable
+            )
 
         return (
-            Qt.ItemIsDragEnabled
+            Qt.ItemIsSelectable
+            | Qt.ItemIsDragEnabled
             | Qt.ItemIsDropEnabled
             | Qt.ItemIsEnabled
-            | Qt.ItemIsSelectable
             | Qt.ItemIsEditable
         )
+
+    # def flags(self, index):
+    #     if not index.isValid():
+    #         return Qt.NoItemFlags
+
+    #     return (
+    #         Qt.ItemIsDragEnabled
+    #         | Qt.ItemIsDropEnabled
+    #         | Qt.ItemIsEnabled
+    #         | Qt.ItemIsSelectable
+    #         | Qt.ItemIsEditable
+    #     )
 
     def supportedDropActions(self):
         return Qt.MoveAction
@@ -266,22 +297,25 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
     ) -> bool:
 
         selected = sorted(
-            self.dataframe_viewer.pgdf.dataframe_explorer.roles_view.get_source_from_selection()
+            self.dataframe_explorer.roles_view.get_source_from_selection()
         )
-        # self.pgdf.dataframe_explorer.roles_view.get_source_from_selection()
+        if not selected:
+            return False
+        if row == -1:
+            return False
         print(selected, row)
         self.pgdf.reorder_columns(selected, row)
         return super().dropMimeData(data, action, row, column, parent)
 
-    def canDropMimeData(
-        self,
-        data: "QMimeData",
-        action: Qt.DropAction,
-        row: int,
-        column: int,
-        parent: QtCore.QModelIndex,
-    ) -> bool:
-        return super().canDropMimeData(data, action, row, column, parent)
+    # def canDropMimeData(
+    #     self,
+    #     data: "QMimeData",
+    #     action: Qt.DropAction,
+    #     row: int,
+    #     column: int,
+    #     parent: QtCore.QModelIndex,
+    # ) -> bool:
+    #     return super().canDropMimeData(data, action, row, column, parent)
 
     def beginInsertRows(
         self, parent: QtCore.QModelIndex, first: int, last: int
@@ -293,14 +327,10 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
 
 
 class HeaderRolesView(QtWidgets.QListView):
-    def __init__(self, parent: DataFrameViewer = None):
-        super().__init__(parent=None)
-        if parent is not None:
-            self.dataframe_viewer = parent
-            self.pgdf: DataFrameViewer = parent.pgdf
-
-            # self.orig_model = HeaderRolesModel(parent=self.dataframe_viewer)
-            # self.setModel(self.orig_model)
+    def __init__(self, parent: DataFrameExplorer):
+        super().__init__(parent)
+        self.dataframe_explorer = parent
+        self.pgdf: DataFrameViewer = parent.pgdf
 
         font = QtGui.QFont()
         font.setPointSize(11)
@@ -316,17 +346,21 @@ class HeaderRolesView(QtWidgets.QListView):
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 
-    def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
-        if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-            print(event.mimeData().formats(), len(event.mimeData().text()))
-            event.accept()
-        else:
-            event.ignore()
+        self.setMovement(QtWidgets.QListView.Snap)
+        self.setDragDropOverwriteMode(False)
+        # self.header().hide()
+        # self.setRootIsDecorated(False)
 
-    def startDrag(
-        self, supportedActions: Union[QtCore.Qt.DropActions, QtCore.Qt.DropAction]
-    ) -> None:
-        return super().startDrag(supportedActions)
+    # def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
+    #     if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
+    #         event.accept()
+    #     else:
+    #         event.ignore()
+
+    # def startDrag(
+    #     self, supportedActions: Union[QtCore.Qt.DropActions, QtCore.Qt.DropAction]
+    # ) -> None:
+    #     return super().startDrag(supportedActions)
 
     def dragMoveEvent(self, event):
         if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
@@ -334,11 +368,22 @@ class HeaderRolesView(QtWidgets.QListView):
             event.accept()
         else:
             event.ignore()
+        return super().dragMoveEvent(event)
 
     def dropEvent(self, event: QtGui.QDropEvent) -> None:
-        # print(event.pos())
+        event.setDropAction(Qt.MoveAction)
         super().dropEvent(event)
-        # self.onDropSignal.emit()
+
+    #     # self.onDropSignal.emit()
+
+    # def dropIndicatorPosition(self) -> "QAbstractItemView.DropIndicatorPosition":
+    #     return super().dropIndicatorPosition()
+
+    # def showDropIndicator(self) -> bool:
+    #     return super().showDropIndicator()
+
+    # def setDropIndicatorShown(self, enable: bool) -> None:
+    #     return super().setDropIndicatorShown(enable)
 
 
 # class ColumnArranger(ColumnViewer):

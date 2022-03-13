@@ -965,11 +965,6 @@ class MainWindow(QMainWindow):
                     df_title
                 ].dataframe_explorer.roles_view.column_search_model,
             )
-            # self.analysis_roles_view.replace_model(
-            #     model=self.store.data[
-            #         df_title
-            #     ].dataframe_explorer.roles_view.column_search_model,
-            # )
 
         elif mode == "testing":
             self.testing_df = df_title
@@ -1910,7 +1905,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyleSheet(qtstylish.dark())
+    # app.setStyleSheet(qtstylish.dark())
     win = MainWindow()
     win.resize(1920, 180)
     win.show()
