@@ -136,6 +136,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.button_layout.addWidget(self.delete_column)
 
         self.search_columns = QtWidgets.QLineEdit()
+        self.search_columns.setPlaceholderText("Search columns")
         self.main_layout.addWidget(self.search_columns)
 
         self.column_viewer = HeaderRolesView(parent=self.dataframe_explorer)
@@ -188,9 +189,13 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
             hasSelection = self.column_viewer.selectionModel().hasSelection()
             if hasSelection:
                 selectedRows = self.column_viewer.selectionModel().selectedRows()
-        return sorted(
-            [self.column_search_model.mapToSource(row).row() for row in selectedRows]
-        )
+        if hasSelection:
+            return sorted(
+                [
+                    self.column_search_model.mapToSource(row).row()
+                    for row in selectedRows
+                ]
+            )
 
     def btn_add_column(self):
         n = self.add_column_count.value()
@@ -245,7 +250,8 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
                     axis="columns",
                     inplace=True,
                 )
-                self.dataframe_explorer.pgdf.dataframe_viewer.refresh_ui()
+                self.dataframe_explorer.pgdf.refresh_ui()
+                # self.dataframe_explorer.pgdf.dataframe_viewer.refresh_ui()
             except Exception as e:
                 logger.exception(e)
                 return False
@@ -271,18 +277,6 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
             | Qt.ItemIsEnabled
             | Qt.ItemIsEditable
         )
-
-    # def flags(self, index):
-    #     if not index.isValid():
-    #         return Qt.NoItemFlags
-
-    #     return (
-    #         Qt.ItemIsDragEnabled
-    #         | Qt.ItemIsDropEnabled
-    #         | Qt.ItemIsEnabled
-    #         | Qt.ItemIsSelectable
-    #         | Qt.ItemIsEditable
-    #     )
 
     def supportedDropActions(self):
         return Qt.MoveAction
@@ -351,17 +345,6 @@ class HeaderRolesView(QtWidgets.QListView):
         # self.header().hide()
         # self.setRootIsDecorated(False)
 
-    # def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
-    #     if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-    #         event.accept()
-    #     else:
-    #         event.ignore()
-
-    # def startDrag(
-    #     self, supportedActions: Union[QtCore.Qt.DropActions, QtCore.Qt.DropAction]
-    # ) -> None:
-    #     return super().startDrag(supportedActions)
-
     def dragMoveEvent(self, event):
         if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
             event.setDropAction(Qt.MoveAction)
@@ -373,6 +356,17 @@ class HeaderRolesView(QtWidgets.QListView):
     def dropEvent(self, event: QtGui.QDropEvent) -> None:
         event.setDropAction(Qt.MoveAction)
         super().dropEvent(event)
+
+    # def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
+    #     if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
+    #         event.accept()
+    #     else:
+    #         event.ignore()
+
+    # def startDrag(
+    #     self, supportedActions: Union[QtCore.Qt.DropActions, QtCore.Qt.DropAction]
+    # ) -> None:
+    #     return super().startDrag(supportedActions)
 
     #     # self.onDropSignal.emit()
 

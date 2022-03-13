@@ -18,7 +18,7 @@ from PyQt5.QtGui import (
 )
 from excel_helpers import Excel
 from selenium_helpers import Browser
-from data_variables import *
+from utils.data_variables import *
 from stylesheets import Stylesheets
 from bs4 import BeautifulSoup
 import qtstylish

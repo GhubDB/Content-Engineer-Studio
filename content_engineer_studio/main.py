@@ -80,7 +80,7 @@ import logging
 # My packages
 from excel_helpers import Excel
 from selenium_helpers import Browser
-from data_variables import *
+from utils.data_variables import *
 from widgets.drag_drop import DragDrop
 from stylesheets import Stylesheets
 from utils.worker_thread import Worker, WorkerSignals
@@ -503,9 +503,6 @@ class MainWindow(QMainWindow):
         """Create all widgets"""
         # Hide the question mark on dialogs
         # self.app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
-
-        # Accept drops, for importing files. See methods below: dropEvent, dragEnterEvent, dragMoveEvent
-        # self.setAcceptDrops(True)
 
         # This adds the drag_drop area for testing/analysis dataframes
         self.drag_drop = DragDrop(self)
