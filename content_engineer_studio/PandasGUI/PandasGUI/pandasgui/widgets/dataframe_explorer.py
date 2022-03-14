@@ -150,24 +150,29 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
 
         # Initializing models
 
-        self.orig_model = HeaderRolesModel(parent=self.dataframe_explorer)
-
-        self.column_search_model = QtCore.QSortFilterProxyModel()
-        self.column_search_model.setSourceModel(self.orig_model)
-        self.column_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
-        self.column_search_model.setFilterKeyColumn(-1)
-        self.search_columns.textChanged.connect(
-            self.column_search_model.setFilterRegExp
+        self.pgdf.model["header_roles_model"] = HeaderRolesModel(
+            parent=self.dataframe_explorer
         )
-        self.column_viewer.setModel(self.column_search_model)
+
+        self.pgdf.model["column_search_model"] = QtCore.QSortFilterProxyModel()
+        self.pgdf.model["column_search_model"].setSourceModel(
+            self.pgdf.model["header_roles_model"]
+        )
+        self.pgdf.model["column_search_model"].setFilterCaseSensitivity(
+            Qt.CaseInsensitive
+        )
+        self.pgdf.model["column_search_model"].setFilterKeyColumn(-1)
+        self.search_columns.textChanged.connect(
+            self.pgdf.model["column_search_model"].setFilterRegExp
+        )
+        self.column_viewer.setModel(self.pgdf.model["column_search_model"])
         self.installEventFilter(self)
 
-    def replace_model(self, orig_model, search_model):
-        self.orig_model = orig_model
-        self.column_search_model = search_model
-        self.column_viewer.setModel(self.column_search_model)
+    def replace_model(self, pgdf):
+        self.pgdf = pgdf
+        self.column_viewer.setModel(self.pgdf.model["column_search_model"])
         self.search_columns.textChanged.connect(
-            self.column_search_model.setFilterRegExp
+            self.pgdf.model["column_search_model"].setFilterRegExp
         )
 
     @pyqtSlot(QtCore.QItemSelection)
@@ -193,7 +198,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         if hasSelection:
             return sorted(
                 [
-                    self.column_search_model.mapToSource(row).row()
+                    self.pgdf.model["column_search_model"].mapToSource(row).row()
                     for row in selectedRows
                 ]
             )

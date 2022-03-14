@@ -338,6 +338,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.filters: List[Filter] = []
         self.filtered_index_map = df.reset_index().index
 
+        # Models
+        self.model = {}
+
         # Statistics
         self.column_statistics = None
         self.row_statistics = None
@@ -561,24 +564,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.add_history_item(
             "reorder_columns", f"df = df.reindex(columns={reordered})"
         )
-
-    # @status_message_decorator("Reordering columns...")
-    # def reorder_columns(self, columns: List[str]):
-    #     if sorted(list(columns)) != sorted(list(self.df_unfiltered.columns)):
-    #         raise ValueError("Provided column names do not match DataFrame")
-
-    #     original_columns = list(self.df_unfiltered.columns)
-
-    #     self.df_unfiltered = self.df_unfiltered.reindex(columns=columns)
-
-    #     self.dataframe_viewer.setUpdatesEnabled(False)
-    #     # Move columns around in TableView to maintain column widths
-    #     for (src, dest) in get_movements(original_columns, columns):
-    #         self.dataframe_viewer._move_column(src, dest, refresh=False)
-    #     self.apply_filters()
-    #     self.dataframe_viewer.setUpdatesEnabled(True)
-
-    #     self.add_history_item("reorder_columns", f"df = df.reindex(columns={columns})")
 
     ###################################
     # Sorting

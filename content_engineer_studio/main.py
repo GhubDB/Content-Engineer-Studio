@@ -921,19 +921,6 @@ class MainWindow(QMainWindow):
         """
         Assigns dataframes to analysis and testing mode viewer
         """
-        # Get models from dataframe_viewer
-        dfv_model = self.store.data[df_title].dataframe_viewer.dataView.orig_model
-
-        header_model_horizontal = self.store.data[
-            df_title
-        ].dataframe_viewer.columnHeader.header_model_horizontal
-
-        header_model_vertical = self.store.data[
-            df_title
-        ].dataframe_viewer.indexHeader.header_model_vertical
-
-        # If there is no preexisting viewer,
-        # make a new one and pass in a dummy Dataframe
         if mode == "analysis":
             self.analysis_df = df_title
             if self.analysis_viewer == None:
@@ -943,25 +930,16 @@ class MainWindow(QMainWindow):
                     self.analysis_viewer,
                 )
                 self.add_analysis_dataframe.deleteLater()
+
+                # Add Header Roles View
                 self.analysis_roles_view = HeaderRolesViewContainer(
                     parent=self.store.data[df_title].dataframe_explorer
                 )
                 self.analysis_column_viewer_layout.addWidget(self.analysis_roles_view)
+
             # Switch out dummy df for a real one
-            self.analysis_viewer.replace_models(
-                pgdf=self.store.data[df_title],
-                data_table_model=dfv_model,
-                header_model_horizontal=header_model_horizontal,
-                header_model_vertical=header_model_vertical,
-            )
-            self.analysis_roles_view.replace_model(
-                orig_model=self.store.data[
-                    df_title
-                ].dataframe_explorer.roles_view.orig_model,
-                search_model=self.store.data[
-                    df_title
-                ].dataframe_explorer.roles_view.column_search_model,
-            )
+            self.analysis_viewer.replace_models(pgdf=self.store.data[df_title])
+            self.analysis_roles_view.replace_model(pgdf=self.store.data[df_title])
 
         elif mode == "testing":
             self.testing_df = df_title
@@ -972,12 +950,14 @@ class MainWindow(QMainWindow):
                     self.testing_viewer,
                 )
                 self.add_testing_dataframe.deleteLater()
-            self.testing_viewer.replace_models(
-                pgdf=self.store.data[df_title],
-                data_table_model=dfv_model,
-                header_model_horizontal=header_model_horizontal,
-                header_model_vertical=header_model_vertical,
-            )
+
+                self.analysis_roles_view = HeaderRolesViewContainer(
+                    parent=self.store.data[df_title].dataframe_explorer
+                )
+                self.analysis_column_viewer_layout.addWidget(self.analysis_roles_view)
+
+            self.testing_viewer.replace_models(pgdf=self.store.data[df_title])
+            self.testing_roles_view.replace_model(pgdf=self.store.data[df_title])
 
     def row_selector(self, selected: QtCore.QObject):
         """
