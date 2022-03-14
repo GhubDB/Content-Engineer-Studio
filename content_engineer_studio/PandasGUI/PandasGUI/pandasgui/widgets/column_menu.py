@@ -35,13 +35,17 @@ class ColumnMenu(QtWidgets.QMenu):
         def assign_role(text):
             # if there is no multiindex, we add a second level with all values set to None
             if not isinstance(df.columns, pd.MultiIndex):
+                self.pgdf.model["header_model_horizontal"].beginInsertRows(
+                    QtCore.QModelIndex(), 1, 2
+                )
                 df.columns = pd.MultiIndex.from_product([df.columns, ["None"]])
+                self.pgdf.model["header_model_horizontal"].endInsertRows()
 
             # Altering and replacing the existing index
             tuples = df.columns.tolist()
             tuples[self.column_ix] = (tuples[self.column_ix][0], text)
             df.columns = pd.MultiIndex.from_tuples(tuples)
-            self.pgdf.dataframe_viewer.refresh_ui()
+            self.pgdf.refresh_ui()
 
         self.header_role_selector = QtWidgets.QComboBox()
         for item in roles:

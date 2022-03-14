@@ -82,6 +82,7 @@ from excel_helpers import Excel
 from selenium_helpers import Browser
 from utils.data_variables import *
 from widgets.drag_drop import DragDrop
+from widgets.proxy_models import SideBarProxyModel, AnalysisSelectorProxyModel
 from stylesheets import Stylesheets
 from utils.worker_thread import Worker, WorkerSignals
 
@@ -355,11 +356,8 @@ class MainWindow(QMainWindow):
         self.chat.installEventFilter(self)
 
         # Connecting functions
-        [
-            self.sidebar.selectionModel().selectionChanged.connect(x)
-            for x in [self.row_selector, self.clear_selections]
-        ]
-        self.sidebar_2.selectionModel().selectionChanged.connect(self.row_selector_2)
+        # self.sidebar.selectionModel().selectionChanged.connect(self.row_selector)
+        # self.sidebar_2.selectionModel().selectionChanged.connect(self.row_selector_2)
         # self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
         # self.cell_selector_2.currentIndexChanged.connect(self.populate_analysis_2)
         self.analysis.textChanged.connect(self.save_analysis)
@@ -425,20 +423,20 @@ class MainWindow(QMainWindow):
 
         # Executed on excel.load
         self.df = self.analysis_excel.load("transcripts.xlsx", "Sheet1")
-        self.header_len = len(self.df.columns)
-        self.index_len = len(self.df.index)
-        self.completed = self.analysis_excel.incomplete(
-            self.df, self.cell_selector_start, len(self.df.columns)
-        )
-        self.populate_sidebar()
+        # self.header_len = len(self.df.columns)
+        # self.index_len = len(self.df.index)
+        # self.completed = self.analysis_excel.incomplete(
+        #     self.df, self.cell_selector_start, len(self.df.columns)
+        # )
+        # self.populate_sidebar()
 
         self.df_2 = self.testing_excel.load("testing.xlsx", "Sheet1")
-        self.header_len_2 = len(self.df_2.columns)
-        self.index_len_2 = len(self.df_2.index)
-        self.completed_2 = self.testing_excel.incomplete(
-            self.df_2, self.cell_selector_start_2, len(self.df_2.columns)
-        )
-        self.populate_sidebar_2()
+        # self.header_len_2 = len(self.df_2.columns)
+        # self.index_len_2 = len(self.df_2.index)
+        # self.completed_2 = self.testing_excel.incomplete(
+        #     self.df_2, self.cell_selector_start_2, len(self.df_2.columns)
+        # )
+        # self.populate_sidebar_2()
 
         self.faq_df = self.faq_excel.load("recipes.xlsx", "Sheet1")
 
@@ -684,8 +682,6 @@ class MainWindow(QMainWindow):
         #     index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current)
 
         self.populate_status_bar(2, 0, 2)
-        self.populate_cell_selector(self.cell_selector_start, self.header_len + 1)
-        self.populate_cell_selector_2(self.cell_selector_start_2, self.header_len_2 + 1)
 
         # Tests
         # print(xw.books.active.name)
@@ -940,6 +936,8 @@ class MainWindow(QMainWindow):
             # Switch out dummy df for a real one
             self.analysis_viewer.replace_models(pgdf=self.store.data[df_title])
             self.analysis_roles_view.replace_model(pgdf=self.store.data[df_title])
+            self.populate_sidebar()
+            self.populate_cell_selector()
 
         elif mode == "testing":
             self.testing_df = df_title
@@ -958,6 +956,7 @@ class MainWindow(QMainWindow):
 
             self.testing_viewer.replace_models(pgdf=self.store.data[df_title])
             self.testing_roles_view.replace_model(pgdf=self.store.data[df_title])
+            self.populate_sidebar_2()
 
     def row_selector(self, selected: QtCore.QObject):
         """
@@ -980,7 +979,7 @@ class MainWindow(QMainWindow):
         self.completed = self.analysis_excel.incomplete(
             self.df, self.cell_selector_start, len(self.df.columns)
         )
-        self.populate_sidebar()
+        # self.populate_sidebar()
 
         # Loading web page, web scraping and adding results to self.chat
         if self.open_links.checkState():
@@ -1091,11 +1090,6 @@ class MainWindow(QMainWindow):
                     return True
 
         return super().eventFilter(source, event)
-
-    def clear_selections(self):
-        self.flows.clearSelection()
-        self.actions.clearSelection()
-        # self.canned.rb_group.setChecked(False)
 
     def save_analysis(self):
         """
@@ -1220,9 +1214,13 @@ class MainWindow(QMainWindow):
             # cursor.clearSelection()
         self.auto_anonymized = []
 
-    def populate_cell_selector(self, start, end):
-        for item in list(self.df.columns.values)[start:end]:
-            self.cell_selector.addItem(item)
+    def populate_cell_selector(self):
+        analysis_selector_proxymodel = AnalysisSelectorProxyModel(
+            parent=self, df=self.store.data[self.analysis_df].df_unfiltered
+        )
+        analysis_selector_proxymodel.setSourceModel(
+            self.store.data[self.analysis_df].model["header_model_horizontal"]
+        )
 
     # def populate_analysis(self):
     #     self.analysis.setPlainText(
@@ -1333,19 +1331,14 @@ class MainWindow(QMainWindow):
 
     def populate_sidebar(self):
 
-        self.sidebar.setColumnCount(1)
-        self.sidebar.setRowCount(self.index_len)
-        [
-            self.sidebar.setItem(idx, 0, QTableWidgetItem(str(idx + 2)))
-            for idx in range(0, self.index_len)
-        ]
-        [
-            self.sidebar.item(idx, 0).setBackground(QtGui.QColor(100, 100, 100))
-            for idx, row in self.completed.iterrows()
-            if row.all()
-        ]
-        self.sidebar.resizeColumnsToContents()
-        self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        sidebar_proxy_model = SideBarProxyModel(parent=self)
+        sidebar_proxy_model.setSourceModel(
+            self.store.data[self.analysis_df].model["header_model_vertical"]
+        )
+        self.sidebar.setModel(sidebar_proxy_model)
+
+        # self.sidebar.resizeColumnsToContents()
+        # self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def populate_status_bar(self, row: int, start: int, end: int):
         self.status_bar.setText(
@@ -1470,9 +1463,6 @@ class MainWindow(QMainWindow):
 
         # Autoscrolling to the selection on the sidebar
         self.sidebar_2.scrollToItem(self.sidebar.item(self.row, 0))
-
-        # self.populate_canned_2()
-        # self.populate_analysis_2()
 
     def saveOnRowChange_2(self):
         """
@@ -1719,14 +1709,6 @@ class MainWindow(QMainWindow):
         ]
         self.sidebar_2.resizeColumnsToContents()
         self.sidebar_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-    """Unused"""
-    # def resetAutoQueueColors(self, index, column, row):
-    #     print(column,row, self.auto_queue_model.rowCount())
-    #     for row in range(0, self.auto_queue_model.rowCount()):
-    #         item = self.auto_queue_model.item(row, 0)
-    #         if item:
-    #             item.setBackground(QtGui.QColor(70, 70, 70))
 
     def populateHistory(self, input):
         item = QtGui.QStandardItem(input)

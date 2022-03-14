@@ -253,7 +253,7 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
     def setData(self, index, value, role=None):
         if role == QtCore.Qt.EditRole:
             row = index.row()
-            col = index.column()
+            # col = index.column()
             try:
                 # self.pgdf.df_unfiltered.columns.values[row] = value
                 self.pgdf.df_unfiltered.rename(

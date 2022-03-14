@@ -181,13 +181,17 @@ class DataFrameViewer(QtWidgets.QWidget):
     def replace_models(self, pgdf: PandasGuiDataFrameStore):
         # Replaces models with new selected working view models and refreshes UI
         self.pgdf = pgdf
+        pgdf.dataframe_viewer = self  # check what is going on here
 
         self.dataView.setModel(self.pgdf.model["data_table_model"])
         self.columnHeader.setModel(self.pgdf.model["header_model_horizontal"])
         self.indexHeader.setModel(self.pgdf.model["header_model_vertical"])
+
         for column_index in range(self.columnHeader.model().columnCount()):
             self.auto_size_column(column_index)
+
         self.refresh_ui()
+
         self.dataView.already_resized = False
 
     def set_styles(self):
@@ -447,7 +451,6 @@ class DataFrameViewer(QtWidgets.QWidget):
             self.refresh_ui()
 
     def refresh_ui(self):
-
         # Update models
         self.models = []
         self.models += [
@@ -952,6 +955,12 @@ class HeaderModel(QtCore.QAbstractTableModel):
             ):
                 return icon
 
+    def beginInsertRows(self, parent: QModelIndex, first: int, last: int) -> None:
+        return super().beginInsertRows(parent, first, last)
+
+    def endInsertRows(self) -> None:
+        return super().endInsertRows()
+
     # The headers of this table will show the level names of the MultiIndex
     def headerData(self, section, orientation, role=None):
         # This was moved to HeaderNamesModel
@@ -1062,7 +1071,6 @@ class HeaderView(QtWidgets.QTableView):
         ix = self.indexAt(point)
         col = ix.column()
         row = ix.row()
-        print("row", row)
         # col_name = self.pgdf.df.columns[col]
         if (
             event.button() == QtCore.Qt.RightButton

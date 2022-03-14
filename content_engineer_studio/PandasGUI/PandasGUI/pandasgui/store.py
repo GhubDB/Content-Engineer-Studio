@@ -339,6 +339,14 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.filtered_index_map = df.reset_index().index
 
         # Models
+        """
+        Contents:
+        data_table_model
+        header_model_horizontal
+        header_model_vertical
+        column_search_model
+        header_roles_model
+        """
         self.model = {}
 
         # Statistics
