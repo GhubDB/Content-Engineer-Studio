@@ -117,6 +117,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         super().__init__(parent)
         self.dataframe_explorer = parent
         self.pgdf: DataFrameViewer = parent.pgdf
+        self.gui = self.dataframe_explorer.pgdf.store.gui
 
         # Set up elements
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -175,14 +176,14 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         Map Proxy model selection to source model selection and return list of selected rows
         https://stackoverflow.com/questions/61268687/access-original-index-in-qabstracttablemodel-from-selected-row-in-qtableview
         """
-        index = self.dataframe_explorer.pgdf.store.gui.stackedWidget.currentIndex()
+        index = self.gui.stackedWidget.currentIndex()
         if index == 0:
             hasSelection = (
-                self.dataframe_explorer.pgdf.store.gui.analysis_roles_view.column_viewer.selectionModel().hasSelection()
+                self.gui.analysis_roles_view.column_viewer.selectionModel().hasSelection()
             )
             if hasSelection:
                 selectedRows = (
-                    self.dataframe_explorer.pgdf.store.gui.analysis_roles_view.column_viewer.selectionModel().selectedRows()
+                    self.gui.analysis_roles_view.column_viewer.selectionModel().selectedRows()
                 )
         # if index == 1:
         if index == 5:

@@ -922,9 +922,13 @@ class HeaderModel(QtCore.QAbstractTableModel):
             if self.orientation == Qt.Horizontal:
 
                 if isinstance(self.pgdf.df.columns, pd.MultiIndex):
-                    return str(self.pgdf.df.columns[col][row])
+                    return str(self.pgdf.df_unfiltered.columns[col][row])
                 else:
-                    return str(self.pgdf.df.columns[col])
+                    return str(self.pgdf.df_unfiltered.columns[col])
+                # if isinstance(self.pgdf.df.columns, pd.MultiIndex):
+                #     return str(self.pgdf.df.columns[col][row])
+                # else:
+                #     return str(self.pgdf.df.columns[col])
 
             elif self.orientation == Qt.Vertical:
 

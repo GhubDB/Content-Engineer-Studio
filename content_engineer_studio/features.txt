@@ -7,6 +7,7 @@ fix csv export or change to xlsx export
 add a way to hide columns
 add a way to add rows/columns
 improve pandasgui performance
+make a dataclass on self.store.data[df_title] to hold all models for dataframe_viewer and dataframe_explorer
 add status_messsage_decorator to methods in all views
 add a way to view pandasgui on second monitor
 add resizeRowsToContents button to Dataframe Viewer
