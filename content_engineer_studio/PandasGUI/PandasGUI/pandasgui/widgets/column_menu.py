@@ -13,7 +13,9 @@ from utils.data_variables import roles
 
 
 class ColumnMenu(QtWidgets.QMenu):
-    def __init__(self, pgdf: PandasGuiDataFrameStore, column_ix: int, parent=None):
+    def __init__(
+        self, pgdf: PandasGuiDataFrameStore, column_ix: int, row: int, parent=None
+    ):
         super().__init__(parent)
 
         self.pgdf = pgdf
@@ -22,27 +24,35 @@ class ColumnMenu(QtWidgets.QMenu):
 
         ########################
         # Info
-        label = QtWidgets.QLabel(self.pgdf.df_unfiltered.columns[column_ix])
+        label = QtWidgets.QLabel(
+            self.pgdf.df_unfiltered.columns.get_level_values(row)[column_ix]
+        )
         self.add_widget(label)
 
         ########################
         # Header Role
 
         def assign_role(text):
-            if df.columns.nlevels <= 1:
+            # if there is no multiindex, we add a second level with all values set to None
+            if not isinstance(df.columns, pd.MultiIndex):
                 df.columns = pd.MultiIndex.from_product([df.columns, ["None"]])
 
-            updated_columns = list(df.columns.get_level_values(1))
-            print(updated_columns)
-            updated_columns[self.column_ix] = text
-            df.columns.set_levels(updated_columns, level=1, inplace=True)
-            print(df.columns.get_level_values(1))
+            # Altering and replacing the existing index
+            tuples = df.columns.tolist()
+            tuples[self.column_ix] = (tuples[self.column_ix][0], text)
+            df.columns = pd.MultiIndex.from_tuples(tuples)
             self.pgdf.dataframe_viewer.refresh_ui()
 
         self.header_role_selector = QtWidgets.QComboBox()
         for item in roles:
             self.header_role_selector.addItem(item)
         self.add_widget(self.header_role_selector)
+
+        # Preselect the currently set role
+        if isinstance(df.columns, pd.MultiIndex):
+            self.header_role_selector.setCurrentText(
+                self.pgdf.df_unfiltered.columns.get_level_values(1)[column_ix]
+            )
         self.header_role_selector.currentTextChanged.connect(assign_role)
 
         ########################
