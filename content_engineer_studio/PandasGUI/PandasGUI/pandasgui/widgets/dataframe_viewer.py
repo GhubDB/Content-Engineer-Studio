@@ -372,9 +372,11 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         self.dataView.setSelectionMode(temp)
 
-    def show_column_menu(self, column_ix_or_name: Union[str, int]):
-        if isinstance(self.pgdf.df.columns, pd.MultiIndex):
-            logger.info("Column menu not implemented for MultiIndex")
+    def show_column_menu(self, column_ix_or_name: Union[str, int], row: int):
+        # if isinstance(self.pgdf.df.columns, pd.MultiIndex):
+        #     logger.info("Column menu not implemented for MultiIndex")
+        #     return
+        if row >= 1:
             return
 
         if type(column_ix_or_name) == str:
@@ -389,7 +391,7 @@ class DataFrameViewer(QtWidgets.QWidget):
             self.columnHeader.geometry().bottom() - 6,
         )
 
-        menu = ColumnMenu(self.pgdf, column_ix, self)
+        menu = ColumnMenu(self.pgdf, column_ix=column_ix, row=row, parent=self)
         menu.show_menu(self.columnHeader.mapToGlobal(point))
 
     def _remove_column(self, ix):
@@ -423,7 +425,16 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         cols = list(self.pgdf.df_unfiltered.columns)
         # Insert list of generated columnn headers into column index list
-        cols[first:first] = [next(self.pgdf.column_gen) for _ in range(0, last - first)]
+        # TODO: include a check to make column names unique
+        print(cols[first])
+        if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
+            cols[first:first] = [
+                next(self.pgdf.column_gen) for _ in range(0, last - first)
+            ]
+        else:
+            cols[first:first] = [
+                (next(self.pgdf.column_gen), "None") for _ in range(0, last - first)
+            ]
         self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
 
         for model in [
@@ -458,8 +469,8 @@ class DataFrameViewer(QtWidgets.QWidget):
             model.endResetModel()
 
         # Update multi-index spans
-        # for view in [self.columnHeader, self.indexHeader]:
-        # view.set_spans()
+        for view in [self.columnHeader, self.indexHeader]:
+            view.set_spans()
 
         # Update sizing
         for view in [self.columnHeader, self.indexHeader, self.dataView]:
@@ -1010,7 +1021,7 @@ class HeaderView(QtWidgets.QTableView):
         self.selectionModel().selectionChanged.connect(
             lambda x: self.on_selectionChanged()
         )
-        # self.set_spans()
+        self.set_spans()
 
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
@@ -1052,12 +1063,14 @@ class HeaderView(QtWidgets.QTableView):
         point = event.pos()
         ix = self.indexAt(point)
         col = ix.column()
+        row = ix.row()
+        print("row", row)
         # col_name = self.pgdf.df.columns[col]
         if (
             event.button() == QtCore.Qt.RightButton
             and self.orientation == Qt.Horizontal
         ):
-            self.dataframe_viewer.show_column_menu(col)
+            self.dataframe_viewer.show_column_menu(column_ix_or_name=col, row=row)
         else:
             super().mousePressEvent(event)
 
@@ -1144,7 +1157,7 @@ class HeaderView(QtWidgets.QTableView):
 
     # This sets spans to group together adjacent cells with the same values
     def set_spans(self):
-
+        return
         df = self.pgdf.df
         self.clearSpans()
         # Find spans for horizontal HeaderView

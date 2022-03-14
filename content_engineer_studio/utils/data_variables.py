@@ -11,7 +11,7 @@ descriptors = [
     ["Kundenanliegen gelöst", "Kundenanliegen nicht gelöst"],
 ]
 
-roles = ["Bot", "Customer", "Multi-Choice", "Editable", "Correct FAQ"]
+roles = ["None", "Bot", "Customer", "Multi-Choice", "Editable", "Correct FAQ"]
 
 # add Priorität, bereits in Arbeit?
 # add faq paste function

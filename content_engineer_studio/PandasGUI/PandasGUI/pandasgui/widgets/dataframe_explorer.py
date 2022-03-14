@@ -230,9 +230,9 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
     def rowCount(self, parent):
         return self.pgdf.df_unfiltered.columns.shape[0]
 
-    def columnCount(self, parent: QtCore.QModelIndex) -> int:
-        print(self.pgdf.df_unfiltered.columns.nlevels)
-        return self.pgdf.df_unfiltered.columns.nlevels
+    # def columnCount(self, parent: QtCore.QModelIndex) -> int:
+    #     print(self.pgdf.df_unfiltered.columns.nlevels)
+    #     return self.pgdf.df_unfiltered.columns.nlevels
 
     def data(self, index, role):
         if not index.isValid():
@@ -247,9 +247,8 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
     def setData(self, index, value, role=None):
         if role == QtCore.Qt.EditRole:
             row = index.row()
-            # col = index.column()
+            col = index.column()
             try:
-                print(row)
                 # self.pgdf.df_unfiltered.columns.values[row] = value
                 self.pgdf.df_unfiltered.rename(
                     {self.pgdf.df_unfiltered.columns.get_level_values(0)[row]: value},
@@ -303,7 +302,7 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
             return False
         if row == -1:
             return False
-        print(selected, row)
+        # print(selected, row)
         self.pgdf.reorder_columns(selected, row)
         return super().dropMimeData(data, action, row, column, parent)
 

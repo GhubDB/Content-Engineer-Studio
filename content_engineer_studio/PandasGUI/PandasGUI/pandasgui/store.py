@@ -514,7 +514,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Need to inform the PyQt model too so column widths properly shift
-        # TODO: check if HeaderNamesModel also needs to be updated
+        # TODO: check if HeaderNamesModel also needs to be updated, fix multi index version
         self.dataframe_viewer._add_column(first, last)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
@@ -545,8 +545,10 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         original = list(self.df_unfiltered.columns)
         reordered = original[:]
         moved = [reordered.pop(selected - i) for i, selected in enumerate(selected)]
-        insertion_point = reordered.index(original[row])
-        reordered[insertion_point:insertion_point] = moved
+        # reduce row number by number of rows that were moved from above the row to below the row
+        row -= sum(i < row for i in selected)
+        reordered[row:row] = moved
+
         self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
 
         self.dataframe_viewer.setUpdatesEnabled(False)
