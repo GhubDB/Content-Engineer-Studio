@@ -78,12 +78,12 @@ from IPython.core.magic import register_line_magic
 import logging
 
 # My packages
-from excel_helpers import Excel
-from selenium_helpers import Browser
+from utils.excel_helpers import Excel
+from utils.selenium_helpers import Browser
 from utils.data_variables import *
 from widgets.drag_drop import DragDrop
 from widgets.proxy_models import SideBarProxyModel, AnalysisSelectorProxyModel
-from stylesheets import Stylesheets
+from utils.stylesheets import Stylesheets
 from utils.worker_thread import Worker, WorkerSignals
 
 
@@ -422,7 +422,7 @@ class MainWindow(QMainWindow):
         )
 
         # Executed on excel.load
-        self.df = self.analysis_excel.load("transcripts.xlsx", "Sheet1")
+        self.df = self.analysis_excel.load("csv/transcripts.xlsx", "Sheet1")
         # self.header_len = len(self.df.columns)
         # self.index_len = len(self.df.index)
         # self.completed = self.analysis_excel.incomplete(
@@ -430,7 +430,7 @@ class MainWindow(QMainWindow):
         # )
         # self.populate_sidebar()
 
-        self.df_2 = self.testing_excel.load("testing.xlsx", "Sheet1")
+        self.df_2 = self.testing_excel.load("csv/testing.xlsx", "Sheet1")
         # self.header_len_2 = len(self.df_2.columns)
         # self.index_len_2 = len(self.df_2.index)
         # self.completed_2 = self.testing_excel.incomplete(
@@ -438,7 +438,7 @@ class MainWindow(QMainWindow):
         # )
         # self.populate_sidebar_2()
 
-        self.faq_df = self.faq_excel.load("recipes.xlsx", "Sheet1")
+        self.faq_df = self.faq_excel.load("csv/recipes.xlsx", "Sheet1")
 
         # Adding PandasGUI
         """
@@ -1221,6 +1221,7 @@ class MainWindow(QMainWindow):
         analysis_selector_proxymodel.setSourceModel(
             self.store.data[self.analysis_df].model["header_model_horizontal"]
         )
+        self.cell_selector.setModel(analysis_selector_proxymodel)
 
     # def populate_analysis(self):
     #     self.analysis.setPlainText(
@@ -1864,7 +1865,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # app.setStyleSheet(qtstylish.dark())
+    app.setStyleSheet(qtstylish.dark())
     win = MainWindow()
     win.resize(1920, 180)
     win.show()

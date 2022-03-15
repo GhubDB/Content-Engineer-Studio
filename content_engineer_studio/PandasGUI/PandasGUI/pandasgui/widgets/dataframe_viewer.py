@@ -654,7 +654,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
     def createEditor(
         self,
         parent: QtWidgets.QWidget,
-        option: "QStyleOptionViewItem",
+        option: QtWidgets.QStyleOptionViewItem,
         index: QtCore.QModelIndex,
     ) -> QtWidgets.QWidget:
         """
@@ -709,7 +709,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
     def paint(
         self,
         painter: QPainter,
-        option: "QStyleOptionViewItem",
+        option: QtWidgets.QStyleOptionViewItem,
         index: QtCore.QModelIndex,
     ) -> None:
         """
@@ -747,7 +747,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         painter.restore()
 
     def sizeHint(
-        self, option: "QStyleOptionViewItem", index: QtCore.QModelIndex
+        self, option: QtWidgets.QStyleOptionViewItem, index: QtCore.QModelIndex
     ) -> None:
         """
         Method override

@@ -1,12 +1,13 @@
 import sys
 from PyQt5.uic import loadUi
-from PyQt5 import QtCore, QtWidgets, QtGui 
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit
-from PyQt5.QtWidgets import * 
-from excel_helpers import * 
+from PyQt5.QtWidgets import *
+from utils.excel_helpers import *
 from data import *
-from stylesheets import *
+from utils.stylesheets import *
+
 
 class TextEdit(QTextEdit):
     def __init__(self, *args, **kwargs):
@@ -37,7 +38,8 @@ class MyApp(QWidget):
         self.tableWidget_3.verticalHeader().setVisible(False)
         self.tableWidget_3.horizontalHeader().setVisible(False)
         self.tableWidget_3.horizontalHeader().setSectionResizeMode(
-            0, QtWidgets.QHeaderView.Stretch)
+            0, QtWidgets.QHeaderView.Stretch
+        )
 
         for i in range(10):
             rowCount = self.tableWidget_3.rowCount()
@@ -46,12 +48,14 @@ class MyApp(QWidget):
             self.tableWidget_3.setCellWidget(i, 0, combo)
             combo.setText(text)
             combo.textChanged.connect(
-                lambda i=i: self.tableWidget_3.resizeRowToContents(i))
+                lambda i=i: self.tableWidget_3.resizeRowToContents(i)
+            )
         self.tableWidget_3.installEventFilter(self)
 
     def eventFilter(self, source, event):
         if event.type() == event.Resize:
             QTimer.singleShot(0, self.tableWidget_3.resizeRowsToContents)
         return super().eventFilter(source, event)
+
 
 MyApp()

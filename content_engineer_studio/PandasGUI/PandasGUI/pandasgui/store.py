@@ -10,7 +10,7 @@ if typing.TYPE_CHECKING:
     from pandasgui.widgets.navigator import Navigator
 
 from dataclasses import dataclass, field
-from typing import Iterable, List, Union
+from typing import Iterable, List, Union, Type
 from typing_extensions import Literal
 import pandas as pd
 from pandas import DataFrame
@@ -80,7 +80,7 @@ class Setting(DictLike):
         self.label: str = label
         self.value: any = value
         self.description: str = description
-        self.dtype: Union[type(str), type(bool), Enum] = dtype
+        self.dtype: Union[Type(str), Type(bool), Enum] = dtype
         self.persist: bool = persist
 
     def __setattr__(self, key, value):

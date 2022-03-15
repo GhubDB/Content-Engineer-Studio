@@ -143,6 +143,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.column_viewer = HeaderRolesView(parent=self.dataframe_explorer)
         self.main_layout.addWidget(self.column_viewer)
         self.setLayout(self.main_layout)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
 
         # Connecting buttons and filters
         self.add_column.clicked.connect(self.btn_add_column)
@@ -294,7 +295,7 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
 
     def dropMimeData(
         self,
-        data: "QMimeData",
+        data: QtCore.QMimeData,
         action: Qt.DropAction,
         row: int,
         column: int,

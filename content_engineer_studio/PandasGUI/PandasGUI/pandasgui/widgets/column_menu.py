@@ -3,6 +3,7 @@ Menu that appears on right clicking a column header. Contains options for modify
 """
 
 import sys
+import traceback
 import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -35,11 +36,11 @@ class ColumnMenu(QtWidgets.QMenu):
         def assign_role(text):
             # if there is no multiindex, we add a second level with all values set to None
             if not isinstance(df.columns, pd.MultiIndex):
-                self.pgdf.model["header_model_horizontal"].beginInsertRows(
-                    QtCore.QModelIndex(), 1, 2
-                )
+                # self.pgdf.model["header_model_horizontal"].beginInsertRows(
+                #     QtCore.QModelIndex(), 1, 2
+                # )
                 df.columns = pd.MultiIndex.from_product([df.columns, ["None"]])
-                self.pgdf.model["header_model_horizontal"].endInsertRows()
+                # self.pgdf.model["header_model_horizontal"].endInsertRows()
 
             # Altering and replacing the existing index
             tuples = df.columns.tolist()

@@ -177,6 +177,7 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(9)
         self.cell_selector.setFont(font)
+        self.cell_selector.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
         self.cell_selector.setObjectName("cell_selector")
         self.horizontalLayout_2.addWidget(self.cell_selector)
         self.left = QtWidgets.QPushButton(self.layoutWidget3)

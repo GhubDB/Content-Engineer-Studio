@@ -16,10 +16,10 @@ from PyQt5.QtGui import (
     QTextCharFormat,
     QTextCursor,
 )
-from excel_helpers import Excel
-from selenium_helpers import Browser
+from utils.excel_helpers import Excel
+from utils.selenium_helpers import Browser
 from utils.data_variables import *
-from stylesheets import Stylesheets
+from utils.stylesheets import Stylesheets
 from bs4 import BeautifulSoup
 import qtstylish
 
