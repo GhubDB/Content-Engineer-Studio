@@ -349,6 +349,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         header_roles_model -> Model for dragable header names listview
         column_search_model -> Searchable proxymodel for dragable header names listview
         analysis_selector_proxy_model -> Model for analysis QComboBox
+        analysis_canned_model -> Model for analysis canned response tableview
         """
         self.model = {}
 
@@ -451,6 +452,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
     @status_message_decorator("Applying cell edit...")
     def edit_data(self, row, col, text):
+        intup = type(col)
 
         column_dtype = self.df.dtypes[col].type
         # type should always be str when being called from PyQt GUI but someone might call this directly
@@ -459,12 +461,15 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         # Map the row number in the filtered df (which the user interacts with) to the unfiltered one
         row = self.filtered_index_map[row]
-        old_val = self.df_unfiltered.iat[row, col]
-        if old_val != value and not (pd.isna(old_val) and pd.isna(value)):
-            self.df_unfiltered.iat[row, col] = value
-            self.apply_filters()
 
-            self.add_history_item("edit_data", f"df.iat[{row}, {col}] = {repr(value)}")
+        # Save value to dataframe
+        self.df_unfiltered.iat[
+            row, col if intup == int else list(self.df.columns).index(col)
+        ] = value
+
+        self.apply_filters()
+
+        # self.add_history_item("edit_data", f"df.iat[{row}, {col}] = {repr(value)}")
 
     @status_message_decorator("Pasting data...")
     def paste_data(self, top_row, left_col, df_to_paste):

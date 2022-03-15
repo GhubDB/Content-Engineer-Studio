@@ -41,6 +41,7 @@ class ColumnMenu(QtWidgets.QMenu):
                 )
 
             if text == "Editable":
+                # TODO: account for analysis/testing
                 self.pgdf.gui.cell_selector.model().beginInsertRows(
                     QtCore.QModelIndex(),
                     self.pgdf.gui.cell_selector.model().rowCount(),

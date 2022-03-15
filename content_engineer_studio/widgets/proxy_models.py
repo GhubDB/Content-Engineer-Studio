@@ -1,7 +1,12 @@
 import typing
 import pandas as pd
+import numpy as np
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
+
+from build.lib.pandasgui.store import PandasGuiDataFrameStore
+
+from utils.data_variables import multiple_choice
 
 
 class SideBarProxyModel(QtCore.QIdentityProxyModel):
@@ -56,6 +61,92 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
             return Qt.ItemIsSelectable | Qt.ItemIsEnabled
 
         return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+    def beginInsertRows(
+        self, parent: QtCore.QModelIndex, first: int, last: int
+    ) -> None:
+        return super().beginInsertRows(parent, first, last)
+
+    def endInsertRows(self) -> None:
+        return super().endInsertRows()
+
+
+class CannedSelectionModel(QtCore.QAbstractTableModel):
+    def __init__(self, parent, pgdf: PandasGuiDataFrameStore, mode) -> None:
+        super().__init__(parent)
+        self.gui = parent
+        self.pgdf = pgdf
+        self.df = pgdf.df_unfiltered
+        self.mode = mode
+
+    def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
+        return len(multiple_choice)
+
+    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
+        if not isinstance(self.df.columns, pd.MultiIndex):
+            return 0
+        return sum(i == "Multi-Choice" for i in self.df.columns.get_level_values(1))
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        if not isinstance(self.df.columns, pd.MultiIndex):
+            return None
+
+        column = index.column()
+        if role == QtCore.Qt.DisplayRole:
+            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
+            row = index.row()
+            # print(row)
+            # print(str(self.pgdf.df.columns[row]))
+            # print(rows)
+            # print(self.df.columns)
+            if column == 0:
+                return rows[row]
+            else:
+                return multiple_choice[column]
+        elif role == Qt.CheckStateRole and column in [1, 2, 3]:
+            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
+            row = index.row()
+            if (
+                self.df.loc[self.gui.analysis_row, (rows[row], "Multi-Choice")]
+                == multiple_choice[column]
+            ):
+                return True
+            else:
+                return False
+
+    def setData(
+        self, index: QtCore.QModelIndex, value: typing.Any, role: int = Qt.EditRole
+    ) -> bool:
+        if not index.isValid():
+            return False
+
+        if role == Qt.CheckStateRole:
+            column = index.column()
+            print(value)
+            print(multiple_choice[column])
+            self.pgdf.edit_data(
+                row=self.gui.analysis_row
+                if self.mode == "analysis"
+                else self.gui.testing_row,
+                col=column,
+                text=multiple_choice[column],
+            )
+            # text=np.nan if value == 2 else multiple_choice[column]
+            return True
+
+        return False
+
+    def flags(self, index):
+        """
+        https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
+        """
+        if index.isValid():
+            return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
+
+        return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
 
     def beginInsertRows(
         self, parent: QtCore.QModelIndex, first: int, last: int

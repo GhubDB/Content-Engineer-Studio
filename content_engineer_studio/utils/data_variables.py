@@ -20,7 +20,7 @@ canned_questions = [
     "Kundenanliegen gelöst?",
     "T2A gerechtfertigt?",
 ]
-multiple_choice = ["Ja", "Nein", "Teilweise"]
+multiple_choice = ["", "Ja", "Nein", "Teilweise"]
 
 example_flows = ["Some flow", "Some other flow", "Example flow", "Some FAQ"]
 example_actions = ["Some action", "Some other action", "Example action", "Example FAQ"]
