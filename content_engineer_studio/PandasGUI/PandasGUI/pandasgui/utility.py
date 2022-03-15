@@ -590,6 +590,13 @@ def get_movements(a: list, b: list):
     return movements
 
 
+def generate_index(ismulti, columns):
+    if ismulti:
+        return pd.MultiIndex.from_tuples(columns)
+    else:
+        return pd.Index(columns)
+
+
 def column_generator():
     n = 1
     while True:

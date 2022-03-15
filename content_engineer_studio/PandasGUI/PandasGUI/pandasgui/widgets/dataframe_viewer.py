@@ -41,14 +41,14 @@ logger = logging.getLogger(__name__)
 
 class DataFrameViewer(QtWidgets.QWidget):
     def __init__(
-        self,
-        pgdf: PandasGuiDataFrameStore,
+        self, pgdf: PandasGuiDataFrameStore, is_workingview: Optional[bool] = False
     ):
         super().__init__()
 
         pgdf = PandasGuiDataFrameStore.cast(pgdf)
         pgdf.dataframe_viewer = self
         self.pgdf = pgdf
+        self.is_workingview = is_workingview
 
         # Local state
         # How to color cells
@@ -180,12 +180,16 @@ class DataFrameViewer(QtWidgets.QWidget):
 
     def replace_models(self, pgdf: PandasGuiDataFrameStore):
         # Replaces models with new selected working view models and refreshes UI
-        self.pgdf = pgdf
-        pgdf.dataframe_viewer = self  # check what is going on here
+        # self.pgdf = pgdf
+        # pgdf.dataframe_viewer = self  # check what is going on here
 
         self.dataView.setModel(self.pgdf.model["data_table_model"])
         self.columnHeader.setModel(self.pgdf.model["header_model_horizontal"])
         self.indexHeader.setModel(self.pgdf.model["header_model_vertical"])
+        self.columnHeaderNames.setModel(
+            self.pgdf.model["horizontal_header_names_model"]
+        )
+        self.indexHeaderNames.setModel(self.pgdf.model["vertical_header_names_model"])
 
         for column_index in range(self.columnHeader.model().columnCount()):
             self.auto_size_column(column_index)
@@ -413,13 +417,17 @@ class DataFrameViewer(QtWidgets.QWidget):
             self.refresh_ui()
 
     def _add_column(self, first, last, refresh=True):
+
+        if refresh:
+            self.refresh_ui()
+        return
         for model in [
-            self.dataView.orig_model,
-            self.columnHeader.header_model_horizontal,
+            self.pgdf.model["data_table_model"],
+            self.pgdf.model["header_model_horizontal"],
         ]:
             model.beginInsertColumns(QtCore.QModelIndex(), first, last)
 
-        model = self.pgdf.dataframe_explorer.roles_view.orig_model
+        model = self.pgdf.model["header_roles_model"]
         model.beginInsertRows(QtCore.QModelIndex(), first, last)
 
         cols = list(self.pgdf.df_unfiltered.columns)
@@ -430,39 +438,43 @@ class DataFrameViewer(QtWidgets.QWidget):
             cols[first:first] = [
                 next(self.pgdf.column_gen) for _ in range(0, last - first)
             ]
+            self.pgdf.df_unfiltered.columns = pd.Index(cols)
         else:
             cols[first:first] = [
                 (next(self.pgdf.column_gen), "None") for _ in range(0, last - first)
             ]
-        self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
+            self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(cols)
+
+        # self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
 
         for model in [
-            self.dataView.orig_model,
-            self.columnHeader.header_model_horizontal,
+            self.pgdf.model["data_table_model"],
+            self.pgdf.model["header_model_horizontal"],
         ]:
             model.endInsertColumns()
 
-        model = self.pgdf.dataframe_explorer.roles_view.orig_model
+        model = self.pgdf.model["header_roles_model"]
         model.endInsertRows()
 
         # TODO fix column widths to be analogous to the move rows function
 
-        if refresh:
-            self.refresh_ui()
-
     def refresh_ui(self):
         # Update models
-        self.models = []
-        self.models += [
-            self.dataView.model(),
-            self.columnHeader.model(),
-            self.indexHeader.model(),
-            self.columnHeaderNames.model(),
-            self.indexHeaderNames.model(),
-            self.pgdf.model["header_roles_model"],
-        ]
+        # self.models = []
+        # self.models += [
+        #     self.dataView.model(),
+        #     self.columnHeader.model(),
+        #     self.indexHeader.model(),
+        #     self.columnHeaderNames.model(),
+        #     self.indexHeaderNames.model(),
+        #     self.pgdf.model["header_roles_model"],
+        # ]
 
-        for model in self.models:
+        # for model in self.models:
+        #     model.beginResetModel()
+        #     model.endResetModel()
+
+        for model in self.pgdf.model.values():
             model.beginResetModel()
             model.endResetModel()
 
@@ -789,8 +801,9 @@ class DataTableView(QtWidgets.QTableView):
         # Create and set model
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
 
-        self.pgdf.model["data_table_model"] = DataTableModel(parent)
-        self.setModel(self.pgdf.model["data_table_model"])
+        if not self.dataframe_viewer.is_workingview:
+            self.pgdf.model["data_table_model"] = DataTableModel(parent)
+            self.setModel(self.pgdf.model["data_table_model"])
 
         # Store if dataframe has already been adjusted to contents
         self.already_resized = False
@@ -902,13 +915,13 @@ class HeaderModel(QtCore.QAbstractTableModel):
 
     def columnCount(self, parent=None):
         if self.orientation == Qt.Horizontal:
-            return self.pgdf.df.columns.shape[0]
+            return self.pgdf.df_unfiltered.columns.shape[0]
         else:  # Vertical
             return self.pgdf.df.index.nlevels
 
     def rowCount(self, parent=None):
         if self.orientation == Qt.Horizontal:
-            return self.pgdf.df.columns.nlevels
+            return self.pgdf.df_unfiltered.columns.nlevels
         elif self.orientation == Qt.Vertical:
             return self.pgdf.df.index.shape[0]
 
@@ -961,11 +974,6 @@ class HeaderModel(QtCore.QAbstractTableModel):
     def endInsertRows(self) -> None:
         return super().endInsertRows()
 
-    # The headers of this table will show the level names of the MultiIndex
-    def headerData(self, section, orientation, role=None):
-        # This was moved to HeaderNamesModel
-        pass
-
 
 class HeaderView(QtWidgets.QTableView):
     """
@@ -984,14 +992,17 @@ class HeaderView(QtWidgets.QTableView):
         self.orientation = orientation
         self.table = parent.dataView
 
-        if orientation == 1:
-            self.pgdf.model["header_model_horizontal"] = HeaderModel(
-                parent, orientation
-            )
-            self.setModel(self.pgdf.model["header_model_horizontal"])
-        else:
-            self.pgdf.model["header_model_vertical"] = HeaderModel(parent, orientation)
-            self.setModel(self.pgdf.model["header_model_vertical"])
+        if not self.dataframe_viewer.is_workingview:
+            if orientation == 1:
+                self.pgdf.model["header_model_horizontal"] = HeaderModel(
+                    parent, orientation
+                )
+                self.setModel(self.pgdf.model["header_model_horizontal"])
+            else:
+                self.pgdf.model["header_model_vertical"] = HeaderModel(
+                    parent, orientation
+                )
+                self.setModel(self.pgdf.model["header_model_vertical"])
 
         self.padding = 90
 
@@ -1423,6 +1434,10 @@ class HeaderView(QtWidgets.QTableView):
 
 
 class HeaderNamesModel(QtCore.QAbstractTableModel):
+    """
+    Returns either the index header name or 'index'
+    """
+
     def __init__(self, parent, orientation):
         super().__init__(parent)
         self.orientation = orientation
@@ -1480,7 +1495,7 @@ class HeaderNamesModel(QtCore.QAbstractTableModel):
 
 class HeaderNamesView(QtWidgets.QTableView):
     """
-    Probably used in Reshaper
+    This makes the top left cell that says 'index'
     """
 
     def __init__(self, parent: DataFrameViewer, orientation):
@@ -1493,12 +1508,17 @@ class HeaderNamesView(QtWidgets.QTableView):
 
         # Setup
         self.orientation = orientation
-        if orientation == 1:
-            self.horizontal_header_names_model = HeaderNamesModel(parent, orientation)
-            self.setModel(self.horizontal_header_names_model)
-        else:
-            self.vertical_header_names_model = HeaderNamesModel(parent, orientation)
-            self.setModel(self.vertical_header_names_model)
+        if not self.dataframe_viewer.is_workingview:
+            if orientation == 1:
+                self.pgdf.model["horizontal_header_names_model"] = HeaderNamesModel(
+                    parent, orientation
+                )
+                self.setModel(self.pgdf.model["horizontal_header_names_model"])
+            else:
+                self.pgdf.model["vertical_header_names_model"] = HeaderNamesModel(
+                    parent, orientation
+                )
+                self.setModel(self.pgdf.model["vertical_header_names_model"])
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)

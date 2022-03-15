@@ -1,4 +1,5 @@
 priorities:
+reordering columns and sorting columns asc/desc breaks column role selection and multi index display
 use column viewer to display columns and their roles (bot, customer, analysis, canned)
 add a dataframe of identical size to each dataframe and store cell background colors
 adjust row to contents for all views that use the model

@@ -28,7 +28,7 @@ class AnalysisSelectorProxyModel(QtCore.QIdentityProxyModel):
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.df.columns, pd.MultiIndex):
             return 0
-        # print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
+        print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
         return sum(i == "Editable" for i in self.df.columns.get_level_values(1))
 
     def data(self, index, role):
@@ -44,4 +44,5 @@ class AnalysisSelectorProxyModel(QtCore.QIdentityProxyModel):
             # print(str(self.pgdf.df.columns[row]))
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Editable")
             print(rows)
+            # print(self.df.columns)
             return rows[row]

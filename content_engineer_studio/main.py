@@ -920,7 +920,7 @@ class MainWindow(QMainWindow):
         if mode == "analysis":
             self.analysis_df = df_title
             if self.analysis_viewer == None:
-                self.analysis_viewer = DataFrameViewer(pgdf=self.dummy_df)
+                self.analysis_viewer = DataFrameViewer(pgdf=self.store.data[df_title])
                 self.analysis_dataframe_layout.replaceWidget(
                     self.add_analysis_dataframe,
                     self.analysis_viewer,
@@ -933,7 +933,7 @@ class MainWindow(QMainWindow):
                 )
                 self.analysis_column_viewer_layout.addWidget(self.analysis_roles_view)
 
-            # Switch out dummy df for a real one
+            # Switch out models
             self.analysis_viewer.replace_models(pgdf=self.store.data[df_title])
             self.analysis_roles_view.replace_model(pgdf=self.store.data[df_title])
             self.populate_sidebar()
@@ -942,7 +942,7 @@ class MainWindow(QMainWindow):
         elif mode == "testing":
             self.testing_df = df_title
             if self.testing_viewer == None:
-                self.testing_viewer = DataFrameViewer(pgdf=self.dummy_df)
+                self.testing_viewer = DataFrameViewer(pgdf=self.store.data[df_title])
                 self.testing_dataframe_layout.replaceWidget(
                     self.add_testing_dataframe,
                     self.testing_viewer,
@@ -1215,13 +1215,21 @@ class MainWindow(QMainWindow):
         self.auto_anonymized = []
 
     def populate_cell_selector(self):
-        analysis_selector_proxymodel = AnalysisSelectorProxyModel(
+        self.store.data[self.analysis_df].model[
+            "analysis_selector_proxy_model"
+        ] = AnalysisSelectorProxyModel(
             parent=self, df=self.store.data[self.analysis_df].df_unfiltered
         )
-        analysis_selector_proxymodel.setSourceModel(
+
+        self.store.data[self.analysis_df].model[
+            "analysis_selector_proxy_model"
+        ].setSourceModel(
             self.store.data[self.analysis_df].model["header_model_horizontal"]
         )
-        self.cell_selector.setModel(analysis_selector_proxymodel)
+
+        self.cell_selector.setModel(
+            self.store.data[self.analysis_df].model["analysis_selector_proxy_model"]
+        )
 
     # def populate_analysis(self):
     #     self.analysis.setPlainText(

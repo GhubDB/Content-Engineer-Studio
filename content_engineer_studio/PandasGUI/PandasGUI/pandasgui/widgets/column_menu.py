@@ -35,17 +35,23 @@ class ColumnMenu(QtWidgets.QMenu):
 
         def assign_role(text):
             # if there is no multiindex, we add a second level with all values set to None
-            if not isinstance(df.columns, pd.MultiIndex):
-                # self.pgdf.model["header_model_horizontal"].beginInsertRows(
-                #     QtCore.QModelIndex(), 1, 2
-                # )
-                df.columns = pd.MultiIndex.from_product([df.columns, ["None"]])
-                # self.pgdf.model["header_model_horizontal"].endInsertRows()
+            if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
+                self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_product(
+                    [df.columns, ["None"]]
+                )
 
+            if text == "Editable":
+                self.pgdf.gui.cell_selector.model().beginInsertRows(
+                    QtCore.QModelIndex(),
+                    self.pgdf.gui.cell_selector.model().rowCount(),
+                    1,
+                )
             # Altering and replacing the existing index
-            tuples = df.columns.tolist()
+            tuples = self.pgdf.df_unfiltered.columns.tolist()
             tuples[self.column_ix] = (tuples[self.column_ix][0], text)
-            df.columns = pd.MultiIndex.from_tuples(tuples)
+            self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(tuples)
+            if text == "Editable":
+                self.pgdf.gui.cell_selector.model().endInsertRows()
             self.pgdf.refresh_ui()
 
         self.header_role_selector = QtWidgets.QComboBox()
@@ -54,7 +60,7 @@ class ColumnMenu(QtWidgets.QMenu):
         self.add_widget(self.header_role_selector)
 
         # Preselect the currently set role
-        if isinstance(df.columns, pd.MultiIndex):
+        if isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             self.header_role_selector.setCurrentText(
                 self.pgdf.df_unfiltered.columns.get_level_values(1)[column_ix]
             )

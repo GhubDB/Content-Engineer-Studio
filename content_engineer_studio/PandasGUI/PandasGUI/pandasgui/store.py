@@ -1,5 +1,12 @@
 from __future__ import annotations
 import typing
+import os
+import numpy as np
+from enum import Enum
+import json
+import inspect
+import logging
+import contextlib
 from abc import abstractmethod
 
 if typing.TYPE_CHECKING:
@@ -28,14 +35,9 @@ from pandasgui.utility import (
     parse_date,
     get_movements,
     column_generator,
+    generate_index,
 )
 from pandasgui.constants import LOCAL_DATA_DIR
-import os
-from enum import Enum
-import json
-import inspect
-import logging
-import contextlib
 
 logger = logging.getLogger(__name__)
 
@@ -341,11 +343,12 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         # Models
         """
         Contents:
-        data_table_model
-        header_model_horizontal
-        header_model_vertical
-        column_search_model
-        header_roles_model
+        data_table_model -> Main Table for dataframe viewer
+        header_model_horizontal -> Header names for dataframe viewer
+        header_model_vertical -> Index for dataframe viewer
+        header_roles_model -> Model for dragable header names listview
+        column_search_model -> Searchable proxymodel for dragable header names listview
+        analysis_selector_proxy_model -> Model for analysis QComboBox
         """
         self.model = {}
 
@@ -514,16 +517,46 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
     @status_message_decorator("Adding column(s)...")
     def add_column(self, first: int, last: int, refresh=True):
-        self.add_history_item(
-            "add_column(s)",
-            (
-                f"cols = list(df.columns)"
-                f"cols[{first}:{first}] = [self.column_generator() for _ in range(0, {last} - {first})]"
-                f"df = df.reindex(cols, axis=1)"
-            ),
-        )
+        # self.add_history_item(
+        #     "add_column(s)",
+        #     (
+        #         f"cols = list(df.columns)"
+        #         f"cols[{first}:{first}] = [self.column_generator() for _ in range(0, {last} - {first})]"
+        #         f"df = df.reindex(cols, axis=1)"
+        #     ),
+        # )
 
         self.dataframe_viewer.setUpdatesEnabled(False)
+
+        self.model["data_table_model"].beginInsertColumns(
+            QtCore.QModelIndex(), first, last
+        )
+        self.model["header_model_horizontal"].beginInsertColumns(
+            QtCore.QModelIndex(), first, last
+        )
+        self.model["header_roles_model"].beginInsertRows(
+            QtCore.QModelIndex(), first, last
+        )
+
+        # This inserts at the end.
+        # self.df_unfiltered[
+        #     [next(self.column_gen) for _ in range(0, last - first)]
+        # ] = pd.DataFrame([np.nan])
+
+        for i in range(0, last - first):
+            # Make sure column name is unique:
+            evaluating = True
+            while evaluating:
+                col_name = next(self.column_gen)
+                if col_name not in self.df_unfiltered.columns.values:
+                    evaluating = False
+
+            self.df_unfiltered.insert(first + i, col_name, np.nan)
+
+        self.model["data_table_model"].endInsertColumns()
+        self.model["header_model_horizontal"].endInsertColumns()
+        self.model["header_roles_model"].endInsertRows()
+
         # Need to inform the PyQt model too so column widths properly shift
         # TODO: check if HeaderNamesModel also needs to be updated, fix multi index version
         self.dataframe_viewer._add_column(first, last)
@@ -534,7 +567,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     def move_column(self, src: int, dest: int):
         cols = list(self.df_unfiltered.columns)
         cols.insert(dest, cols.pop(src))
-        self.df_unfiltered = self.df_unfiltered.reindex(cols, axis=1)
+        self.df_unfiltered.columns = generate_index(
+            ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex), columns=cols
+        )
 
         self.add_history_item(
             "move_column",
@@ -560,7 +595,14 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         row -= sum(i < row for i in selected)
         reordered[row:row] = moved
 
-        self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
+        # Original implementation changed because it  decoupled from df.columns
+        # self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
+
+        # Make new index and overwrite the old one
+        self.df_unfiltered.columns = generate_index(
+            ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex),
+            columns=reordered,
+        )
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Move columns around in TableView to maintain column widths
