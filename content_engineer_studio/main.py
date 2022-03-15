@@ -82,7 +82,7 @@ from utils.excel_helpers import Excel
 from utils.selenium_helpers import Browser
 from utils.data_variables import *
 from widgets.drag_drop import DragDrop
-from widgets.proxy_models import SideBarProxyModel, AnalysisSelectorProxyModel
+from widgets.proxy_models import SideBarProxyModel, AnalysisSelectorModel
 from utils.stylesheets import Stylesheets
 from utils.worker_thread import Worker, WorkerSignals
 
@@ -309,8 +309,6 @@ class MainWindow(QMainWindow):
         self.dialog_num = 0
         self.canned_states = {}
         self.canned_states_2 = {}
-        self.marked_messages = {}
-        self.marked_messages_2 = {}
         self.sent_messages = []
         self.filter_proxy_model = ""
         self.auto_anonymized = []
@@ -356,9 +354,9 @@ class MainWindow(QMainWindow):
         self.chat.installEventFilter(self)
 
         # Connecting functions
-        # self.sidebar.selectionModel().selectionChanged.connect(self.row_selector)
+
         # self.sidebar_2.selectionModel().selectionChanged.connect(self.row_selector_2)
-        # self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
+        self.cell_selector.currentIndexChanged.connect(self.populate_analysis)
         # self.cell_selector_2.currentIndexChanged.connect(self.populate_analysis_2)
         self.analysis.textChanged.connect(self.save_analysis)
         self.analysis_2.textChanged.connect(self.save_analysis_2)
@@ -937,6 +935,7 @@ class MainWindow(QMainWindow):
             self.analysis_viewer.replace_models(pgdf=self.store.data[df_title])
             self.analysis_roles_view.replace_model(pgdf=self.store.data[df_title])
             self.populate_sidebar()
+
             self.populate_cell_selector()
 
         elif mode == "testing":
@@ -965,21 +964,11 @@ class MainWindow(QMainWindow):
         # Save and clean up before next row is loaded
         self.saveOnRowChange()
         self.clearChat()
-        self.marked_messages = {}
 
         # Updates the self.row property
         idx = selected.indexes()
         if len(idx) > 0 and idx != self.row:
             self.row = idx[0].row()
-
-        # Reloading excel sheet for test purposes
-        self.df = self.analysis_excel.reload()
-        self.header_len = len(self.df.columns)
-        self.index_len = len(self.df.index)
-        self.completed = self.analysis_excel.incomplete(
-            self.df, self.cell_selector_start, len(self.df.columns)
-        )
-        # self.populate_sidebar()
 
         # Loading web page, web scraping and adding results to self.chat
         if self.open_links.checkState():
@@ -989,10 +978,7 @@ class MainWindow(QMainWindow):
             self.threadpool.start(setup)
 
         # Autoscrolling to the selection on the sidebar
-        self.sidebar.scrollToItem(self.sidebar.item(self.row, 0))
-
-        # self.populate_canned()
-        # self.populate_analysis()
+        self.sidebar.scrollTo(self.sidebar.model().index(self.row, 0))
 
     def saveOnRowChange(self):
         """
@@ -1001,20 +987,20 @@ class MainWindow(QMainWindow):
         # Saving chat messages
         if self.chat.rowCount() > 0:
             customer, bot = self.getChatText()
-            self.analysis_excel.updateCells(customer, self.row + 2, 5)
-            self.analysis_excel.updateCells(bot, self.row + 2, 6)
+            # self.analysis_excel.updateCells(customer, self.row + 2, 5)
+            # self.analysis_excel.updateCells(bot, self.row + 2, 6)
 
         # Saving analysis contents
-        self.analysis_excel.updateCells(
-            self.df.iloc[
-                self.row : self.row + 1, self.cell_selector_start : self.header_len
-            ].values,
-            self.row + 2,
-            self.cell_selector_start + 1,
-        )
+        # self.analysis_excel.updateCells(
+        #     self.df.iloc[
+        #         self.row : self.row + 1, self.cell_selector_start : self.header_len
+        #     ].values,
+        #     self.row + 2,
+        #     self.cell_selector_start + 1,
+        # )
 
         # Saves the excel file
-        self.analysis_excel.saveWB()
+        # self.analysis_excel.saveWB()
 
     def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent):
         """
@@ -1090,18 +1076,6 @@ class MainWindow(QMainWindow):
                     return True
 
         return super().eventFilter(source, event)
-
-    def save_analysis(self):
-        """
-        Saves current analysis text to dataframe
-        """
-        # TODO: add to save_analysis_2
-        self.store.data[self.analysis_df].edit_data(
-            self.row, self.cell_selector.currentText(), self.analysis.toPlainText()
-        )
-        # self.store.data[self.analysis_df].df.loc[self.row][
-        #     self.cell_selector.currentText()
-        # ] = self.analysis.toPlainText()
 
     def getChatlog(self, output):
         """
@@ -1215,28 +1189,43 @@ class MainWindow(QMainWindow):
         self.auto_anonymized = []
 
     def populate_cell_selector(self):
+        """
+        Set model for combobox that displays "Editable" rows
+        """
+        # for _ in range(10):
+        #     self.cell_selector.addItem("Banana")
+        # return
         self.store.data[self.analysis_df].model[
             "analysis_selector_proxy_model"
-        ] = AnalysisSelectorProxyModel(
+        ] = AnalysisSelectorModel(
             parent=self, df=self.store.data[self.analysis_df].df_unfiltered
-        )
-
-        self.store.data[self.analysis_df].model[
-            "analysis_selector_proxy_model"
-        ].setSourceModel(
-            self.store.data[self.analysis_df].model["header_model_horizontal"]
         )
 
         self.cell_selector.setModel(
             self.store.data[self.analysis_df].model["analysis_selector_proxy_model"]
         )
 
-    # def populate_analysis(self):
-    #     self.analysis.setPlainText(
-    #         self.store.data[self.analysis_df].df.loc[self.row][
-    #             self.cell_selector.currentIndex() + self.cell_selector_start
-    #         ]
-    #     )
+    def populate_analysis(self):
+        self.analysis.setPlainText(
+            self.store.data[self.analysis_df].df_unfiltered.loc[
+                self.row, (self.cell_selector.currentText(), "Editable")
+            ]
+        )
+
+    def save_analysis(self):
+        """
+        Saves current analysis text to dataframe
+        """
+
+        self.store.data[self.analysis_df].df_unfiltered.loc[
+            self.row, (self.cell_selector.currentText(), "Editable")
+        ] = self.analysis.toPlainText()
+
+        # self.store.data[self.analysis_df].edit_data(
+        #     self.row,
+        #     (self.cell_selector.currentText(), "Editable"),
+        #     self.analysis.toPlainText(),
+        # )
 
     def populate_search_column_select(self):
         """
@@ -1345,6 +1334,7 @@ class MainWindow(QMainWindow):
             self.store.data[self.analysis_df].model["header_model_vertical"]
         )
         self.sidebar.setModel(sidebar_proxy_model)
+        self.sidebar.selectionModel().selectionChanged.connect(self.row_selector)
 
         # self.sidebar.resizeColumnsToContents()
         # self.sidebar.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
@@ -1381,11 +1371,9 @@ class MainWindow(QMainWindow):
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
 
     def btn_right(self):
-        if (
-            not self.cell_selector.currentIndex()
-            < self.header_len - self.cell_selector_start - 1
-        ):
-            self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 2)
+        if self.cell_selector.currentIndex() >= self.cell_selector.count() - 1:
+            self.cell_selector.setCurrentIndex(0)
+            return
         self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 1)
 
     def btn_up(self):
@@ -1454,7 +1442,6 @@ class MainWindow(QMainWindow):
         # Save and clean up before next row is loaded
         self.saveOnRowChange_2()
         self.chat_2.setRowCount(0)
-        self.marked_messages_2 = {}
 
         # Updates the self.row property
         idx = selected.indexes()

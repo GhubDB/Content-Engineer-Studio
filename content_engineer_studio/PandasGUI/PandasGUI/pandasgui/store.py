@@ -595,9 +595,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         row -= sum(i < row for i in selected)
         reordered[row:row] = moved
 
-        # Original implementation changed because it  decoupled from df.columns
-        # self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
-
         # Make new index and overwrite the old one
         self.df_unfiltered.columns = generate_index(
             ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex),

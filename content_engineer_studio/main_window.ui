@@ -27,7 +27,7 @@
        <number>0</number>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="analysis_suite">
        <property name="sizePolicy">
@@ -583,6 +583,11 @@
             <width>35</width>
             <height>16777215</height>
            </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
           </property>
           <property name="cursor" stdset="0">
            <cursorShape>PointingHandCursor</cursorShape>
@@ -1228,6 +1233,11 @@
             <width>35</width>
             <height>16777215</height>
            </size>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>11</pointsize>
+           </font>
           </property>
           <property name="cursor" stdset="0">
            <cursorShape>PointingHandCursor</cursorShape>

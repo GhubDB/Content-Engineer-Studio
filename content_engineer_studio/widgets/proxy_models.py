@@ -1,6 +1,7 @@
 import typing
 import pandas as pd
 from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt
 
 
 class SideBarProxyModel(QtCore.QIdentityProxyModel):
@@ -19,7 +20,7 @@ class SideBarProxyModel(QtCore.QIdentityProxyModel):
     # return super().data(proxyIndex, role)
 
 
-class AnalysisSelectorProxyModel(QtCore.QIdentityProxyModel):
+class AnalysisSelectorModel(QtCore.QAbstractListModel):
     def __init__(self, parent, df) -> None:
         super().__init__(parent)
         self.gui = parent
@@ -28,7 +29,7 @@ class AnalysisSelectorProxyModel(QtCore.QIdentityProxyModel):
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.df.columns, pd.MultiIndex):
             return 0
-        print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
+        # print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
         return sum(i == "Editable" for i in self.df.columns.get_level_values(1))
 
     def data(self, index, role):
@@ -43,6 +44,23 @@ class AnalysisSelectorProxyModel(QtCore.QIdentityProxyModel):
             # print(row)
             # print(str(self.pgdf.df.columns[row]))
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Editable")
-            print(rows)
+            # print(rows)
             # print(self.df.columns)
             return rows[row]
+
+    def flags(self, index):
+        """
+        https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
+        """
+        if index.isValid():
+            return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+        return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+    def beginInsertRows(
+        self, parent: QtCore.QModelIndex, first: int, last: int
+    ) -> None:
+        return super().beginInsertRows(parent, first, last)
+
+    def endInsertRows(self) -> None:
+        return super().endInsertRows()
