@@ -1,7 +1,7 @@
 import typing
 import pandas as pd
 import numpy as np
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 
 from build.lib.pandasgui.store import PandasGuiDataFrameStore
@@ -15,6 +15,24 @@ class SideBarProxyModel(QtCore.QIdentityProxyModel):
 
     def setSourceModel(self, sourceModel: QtCore.QAbstractItemModel) -> None:
         return super().setSourceModel(sourceModel)
+
+    def paint(
+        self,
+        painter: QtGui.QPainter,
+        option: QtWidgets.QStyleOptionViewItem,
+        index: QtCore.QModelIndex,
+    ) -> None:
+
+        # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
+        if option.state & QtWidgets.QStyle.State_HasFocus:
+            option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
+
+        options = QtWidgets.QStyleOptionViewItem(option)
+        option.widget.style().drawControl(
+            QtWidgets.QStyle.CE_ItemViewItem, option, painter, options.widget
+        )
+
+        super().paint(painter, option, index)
 
     # def __init__(self, parent) -> None:
     #     super().__init__(parent)
@@ -98,10 +116,6 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
         if role == QtCore.Qt.DisplayRole:
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             row = index.row()
-            # print(row)
-            # print(str(self.pgdf.df.columns[row]))
-            # print(rows)
-            # print(self.df.columns)
             if column == 0:
                 return rows[row]
             else:
@@ -113,9 +127,9 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
                 self.df.loc[self.gui.analysis_row, (rows[row], "Multi-Choice")]
                 == multiple_choice[column]
             ):
-                return True
+                return Qt.Checked
             else:
-                return False
+                return Qt.Unchecked
 
     def setData(
         self, index: QtCore.QModelIndex, value: typing.Any, role: int = Qt.EditRole
@@ -124,16 +138,17 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             return False
 
         if role == Qt.CheckStateRole:
+            row = index.row()
             column = index.column()
-            print(value)
-            print(multiple_choice[column])
+            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             self.pgdf.edit_data(
                 row=self.gui.analysis_row
                 if self.mode == "analysis"
                 else self.gui.testing_row,
-                col=column,
+                col=(rows[row], "Multi-Choice"),
                 text=multiple_choice[column],
             )
+            self.dataChanged.emit(index, index)
             # text=np.nan if value == 2 else multiple_choice[column]
             return True
 
@@ -144,9 +159,9 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
         https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
         """
         if index.isValid():
-            return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
+            return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
 
-        return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEditable
+        return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
 
     def beginInsertRows(
         self, parent: QtCore.QModelIndex, first: int, last: int
