@@ -1,5 +1,5 @@
 import sys
-from typing import List, Union
+from typing import List, Optional, Union
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from pandasgui.widgets.code_history_viewer import CodeHistoryViewer
@@ -113,11 +113,12 @@ class DataFrameExplorer(QtWidgets.QWidget):
 
 
 class HeaderRolesViewContainer(QtWidgets.QWidget):
-    def __init__(self, parent: DataFrameExplorer):
+    def __init__(self, parent: Optional[DataFrameExplorer] = None):
         super().__init__(parent)
-        self.dataframe_explorer = parent
-        self.pgdf: DataFrameViewer = parent.pgdf
-        self.gui = self.dataframe_explorer.pgdf.store.gui
+        if parent is not None:
+            self.dataframe_explorer = parent
+            self.pgdf: DataFrameViewer = parent.pgdf
+            self.gui = self.dataframe_explorer.pgdf.store.gui
 
         # Set up elements
         self.main_layout = QtWidgets.QVBoxLayout()
@@ -140,7 +141,9 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.search_columns.setPlaceholderText("Search columns")
         self.main_layout.addWidget(self.search_columns)
 
-        self.column_viewer = HeaderRolesView(parent=self.dataframe_explorer)
+        self.column_viewer = HeaderRolesView(
+            parent=self.dataframe_explorer if parent is not None else None
+        )
         self.main_layout.addWidget(self.column_viewer)
         self.setLayout(self.main_layout)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -150,24 +153,24 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.delete_column.clicked.connect(self.btn_delete_column)
 
         # Initializing models
+        if parent is not None:
+            self.pgdf.model["header_roles_model"] = HeaderRolesModel(
+                parent=self.dataframe_explorer
+            )
 
-        self.pgdf.model["header_roles_model"] = HeaderRolesModel(
-            parent=self.dataframe_explorer
-        )
-
-        self.pgdf.model["column_search_model"] = QtCore.QSortFilterProxyModel()
-        self.pgdf.model["column_search_model"].setSourceModel(
-            self.pgdf.model["header_roles_model"]
-        )
-        self.pgdf.model["column_search_model"].setFilterCaseSensitivity(
-            Qt.CaseInsensitive
-        )
-        self.pgdf.model["column_search_model"].setFilterKeyColumn(-1)
-        self.search_columns.textChanged.connect(
-            self.pgdf.model["column_search_model"].setFilterRegExp
-        )
-        self.column_viewer.setModel(self.pgdf.model["column_search_model"])
-        self.installEventFilter(self)
+            self.pgdf.model["column_search_model"] = QtCore.QSortFilterProxyModel()
+            self.pgdf.model["column_search_model"].setSourceModel(
+                self.pgdf.model["header_roles_model"]
+            )
+            self.pgdf.model["column_search_model"].setFilterCaseSensitivity(
+                Qt.CaseInsensitive
+            )
+            self.pgdf.model["column_search_model"].setFilterKeyColumn(-1)
+            self.search_columns.textChanged.connect(
+                self.pgdf.model["column_search_model"].setFilterRegExp
+            )
+            self.column_viewer.setModel(self.pgdf.model["column_search_model"])
+            self.installEventFilter(self)
 
     def replace_model(self, pgdf):
         self.pgdf = pgdf
@@ -335,8 +338,9 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
 class HeaderRolesView(QtWidgets.QListView):
     def __init__(self, parent: DataFrameExplorer):
         super().__init__(parent)
-        self.dataframe_explorer = parent
-        self.pgdf: DataFrameViewer = parent.pgdf
+        if parent is not None:
+            self.dataframe_explorer = parent
+            self.pgdf: DataFrameViewer = parent.pgdf
 
         font = QtGui.QFont()
         font.setPointSize(11)

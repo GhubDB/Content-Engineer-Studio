@@ -1,4 +1,8 @@
 class Stylesheets:
+    """
+    Holds stylesheets used in main application
+    """
+
     bot = """font-size: 11pt;
 			text-align: right;
 			border-style: outset;
