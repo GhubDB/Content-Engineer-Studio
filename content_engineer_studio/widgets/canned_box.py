@@ -105,7 +105,7 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             row = index.row()
             if (
-                self.df.loc[self.gui.analysis_row, (rows[row], "Multi-Choice")]
+                self.df.loc[self.gui.row, (rows[row], "Multi-Choice")]
                 == multiple_choice[column]
             ):
                 return Qt.Checked

@@ -64,9 +64,7 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
             column = index.column()
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             self.pgdf.edit_data(
-                row=self.gui.analysis_row
-                if self.mode == "analysis"
-                else self.gui.testing_row,
+                row=self.gui.row if self.mode == "analysis" else self.gui.row,
                 col=(rows[row], "Multi-Choice"),
                 text=multiple_choice[column],
             )

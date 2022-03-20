@@ -3,6 +3,9 @@ reordering columns and sorting columns asc/desc breaks column role selection and
 use column viewer to display columns and their roles (bot, customer, analysis, canned)
 split testing and analysis into their own class and add modules as needed
 use proxy model instead of filtered df
+use enums for roles in data variables
+add copy/paste for faq's
+consider adding self.dataChanged.emit(index, index) to set data methods in models
 add a dataframe of identical size to each dataframe and store cell background colors
 adjust row to contents for all views that use the model
 a view that allows for selecting bot/customer columns as well as canned and analysis columns

@@ -39,13 +39,13 @@ from PyQt5.QtGui import (
 
 from qtstylish import qtstylish
 
-from widgets.analysis_workarea import AnalysisWorkarea
-from widgets.testing_workarea import TestingWorkarea
+from widgets.analysis_suite import AnalysisSuite
+from widgets.testing_suite import TestingSuite
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet(qtstylish.dark())
-    win = TestingWorkarea()
+    win = TestingSuite()
     win.resize(1920, 1080)
     win.show()
     sys.exit(app.exec_())

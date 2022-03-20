@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
     QButtonGroup,
     QRadioButton,
     QApplication,
+    QTableView,
 )
 from PyQt5.QtGui import (
     QStandardItemModel,
@@ -44,6 +45,8 @@ from utils.model_test import ModelTest
 class FaqSearchBoxContainer(QWidget):
     def __init__(self, parent: typing.Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self.gui = parent.gui
+        self.suite = parent
 
         self.main_layout = QGridLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -66,22 +69,78 @@ class FaqSearchBoxContainer(QWidget):
         self.searchbar_layout.addWidget(self.search_column_select)
 
         # FAQ display Tableview
-        self.search_box = QtWidgets.QTableView()
+        self.search_box = FaqDisplayBox(parent=self)
+        self.main_layout.addWidget(self.search_box, 1, 0)
+
+        # Connecting Functions
+        self.searchbar.textChanged.connect(
+            lambda: self.search_box.setMinimumHeight(500)
+        )
+        self.searchbar.editingFinished.connect(
+            lambda: self.search_box.setMinimumHeight(100)
+        )
+
+        # Initializing FAQ search window item model
+        model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
+        for idx, _ in self.faq_df.iterrows():
+            for i, _ in enumerate(self.faq_df.columns):
+                item = QStandardItem(self.faq_df.iloc[idx, i])
+                model.setItem(idx, i, item)  # check this
+        self.faq_auto_search_model = QSortFilterProxyModel()
+        self.faq_auto_search_model.setSourceModel(model)
+        self.faq_auto_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.faq_auto_search_model.setFilterKeyColumn(-1)
+        self.search_box.installEventFilter(self)
+        self.gui.search_box_3.installEventFilter(self)
+
+        # Adding search box
+        self.populate_search_column_select()
+        self.search_box.setModel(self.faq_auto_search_model)
+        self.gui.search_box_3.setModel(self.faq_auto_search_model)
+        self.gui.search_box_3.horizontalHeader().setSectionResizeMode(
+            QHeaderView.Stretch
+        )
+        self.searchbar.textChanged.connect(self.faq_auto_search_model.setFilterRegExp)
+        self.gui.searchbar_3.textChanged.connect(
+            self.faq_auto_search_model.setFilterRegExp
+        )
+        self.search_column_select.currentIndexChanged.connect(self.populate_search_box)
+        self.gui.search_column_select_3.currentIndexChanged.connect(
+            self.populate_search_box
+        )
+        self.populate_search_box()
+
+
+class FaqDisplayBox(QTableView):
+    def __init__(self, parent: typing.Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self.gui = parent.gui
+
+        # Set-up
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.search_box.sizePolicy().hasHeightForWidth())
-        self.search_box.setSizePolicy(sizePolicy)
-        self.search_box.setMinimumSize(QtCore.QSize(0, 0))
-        self.search_box.setFrameShape(QtWidgets.QFrame.Panel)
-        self.search_box.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.search_box.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.search_box.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.search_box.setObjectName("search_box")
-        self.search_box.horizontalHeader().setVisible(False)
-        self.search_box.horizontalHeader().setStretchLastSection(True)
-        self.search_box.verticalHeader().setVisible(False)
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        self.setSizePolicy(sizePolicy)
+        self.setMinimumSize(QtCore.QSize(0, 0))
+        self.setFrameShape(QtWidgets.QFrame.Panel)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.setObjectName("search_box")
+        self.horizontalHeader().setVisible(False)
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setVisible(False)
 
-        self.main_layout.addWidget(self.search_box, 1, 0)
+    def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
+
+        # Show FAQ search table
+        if e.button() == Qt.RightButton:
+            index = self.selectionModel().currentIndex()
+            value = index.sibling(index.row(), index.column()).data()
+            self.gui.stackedWidget.setCurrentWidget(self.faq)
+            self.searchbar_3.setText(value)
+
+        return super().mouseReleaseEvent(e)
