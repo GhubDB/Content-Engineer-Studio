@@ -40,7 +40,7 @@ from PyQt5.QtGui import (
 )
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from utils.data_variables import multiple_choice
+from utils.data_variables import Data
 from PandasGUI.PandasGUI.pandasgui.store import PandasGuiDataFrameStore
 
 
@@ -93,7 +93,7 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
         self.mode = mode
 
     def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
-        return len(multiple_choice)
+        return len(Data.MULTIPLE_CHOICE)
 
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.df.columns, pd.MultiIndex):
@@ -114,13 +114,13 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             if column == 0:
                 return rows[row]
             else:
-                return multiple_choice[column]
+                return Data.MULTIPLE_CHOICE[column]
         elif role == Qt.CheckStateRole and column in [1, 2, 3]:
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             row = index.row()
             if (
                 self.df.loc[self.gui.row, (rows[row], "Multi-Choice")]
-                == multiple_choice[column]
+                == Data.MULTIPLE_CHOICE[column]
             ):
                 return Qt.Checked
             else:
@@ -141,10 +141,10 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
                 if self.mode == "analysis"
                 else self.gui.testing_row,
                 col=(rows[row], "Multi-Choice"),
-                text=multiple_choice[column],
+                text=Data.MULTIPLE_CHOICE[column],
             )
             self.dataChanged.emit(index, index)
-            # text=np.nan if value == 2 else multiple_choice[column]
+            # text=np.nan if value == 2 else Data.MULTIPLE_CHOICE[column]
             return True
 
         return False

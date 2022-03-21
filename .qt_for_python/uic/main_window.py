@@ -25,10 +25,14 @@ class Ui_MainWindow(object):
         self.stackedWidget.setLineWidth(0)
         self.stackedWidget.setObjectName("stackedWidget")
         self.analysis_suite = QtWidgets.QWidget()
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.analysis_suite.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.analysis_suite.sizePolicy().hasHeightForWidth()
+        )
         self.analysis_suite.setSizePolicy(sizePolicy)
         self.analysis_suite.setObjectName("analysis_suite")
         self.gridLayout_7 = QtWidgets.QGridLayout(self.analysis_suite)
@@ -45,10 +49,14 @@ class Ui_MainWindow(object):
         self.analysis_dataframe_layout.setContentsMargins(0, 0, 0, 0)
         self.analysis_dataframe_layout.setObjectName("analysis_dataframe_layout")
         self.add_analysis_dataframe = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.add_analysis_dataframe.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.add_analysis_dataframe.sizePolicy().hasHeightForWidth()
+        )
         self.add_analysis_dataframe.setSizePolicy(sizePolicy)
         self.add_analysis_dataframe.setObjectName("add_analysis_dataframe")
         self.analysis_dataframe_layout.addWidget(self.add_analysis_dataframe)
@@ -87,7 +95,9 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.export_to_testing_suite, 0, 4, 1, 1)
         self.verticalLayout_3.addLayout(self.gridLayout)
         self.chat = QtWidgets.QTableWidget(self.layoutWidget1)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.chat.sizePolicy().hasHeightForWidth())
@@ -106,7 +116,9 @@ class Ui_MainWindow(object):
         self.layoutWidget2.setObjectName("layoutWidget2")
         self.analysis_column_viewer_layout = QtWidgets.QVBoxLayout(self.layoutWidget2)
         self.analysis_column_viewer_layout.setContentsMargins(0, 0, 0, 0)
-        self.analysis_column_viewer_layout.setObjectName("analysis_column_viewer_layout")
+        self.analysis_column_viewer_layout.setObjectName(
+            "analysis_column_viewer_layout"
+        )
         self.layoutWidget3 = QtWidgets.QWidget(self.analysis_layout)
         self.layoutWidget3.setObjectName("layoutWidget3")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.layoutWidget3)
@@ -125,7 +137,9 @@ class Ui_MainWindow(object):
         self.search_column_select.setObjectName("search_column_select")
         self.gridLayout_8.addWidget(self.search_column_select, 0, 1, 1, 1)
         self.search_box = QtWidgets.QTableView(self.layoutWidget3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.search_box.sizePolicy().hasHeightForWidth())
@@ -142,7 +156,9 @@ class Ui_MainWindow(object):
         self.gridLayout_8.addWidget(self.search_box, 1, 0, 1, 2)
         self.verticalLayout_4.addLayout(self.gridLayout_8)
         self.canned = QtWidgets.QTableView(self.layoutWidget3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.canned.sizePolicy().hasHeightForWidth())
@@ -165,10 +181,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.cell_selector = QtWidgets.QComboBox(self.layoutWidget3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.cell_selector.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.cell_selector.sizePolicy().hasHeightForWidth()
+        )
         self.cell_selector.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -186,7 +206,9 @@ class Ui_MainWindow(object):
         self.right.setObjectName("right")
         self.horizontalLayout_2.addWidget(self.right)
         self.colorize = QtWidgets.QPushButton(self.layoutWidget3)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.colorize.sizePolicy().hasHeightForWidth())
@@ -200,7 +222,9 @@ class Ui_MainWindow(object):
         self.splitter.setOrientation(QtCore.Qt.Vertical)
         self.splitter.setObjectName("splitter")
         self.analysis = QtWidgets.QTextEdit(self.splitter)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.analysis.sizePolicy().hasHeightForWidth())
@@ -218,7 +242,9 @@ class Ui_MainWindow(object):
         self.analysis.setAcceptRichText(False)
         self.analysis.setObjectName("analysis")
         self.actions = QtWidgets.QTableWidget(self.splitter)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.actions.sizePolicy().hasHeightForWidth())
@@ -237,7 +263,9 @@ class Ui_MainWindow(object):
         self.actions.verticalHeader().setVisible(False)
         self.actions.verticalHeader().setHighlightSections(False)
         self.flows = QtWidgets.QTableWidget(self.splitter)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.flows.sizePolicy().hasHeightForWidth())
@@ -271,7 +299,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addLayout(self.horizontalLayout_3)
         self.gridLayout_7.addWidget(self.analysis_layout, 0, 1, 1, 1)
         self.sidebar = QtWidgets.QTableView(self.analysis_suite)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sidebar.sizePolicy().hasHeightForWidth())
@@ -281,7 +311,9 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(11)
         self.sidebar.setFont(font)
-        self.sidebar.viewport().setProperty("cursor", QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.sidebar.viewport().setProperty(
+            "cursor", QtGui.QCursor(QtCore.Qt.PointingHandCursor)
+        )
         self.sidebar.setFrameShape(QtWidgets.QFrame.Panel)
         self.sidebar.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.sidebar.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -312,10 +344,14 @@ class Ui_MainWindow(object):
         self.testing_dataframe_layout.setContentsMargins(0, 0, 0, 0)
         self.testing_dataframe_layout.setObjectName("testing_dataframe_layout")
         self.add_testing_dataframe = QtWidgets.QPushButton(self.layoutWidget4)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.add_testing_dataframe.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.add_testing_dataframe.sizePolicy().hasHeightForWidth()
+        )
         self.add_testing_dataframe.setSizePolicy(sizePolicy)
         self.add_testing_dataframe.setObjectName("add_testing_dataframe")
         self.testing_dataframe_layout.addWidget(self.add_testing_dataframe)
@@ -325,7 +361,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_6.setObjectName("verticalLayout_6")
         self.chat_2 = QtWidgets.QTableWidget(self.layoutWidget5)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.chat_2.sizePolicy().hasHeightForWidth())
@@ -370,12 +408,20 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addLayout(self.horizontalLayout_4)
         self.testing_column_viewer = QtWidgets.QTreeView(self.testing_layout)
         self.testing_column_viewer.setFrameShape(QtWidgets.QFrame.Panel)
-        self.testing_column_viewer.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.testing_column_viewer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.testing_column_viewer.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff
+        )
+        self.testing_column_viewer.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAsNeeded
+        )
         self.testing_column_viewer.setDragEnabled(False)
-        self.testing_column_viewer.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+        self.testing_column_viewer.setDragDropMode(
+            QtWidgets.QAbstractItemView.InternalMove
+        )
         self.testing_column_viewer.setDefaultDropAction(QtCore.Qt.MoveAction)
-        self.testing_column_viewer.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        self.testing_column_viewer.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectItems
+        )
         self.testing_column_viewer.setObjectName("testing_column_viewer")
         self.layoutWidget6 = QtWidgets.QWidget(self.testing_layout)
         self.layoutWidget6.setObjectName("layoutWidget6")
@@ -399,7 +445,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.addWidget(self.search_column_select_2)
         self.verticalLayout_5.addLayout(self.horizontalLayout_6)
         self.search_box_2 = QtWidgets.QTableView(self.layoutWidget6)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.search_box_2.sizePolicy().hasHeightForWidth())
@@ -419,10 +467,14 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
         self.cell_selector_2 = QtWidgets.QComboBox(self.layoutWidget6)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.cell_selector_2.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.cell_selector_2.sizePolicy().hasHeightForWidth()
+        )
         self.cell_selector_2.setSizePolicy(sizePolicy)
         font = QtGui.QFont()
         font.setPointSize(9)
@@ -438,7 +490,9 @@ class Ui_MainWindow(object):
         self.right_2.setObjectName("right_2")
         self.horizontalLayout_7.addWidget(self.right_2)
         self.colorize_2 = QtWidgets.QPushButton(self.layoutWidget6)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.colorize_2.sizePolicy().hasHeightForWidth())
@@ -452,7 +506,9 @@ class Ui_MainWindow(object):
         self.splitter_4.setOrientation(QtCore.Qt.Vertical)
         self.splitter_4.setObjectName("splitter_4")
         self.analysis_2 = QtWidgets.QTextEdit(self.splitter_4)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.analysis_2.sizePolicy().hasHeightForWidth())
@@ -529,7 +585,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_5.addWidget(self.down_2)
         self.gridLayout_4.addLayout(self.horizontalLayout_5, 4, 0, 1, 1)
         self.canned_2 = QtWidgets.QTableView(self.layoutWidget6)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.canned_2.sizePolicy().hasHeightForWidth())
@@ -540,7 +598,9 @@ class Ui_MainWindow(object):
         self.canned_2.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.canned_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.canned_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.canned_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.canned_2.setSizeAdjustPolicy(
+            QtWidgets.QAbstractScrollArea.AdjustToContents
+        )
         self.canned_2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.canned_2.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.canned_2.setShowGrid(False)
@@ -551,7 +611,9 @@ class Ui_MainWindow(object):
         self.gridLayout_4.addWidget(self.canned_2, 1, 0, 1, 1)
         self.gridLayout_9.addWidget(self.testing_layout, 0, 1, 1, 1)
         self.sidebar_2 = QtWidgets.QTableView(self.testing_suite)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sidebar_2.sizePolicy().hasHeightForWidth())
@@ -561,11 +623,15 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(11)
         self.sidebar_2.setFont(font)
-        self.sidebar_2.viewport().setProperty("cursor", QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.sidebar_2.viewport().setProperty(
+            "cursor", QtGui.QCursor(QtCore.Qt.PointingHandCursor)
+        )
         self.sidebar_2.setFrameShape(QtWidgets.QFrame.Panel)
         self.sidebar_2.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.sidebar_2.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.sidebar_2.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.sidebar_2.setSizeAdjustPolicy(
+            QtWidgets.QAbstractScrollArea.AdjustToContents
+        )
         self.sidebar_2.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.sidebar_2.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.sidebar_2.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
@@ -602,7 +668,9 @@ class Ui_MainWindow(object):
         self.close_faq.setObjectName("close_faq")
         self.gridLayout_3.addWidget(self.close_faq, 0, 2, 1, 1)
         self.search_box_3 = QtWidgets.QTableView(self.faq)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.search_box_3.sizePolicy().hasHeightForWidth())
@@ -628,7 +696,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.stackedWidget.addWidget(self.data_frame_viewer)
-        self.gridLayout_6.addWidget(self.stackedWidget, 0, 0, 1, 1)
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1449, 26))
@@ -707,14 +775,18 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.add_analysis_dataframe.setText(_translate("MainWindow", "Add Analysis Dataframe"))
+        self.add_analysis_dataframe.setText(
+            _translate("MainWindow", "Add Analysis Dataframe")
+        )
         self.test.setText(_translate("MainWindow", "Test"))
         self.open_links.setText(_translate("MainWindow", "Open Links"))
         self.lock_browser.setText(_translate("MainWindow", "Lock Browser"))
         self.switch_to_testing_suite.setText(_translate("MainWindow", "Go Testing"))
         self.status_bar.setText(_translate("MainWindow", "Status"))
-        self.export_to_testing_suite.setText(_translate("MainWindow", "Export to Testing"))
-        self.searchbar.setPlaceholderText(_translate("MainWindow", "Search FAQ\'s..."))
+        self.export_to_testing_suite.setText(
+            _translate("MainWindow", "Export to Testing")
+        )
+        self.searchbar.setPlaceholderText(_translate("MainWindow", "Search FAQ's..."))
         self.left.setText(_translate("MainWindow", "<"))
         self.left.setShortcut(_translate("MainWindow", "Ctrl+Shift+Tab"))
         self.right.setText(_translate("MainWindow", ">"))
@@ -723,13 +795,15 @@ class Ui_MainWindow(object):
         self.save.setText(_translate("MainWindow", "Save"))
         self.down.setText(_translate("MainWindow", "Down"))
         self.sidebar.setAccessibleName(_translate("MainWindow", "sidebar_css"))
-        self.add_testing_dataframe.setText(_translate("MainWindow", "Add Testing Dataframe"))
+        self.add_testing_dataframe.setText(
+            _translate("MainWindow", "Add Testing Dataframe")
+        )
         self.auto_2.setText(_translate("MainWindow", "Auto"))
         self.chat_input.setPlaceholderText(_translate("MainWindow", "Send"))
         self.send.setText(_translate("MainWindow", "Send"))
         self.next_question.setText(_translate("MainWindow", "Next"))
         self.new_dialog.setText(_translate("MainWindow", "New Dialog"))
-        self.searchbar_2.setPlaceholderText(_translate("MainWindow", "Search FAQ\'s..."))
+        self.searchbar_2.setPlaceholderText(_translate("MainWindow", "Search FAQ's..."))
         self.left_2.setText(_translate("MainWindow", "<"))
         self.left_2.setShortcut(_translate("MainWindow", "Ctrl+Shift+Tab"))
         self.right_2.setText(_translate("MainWindow", ">"))
@@ -743,15 +817,21 @@ class Ui_MainWindow(object):
         self.down_2.setText(_translate("MainWindow", "Down"))
         self.sidebar_2.setAccessibleName(_translate("MainWindow", "sidebar_css"))
         self.close_settings.setText(_translate("MainWindow", "Close"))
-        self.searchbar_3.setPlaceholderText(_translate("MainWindow", "Search FAQ\'s..."))
+        self.searchbar_3.setPlaceholderText(_translate("MainWindow", "Search FAQ's..."))
         self.close_faq.setText(_translate("MainWindow", "Close"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuSwitch_View.setTitle(_translate("MainWindow", "Switch View"))
         self.open.setText(_translate("MainWindow", "Open Excel File..."))
         self.open.setShortcut(_translate("MainWindow", "Ctrl+O"))
-        self.actionSet_Browser_Position.setText(_translate("MainWindow", "Set Browser Position"))
-        self.select_open.setText(_translate("MainWindow", "Select an open Ecxel file..."))
-        self.open_from_disk.setText(_translate("MainWindow", "Open Excel file on disk..."))
+        self.actionSet_Browser_Position.setText(
+            _translate("MainWindow", "Set Browser Position")
+        )
+        self.select_open.setText(
+            _translate("MainWindow", "Select an open Ecxel file...")
+        )
+        self.open_from_disk.setText(
+            _translate("MainWindow", "Open Excel file on disk...")
+        )
         self.actionAnalysis.setText(_translate("MainWindow", "Analysis"))
         self.actionTesting.setText(_translate("MainWindow", "Testing"))
         self.actionFAQ.setText(_translate("MainWindow", "FAQ"))
@@ -764,5 +844,7 @@ class Ui_MainWindow(object):
         self.faq_menu.setShortcut(_translate("MainWindow", "Ctrl+Q"))
         self.settings_menu.setText(_translate("MainWindow", "Open Settings Page"))
         self.settings_menu_2.setText(_translate("MainWindow", "Settings"))
-        self.data_frame_viewer_menu.setText(_translate("MainWindow", "Dataframe Viewer"))
+        self.data_frame_viewer_menu.setText(
+            _translate("MainWindow", "Dataframe Viewer")
+        )
         self.data_frame_viewer_menu.setShortcut(_translate("MainWindow", "Ctrl+D"))

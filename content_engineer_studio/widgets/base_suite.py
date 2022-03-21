@@ -47,7 +47,7 @@ from widgets.faq_search_box import FaqSearchBoxContainer
 # Content Engineer Studio imports
 from utils.data_variables import Data
 from widgets.sidebar import Sidebar
-from widgets.chat_widget import MainChatWidget
+from widgets.chat_widget import ChatWidgetContainer
 
 
 class BaseSuite(QWidget):
@@ -115,7 +115,7 @@ class BaseSuite(QWidget):
         self.dataframe_layout.addWidget(self.add_dataframe)
 
         # This widget displays chat messages
-        self.chat = MainChatWidget(parent=self)
+        self.chat = ChatWidgetContainer(parent=self)
         self.dataframe_chat_splitter.addWidget(self.chat)
 
         # Holds HeaderRolesViewContainer
@@ -173,7 +173,9 @@ class BaseSuite(QWidget):
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save)
         self.add_dataframe.clicked.connect(
-            lambda: self.gui.stackedWidget.setCurrentIndex(5)
+            lambda: self.gui.stackedWidget.setCurrentWidget(
+                self.gui.pandasgui_container
+            )
         )
 
         #####################################################

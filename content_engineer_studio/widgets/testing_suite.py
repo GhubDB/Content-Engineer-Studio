@@ -42,6 +42,7 @@ from qtstylish import qtstylish
 
 from utils.selenium_helpers import Browser
 from utils.worker_thread import Worker
+from widgets.autoqueue_and_history import AutoqueueAndHistoryContainer
 from widgets.base_suite import BaseSuite
 from utils.data_variables import Data
 
@@ -55,6 +56,7 @@ class TestingSuite(BaseSuite):
         #####################################################
 
         self.browsers = [Browser() for i in range(0, Data.BUFFER)]
+
         # Breaks the buffering loop
         self.buffering = False
         self.is_webscraping = False
@@ -108,6 +110,9 @@ class TestingSuite(BaseSuite):
         self.new_dialog.setText("New Dialog")
         self.dataframe_chat_grid.addWidget(self.toolbar_container, 1, 0)
 
+        self.auto_history = AutoqueueAndHistoryContainer(parent=self)
+        self.component_splitter.addWidget(self.auto_history)
+
         self.chat_input.returnPressed.connect(self.send_btn)
         self.send.clicked.connect(self.send_btn)
         self.new_dialog.clicked.connect(self.new_dialog_btn)
@@ -123,16 +128,16 @@ class TestingSuite(BaseSuite):
         input = self.chat_input.text()
         if input:
             self.browsers[self.current_browser].setCleverbotLive(input)
-            self.populateHistory(input)
+            self.auto_history.populateHistory(input)
             self.chat_input.clear()
 
     def new_dialog_btn(self):
         """
         Sets up webscraper, clears dialog and opens new dialog
         """
-        if self.auto_2.checkState():
+        if self.auto.checkState():
             current = self.current_browser
-            if self.current_browser >= self.buffer_len:
+            if self.current_browser >= Data.BUFFER:
                 self.current_browser = 0
             else:
                 self.current_browser = self.current_browser + 1
@@ -140,23 +145,22 @@ class TestingSuite(BaseSuite):
                 self.browsers[self.current_browser] = Browser()
             self.browsers[self.current_browser].bringToFront()
             # Start prebuffering previous window
-            setup = Worker(lambda: self.setUpNewAutoDialog(current))
+            setup = Worker(lambda: self.chat.setUpNewAutoDialog(current))
             if not self.is_webscraping:
-                setup.signals.finished.connect(self.initializeWebscraping)
-            self.threadpool.start(setup)
+                setup.signals.finished.connect(self.chat.initializeWebscraping)
+            self.gui.threadpool.start(setup)
             # clear chat
-            self.chat_2.clear()
-            self.chat_2.setRowCount(0)
+            self.chat.clearChat()
             self.sent_messages = []
         else:
             # Start Thread for webdriver setup
-            setup = Worker(self.setUpNewDialog)
+            setup = Worker(self.chat.setUpNewDialog)
             # Once setup is complete, start webscraping the chat log
             if not self.is_webscraping:
-                setup.signals.finished.connect(self.initializeWebscraping)
-            self.threadpool.start(setup)
+                setup.signals.finished.connect(self.chat.initializeWebscraping)
+            self.gui.threadpool.start(setup)
 
-    def auto_2_btn(self, signal):
+    def auto_btn(self, signal):
         """
         Turns on auto prebuffering of tabs
         """
@@ -166,8 +170,8 @@ class TestingSuite(BaseSuite):
 
             try:
                 # Get current questions in auto_queue
-                for i in range(0, self.auto_queue_model.rowCount()):
-                    index = self.auto_queue_model.index(i, 0)
+                for i in range(0, self.auto_history.auto_queue_model.rowCount()):
+                    index = self.auto_history.auto_queue_model.index(i, 0)
                     self.questions.append(
                         index.sibling(index.row(), index.column()).data()
                     )
@@ -177,41 +181,43 @@ class TestingSuite(BaseSuite):
 
             if self.questions != []:
 
-                # Set up self.buffer_len new browser windows and ask the questions in the auto_queue
-                for i in range(0, self.buffer_len):
-                    setup = Worker(lambda: self.setUpNewAutoDialog(i))
+                # Set up Data.BUFFER new browser windows and ask the questions in the auto_queue
+                for i in range(0, Data.BUFFER):
+                    setup = Worker(lambda: self.chat.setUpNewAutoDialog(i))
                     if not self.is_webscraping and i == 0:
-                        setup.signals.finished.connect(self.initializeWebscraping)
-                    self.threadpool.start(setup)
+                        setup.signals.finished.connect(self.chat.initializeWebscraping)
+                    self.gui.threadpool.start(setup)
                     print(f"setting up {i}")
             print("setup done")
 
         if signal == 0:
             # If auto is disabled, close browser windows
             self.is_webscraping = False
-            for i in range(0, self.buffer_len):
+            for i in range(0, Data.BUFFER):
                 setup = Worker(lambda: self.browsers[i].tearDown())
-                self.threadpool.start(setup)
+                self.gui.threadpool.start(setup)
 
     def next_btn(self):
         """
         Loads the next message in the auto_queue into the input box
         """
         # Get value of the currently selected item in the auto_queue
-        index = self.auto_queue.selectionModel().currentIndex()
+        index = self.auto_history.auto_queue.selectionModel().currentIndex()
         value = index.sibling(index.row(), index.column()).data()
         self.chat_input.setText(value)
 
         # Jumping to next row in line
-        self.auto_queue.selectionModel().select(index, QItemSelectionModel.Deselect)
+        self.auto_history.auto_queue.selectionModel().select(
+            index, QItemSelectionModel.Deselect
+        )
         index = index.row() + 1
-        self.auto_queue.selectRow(index)
+        self.auto_history.auto_queue.selectRow(index)
 
         # Jump back to the beginning
-        if self.auto_queue.selectedIndexes() == []:
-            self.auto_queue.selectRow(0)
+        if self.auto_history.auto_queue.selectedIndexes() == []:
+            self.auto_history.auto_queue.selectRow(0)
 
     def switchToAnalysis(self):
         self.is_webscraping = False
-        self.stackedWidget.setCurrentWidget(self.analysis_suite)
-        self.populate_search_box()
+        self.gui.stackedWidget.setCurrentWidget(self.gui.analysis_suite)
+        self.gui.populate_search_box()

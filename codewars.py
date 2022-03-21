@@ -12,20 +12,36 @@ import pandas as pd
 # print(list(df.columns.get_level_values(1)))
 # print(df)
 
-tuples = [
-    ("cobra", "mark i"),
-    ("cobra", "mark ii"),
-    ("sidewinder", "mark i"),
-    ("test", "mark i"),
-    ("viper", "mark ii"),
-    ("viper", "mark iii"),
-]
+# tuples = [
+#     ("cobra", "mark i"),
+#     ("cobra", "mark ii"),
+#     ("sidewinder", "mark i"),
+#     ("test", "mark i"),
+#     ("viper", "mark ii"),
+#     ("viper", "mark iii"),
+# ]
 
-index = pd.MultiIndex.from_tuples(tuples)
+# index = pd.MultiIndex.from_tuples(tuples)
 
-values = [[12, 2], [0, 4], [10, 20], [1, 4], [7, 1], [16, 36]]
+# values = [[12, 2], [0, 4], [10, 20], [1, 4], [7, 1], [16, 36]]
 
-df = pd.DataFrame(values, columns=["max_speed", "shield"], index=index)
-# print(df)
+# df = pd.DataFrame(values, columns=["max_speed", "shield"], index=index)
+# # print(df)
 
-print(df.loc[("sidewinder", "mark i"), "shield"])
+# print(df.loc[("sidewinder", "mark i"), "shield"])
+
+bla = "blabla"
+
+
+class thebla:
+    def __init__(self, bla) -> None:
+        self.bla = bla
+
+
+class bla2(thebla):
+    def __init__(self, bla):
+        super().__init__(bla)
+        print(self.bla)
+
+
+blablabla = bla2(bla)

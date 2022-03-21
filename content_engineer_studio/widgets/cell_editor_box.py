@@ -75,11 +75,13 @@ class CellEditorContainer(QWidget):
         self.left = QtWidgets.QPushButton()
         self.left.setMaximumSize(QtCore.QSize(80, 16777215))
         self.left.setObjectName("left")
+        self.left.setText("<")
         self.column_select_layout.addWidget(self.left)
 
         self.right = QtWidgets.QPushButton()
         self.right.setMaximumSize(QtCore.QSize(80, 16777215))
         self.right.setObjectName("right")
+        self.right.setText(">")
         self.column_select_layout.addWidget(self.right)
 
         self.colorize = QtWidgets.QPushButton()
@@ -106,7 +108,7 @@ class CellEditorContainer(QWidget):
         self.colorize.clicked.connect(self.btn_colorize)
 
         # TODO: Add editing finished signal to textedit subclass
-        self.analysis.textChanged.connect(self.save_analysis)
+        # self.analysis.textChanged.connect(self.save_analysis)
 
     def populate_cell_selector(self):
         """
@@ -161,7 +163,7 @@ class CellEditorContainer(QWidget):
 class CellEdit(QTextEdit):
     def __init__(self, parent) -> None:
         super().__init__(parent)
-        self.suite = parent.workarea
+        self.suite = parent.suite
         self.container = parent
 
         sizePolicy = QtWidgets.QSizePolicy(

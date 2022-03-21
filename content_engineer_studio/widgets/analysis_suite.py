@@ -129,7 +129,7 @@ class AnalysisSuite(BaseSuite):
         )
 
     def switchToTesting(self):
-        self.stackedWidget.setCurrentWidget(self.testing_suite)
+        self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
         self.populate_search_box()
 
     def exportToTesting(self):
@@ -139,5 +139,5 @@ class AnalysisSuite(BaseSuite):
                 # print(message)
                 item = QtGui.QStandardItem(message)
                 self.auto_queue_model.appendRow(item)
-        self.stackedWidget.setCurrentWidget(self.testing_suite)
+        self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
         self.populate_search_box()

@@ -1,6 +1,34 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 
+class SideBarProxyModel(QtCore.QIdentityProxyModel):
+    def __init__(self, parent) -> None:
+        super().__init__(parent)
+
+    def setSourceModel(self, sourceModel: QtCore.QAbstractItemModel) -> None:
+        return super().setSourceModel(sourceModel)
+
+    def paint(
+        self,
+        painter: QtGui.QPainter,
+        option: QtWidgets.QStyleOptionViewItem,
+        index: QtCore.QModelIndex,
+    ) -> None:
+
+        # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
+        if option.state & QtWidgets.QStyle.State_HasFocus:
+            option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
+
+        options = QtWidgets.QStyleOptionViewItem(option)
+        option.widget.style().drawControl(
+            QtWidgets.QStyle.CE_ItemViewItem, option, painter, options.widget
+        )
+
+        super().paint(painter, option, index)
+
+    # TODO: add a way to insert a different background color for completed rows
+
+
 class Sidebar(QtWidgets.QTableView):
     def __init__(self, parent) -> None:
         super().__init__(parent)
@@ -35,31 +63,3 @@ class Sidebar(QtWidgets.QTableView):
         )
         self.setModel(sidebar_proxy_model)
         self.selectionModel().selectionChanged.connect(self.row_selector)
-
-
-class SideBarProxyModel(QtCore.QIdentityProxyModel):
-    def __init__(self, parent) -> None:
-        super().__init__(parent)
-
-    def setSourceModel(self, sourceModel: QtCore.QAbstractItemModel) -> None:
-        return super().setSourceModel(sourceModel)
-
-    def paint(
-        self,
-        painter: QtGui.QPainter,
-        option: QtWidgets.QStyleOptionViewItem,
-        index: QtCore.QModelIndex,
-    ) -> None:
-
-        # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
-        if option.state & QtWidgets.QStyle.State_HasFocus:
-            option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
-
-        options = QtWidgets.QStyleOptionViewItem(option)
-        option.widget.style().drawControl(
-            QtWidgets.QStyle.CE_ItemViewItem, option, painter, options.widget
-        )
-
-        super().paint(painter, option, index)
-
-    # TODO: add a way to insert a different background color for completed rows

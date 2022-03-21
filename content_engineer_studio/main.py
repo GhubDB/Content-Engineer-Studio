@@ -96,8 +96,8 @@ class MainWindow(QMainWindow):
     Main application
     """
 
-    def __init__(self, *args, **kwargs):
-        super(MainWindow, self).__init__(*args, **kwargs)
+    def __init__(self):
+        super().__init__()
 
         #####################################################
         """Initializing variables"""
@@ -121,7 +121,8 @@ class MainWindow(QMainWindow):
         #####################################################
 
         # Setup UI
-        self.setDocumentMode(False)
+        self.setObjectName("MainWindow")
+        # self.setDocumentMode(False)
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.setCentralWidget(self.centralwidget)
@@ -131,83 +132,32 @@ class MainWindow(QMainWindow):
         self.stackedWidget.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.stackedWidget.setLineWidth(0)
         self.stackedWidget.setObjectName("stackedWidget")
-
-        # Setup main components
-        self.analysis_suite = AnalysisSuite(parent=self)
-        self.stackedWidget.addWidget(self.analysis_suite)
-
-        self.testing_suite = TestingSuite(parent=self)
-        self.stackedWidget.addWidget(self.testing_suite)
+        self.central_grid.addWidget(self.stackedWidget, 0, 0, 1, 1)
 
         self.faq_search_tab = FaqSearchTabContainer(parent=self)
-        self.stackedWidget.addWidget(self.faq_search_tab)
+        self.stackedWidget.insertWidget(2, self.faq_search_tab)
 
-        # Setup menubar
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1449, 26))
-        self.menubar.setObjectName("menubar")
-        self.menuFile = QtWidgets.QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        self.menuSwitch_View = QtWidgets.QMenu(self.menubar)
-        self.menuSwitch_View.setObjectName("menuSwitch_View")
-        MainWindow.setMenuBar(self.menubar)
-        self.open = QtWidgets.QAction(MainWindow)
-        self.open.setObjectName("open")
-        self.actionSet_Browser_Position = QtWidgets.QAction(MainWindow)
-        self.actionSet_Browser_Position.setObjectName("actionSet_Browser_Position")
-        self.select_open = QtWidgets.QAction(MainWindow)
-        self.select_open.setObjectName("select_open")
-        self.open_from_disk = QtWidgets.QAction(MainWindow)
-        self.open_from_disk.setObjectName("open_from_disk")
-        self.actionAnalysis = QtWidgets.QAction(MainWindow)
-        self.actionAnalysis.setObjectName("actionAnalysis")
-        self.actionTesting = QtWidgets.QAction(MainWindow)
-        self.actionTesting.setObjectName("actionTesting")
-        self.actionFAQ = QtWidgets.QAction(MainWindow)
-        self.actionFAQ.setObjectName("actionFAQ")
-        self.actionSettings = QtWidgets.QAction(MainWindow)
-        self.actionSettings.setObjectName("actionSettings")
-        self.analysis_menu = QtWidgets.QAction(MainWindow)
-        self.analysis_menu.setObjectName("analysis_menu")
-        self.testing_menu = QtWidgets.QAction(MainWindow)
-        self.testing_menu.setObjectName("testing_menu")
-        self.faq_menu = QtWidgets.QAction(MainWindow)
-        self.faq_menu.setObjectName("faq_menu")
-        self.settings_menu = QtWidgets.QAction(MainWindow)
-        self.settings_menu.setObjectName("settings_menu")
-        self.settings_menu_2 = QtWidgets.QAction(MainWindow)
-        self.settings_menu_2.setObjectName("settings_menu_2")
-        self.data_frame_viewer_menu = QtWidgets.QAction(MainWindow)
-        self.data_frame_viewer_menu.setObjectName("data_frame_viewer_menu")
-        self.menuFile.addAction(self.select_open)
-        self.menuFile.addAction(self.open_from_disk)
-        self.menuSwitch_View.addAction(self.analysis_menu)
-        self.menuSwitch_View.addAction(self.testing_menu)
-        self.menuSwitch_View.addAction(self.faq_menu)
-        self.menuSwitch_View.addAction(self.data_frame_viewer_menu)
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuSwitch_View.menuAction())
+        # # Setup main components
+        self.analysis_suite = AnalysisSuite(parent=self)
+        self.stackedWidget.insertWidget(0, self.analysis_suite)
+
+        self.testing_suite = TestingSuite(parent=self)
+        self.stackedWidget.insertWidget(1, self.testing_suite)
+
+        # Populate search box in analysis, testing and faq_search_tab
+        self.populate_search_box()
 
         # Apply custom stylesheets
         self.setStyleSheet(Stylesheets.custom_dark)
 
+        # Setup menubar
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1449, 26))
+        self.menubar.setObjectName("menubar")
+        self.setMenuBar(self.menubar)
+
         # Connecting functions
         self.stackedWidget.currentChanged.connect(self.workingView)
-        self.close_faq.clicked.connect(
-            lambda: self.stackedWidget.setCurrentIndex(self.current_work_area)
-        )
-        self.analysis_menu.triggered.connect(self.switchToAnalysis)
-        self.testing_menu.triggered.connect(self.switchToTesting)
-        self.faq_menu.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(3))
-        self.settings_menu_2.triggered.connect(
-            lambda: self.stackedWidget.setCurrentIndex(2)
-        )
-        self.data_frame_viewer_menu.triggered.connect(
-            lambda: self.stackedWidget.setCurrentIndex(5)
-        )
-        self.add_analysis_dataframe.clicked.connect(
-            lambda: self.stackedWidget.setCurrentIndex(5)
-        )
 
         #####################################################
         """Adding Pandasgui"""
@@ -280,26 +230,29 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QtWidgets.QStackedWidget()
 
         # Make the analys/testing df selection splitter
-        self.splitter_9 = QtWidgets.QSplitter(Qt.Vertical)
+        self.drag_drop_splitter = QtWidgets.QSplitter(Qt.Vertical)
 
         # Make the navigation bar
         self.navigator = Navigator(self.store)
 
         # Make splitter to hold nav and DataFrameExplorers
-        self.splitter = QtWidgets.QSplitter(Qt.Horizontal)
-        self.splitter.addWidget(self.splitter_9)
-        self.splitter_9.addWidget(self.drag_drop)
-        self.splitter_9.addWidget(self.navigator)
-        # self.splitter_9.setStretchFactor(999, 0)
-        self.splitter.addWidget(self.stacked_widget)
+        self.pandasgui_splitter = QtWidgets.QSplitter(Qt.Horizontal)
+        self.pandasgui_splitter.addWidget(self.drag_drop_splitter)
+        self.drag_drop_splitter.addWidget(self.drag_drop)
+        self.drag_drop_splitter.addWidget(self.navigator)
+        self.pandasgui_splitter.addWidget(self.stacked_widget)
 
-        # self.splitter.setCollapsible(0, False)
-        # self.splitter.setCollapsible(1, False)
-        # self.splitter.setStretchFactor(0, 0)
-        self.splitter.setStretchFactor(0, 1)
+        # self.pandasgui_splitter.setCollapsible(0, False)
+        # self.pandasgui_splitter.setCollapsible(1, False)
+        # self.pandasgui_splitter.setStretchFactor(0, 0)
+        self.pandasgui_splitter.setStretchFactor(0, 1)
 
         """Addin to main_window"""
-        self.verticalLayout_2.addWidget(self.splitter)
+        self.pandasgui_container = QWidget()
+        self.pandasgui_grid = QGridLayout(self.pandasgui_container)
+        self.pandasgui_grid.setContentsMargins(0, 0, 0, 0)
+        self.pandasgui_grid.addWidget(self.pandasgui_splitter, 0, 0, 0, 0)
+        self.stackedWidget.addWidget(self.pandasgui_container)
 
         # makes the find toolbar
         self.find_bar = FindToolbar(self)
@@ -332,6 +285,32 @@ class MainWindow(QMainWindow):
             shortcut: str = ""
 
         items = {
+            "Switch View": [
+                MenuItem(
+                    name="Analysis",
+                    func=lambda: self.stackedWidget.setCurrentWidget(
+                        self.analysis_suite
+                    ),
+                ),
+                MenuItem(
+                    name="Testing",
+                    func=lambda: self.stackedWidget.setCurrentWidget(
+                        self.testing_suite
+                    ),
+                ),
+                MenuItem(
+                    name="FAQ",
+                    func=lambda: self.stackedWidget.setCurrentWidget(
+                        self.faq_search_tab
+                    ),
+                ),
+                MenuItem(
+                    name="Dataframe Viewer",
+                    func=lambda: self.stackedWidget.setCurrentWidget(
+                        self.pandasgui_container
+                    ),
+                ),
+            ],
             "Edit": [
                 MenuItem(
                     name="Find", func=self.find_bar.show_find_bar, shortcut="Ctrl+F"
@@ -620,21 +599,123 @@ class MainWindow(QMainWindow):
     """
     ################################################################################################
 
-    def keyPressEvent(self, event):
+    def populate_search_box(self):
+        # Initializing FAQ search window item model
+        model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
+        for idx, _ in self.faq_df.iterrows():
+            for i, _ in enumerate(self.faq_df.columns):
+                item = QStandardItem(self.faq_df.iloc[idx, i])
+                model.setItem(idx, i, item)  # check this
+        self.faq_auto_search_model = QSortFilterProxyModel()
+        self.faq_auto_search_model.setSourceModel(model)
+        self.faq_auto_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.faq_auto_search_model.setFilterKeyColumn(-1)
+
+        # Adding search box models
+        self.analysis_suite.faq_search_box.search_box.setModel(
+            self.faq_auto_search_model
+        )
+        self.testing_suite.faq_search_box.search_box.setModel(
+            self.faq_auto_search_model
+        )
+        self.faq_search_tab.search_box.setModel(self.faq_auto_search_model)
+
+        # Connecting regxp filters
+        self.analysis_suite.faq_search_box.searchbar.textChanged.connect(
+            self.faq_auto_search_model.setFilterRegExp
+        )
+        self.testing_suite.faq_search_box.searchbar.textChanged.connect(
+            self.faq_auto_search_model.setFilterRegExp
+        )
+        self.faq_search_tab.searchbar.textChanged.connect(
+            self.faq_auto_search_model.setFilterRegExp
+        )
+
+        self.update_search_box()
+        self.populate_search_column_select()
+
+    def update_search_box(self):
         """
-        Hotkeys
+        Updates the search box with values from FAQ excel sheet
         """
-        QtWidgets.QWidget.keyPressEvent(self, event)
-        mods = event.modifiers()
-        if event.key() == Qt.Key_G and (mods & Qt.ControlModifier):
-            # Switch to Analysis
-            self.stackedWidget.setCurrentIndex(0)
-        if event.key() == Qt.Key_T and (mods & Qt.ControlModifier):
-            # Switch to Testing
-            self.stackedWidget.setCurrentIndex(1)
-        if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
-            # Switch to Dataframe Viewer
-            self.stackedWidget.setCurrentIndex(5)
+        # Synchronize selectors
+        page = self.stackedWidget.currentIndex()
+        if page == 0:
+            index = (
+                self.analysis_suite.faq_search_box.search_column_select.currentIndex()
+            )
+            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
+                index
+            )
+            self.faq_search_tab.search_column_select.setCurrentIndex(index)
+        elif page == 1:
+            index = (
+                self.analysis_suite.faq_search_box.search_column_select.currentIndex()
+            )
+            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
+                index
+            )
+            self.faq_search_tab.search_column_select.setCurrentIndex(index)
+        elif page == 3:
+            index = self.faq_search_tab.search_column_select.currentIndex()
+            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
+                index
+            )
+            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
+                index
+            )
+
+        # Set table column to filter by
+        try:
+            if index == len(self.faq_df.columns):
+                # Set to filter by all columns
+                self.faq_auto_search_model.setFilterKeyColumn(-1)
+            else:
+                self.faq_auto_search_model.setFilterKeyColumn(index)
+        except UnboundLocalError as e:
+            pass
+
+        # Show/hide columns according to current selection
+        if (page == 0 or page == 1) and index != len(self.faq_df.columns):
+            for i in range(0, len(self.faq_df.columns)):
+                if i != index:
+                    self.analysis_suite.faq_search_box.search_box.hideColumn(
+                        i
+                    ) if page == 0 else self.analysis_suite.faq_search_box.search_box.hideColumn(
+                        i
+                    )
+                else:
+                    self.analysis_suite.faq_search_box.search_box.showColumn(
+                        i
+                    ) if page == 0 else self.analysis_suite.faq_search_box.search_box.showColumn(
+                        i
+                    )
+
+    def populate_search_column_select(self):
+        """
+        Set model for FAQ search selector
+        """
+        model = QStandardItemModel(len(self.faq_df.columns), 0)
+        for idx, item in enumerate(list(self.faq_df.columns.values)):
+            item = QStandardItem(item)
+            model.setItem(idx, 0, item)
+
+        # For searching all columns<
+        item = QStandardItem("Search in all columns")
+        model.setItem(len(self.faq_df.columns), 0, item)
+        self.analysis_suite.faq_search_box.search_column_select.setModel(model)
+        self.testing_suite.faq_search_box.search_column_select.setModel(model)
+        self.faq_search_tab.search_column_select.setModel(model)
+
+        self.analysis_suite.faq_search_box.search_column_select.currentIndexChanged.connect(
+            self.populate_search_box
+        )
+        self.analysis_suite.faq_search_box.search_column_select.currentIndexChanged.connect(
+            self.populate_search_box
+        )
+        self.faq_search_tab.search_column_select.currentIndexChanged.connect(
+            self.populate_search_box
+        )
 
     def set_df(self, df_title: str, mode: str):
         """
@@ -681,6 +762,26 @@ class MainWindow(QMainWindow):
             self.testing_viewer.replace_models(pgdf=self.testing_df)
             self.testing_roles_view.replace_model(pgdf=self.testing_df)
             self.populate_sidebar_2()
+
+    def keyPressEvent(self, event):
+        """
+        Hotkeys
+        """
+        QtWidgets.QWidget.keyPressEvent(self, event)
+        mods = event.modifiers()
+        if event.key() == Qt.Key_G and (mods & Qt.ControlModifier):
+            # Switch to Analysis
+            self.stackedWidget.setCurrentIndex(0)
+        if event.key() == Qt.Key_T and (mods & Qt.ControlModifier):
+            # Switch to Testing
+            self.stackedWidget.setCurrentIndex(1)
+        if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
+            # Switch to Dataframe Viewer
+            self.stackedWidget.setCurrentIndex(3)
+
+    def workingView(self, idx):
+        if idx == 0 | idx == 1:
+            self.current_work_area = idx
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 
-class Data(Enum):
+class Data:
 
     # Sets the number of prebuffered windows for auto mode
     BUFFER = 2

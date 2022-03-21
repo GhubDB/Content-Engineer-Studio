@@ -10,7 +10,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pandasgui.store import PandasGuiDataFrameStore
 
-from utils.data_variables import roles
+from utils.data_variables import Data
 
 
 class ColumnMenu(QtWidgets.QMenu):
@@ -56,7 +56,7 @@ class ColumnMenu(QtWidgets.QMenu):
             self.pgdf.refresh_ui()
 
         self.header_role_selector = QtWidgets.QComboBox()
-        for item in roles:
+        for item in Data.ROLES:
             self.header_role_selector.addItem(item)
         self.add_widget(self.header_role_selector)
 
