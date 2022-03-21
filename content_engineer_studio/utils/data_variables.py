@@ -10,7 +10,7 @@ class Data(Enum):
 
     LIVECHAT_URL = "https://www.cleverbot.com/"
 
-    DUMMY_DF = pd.DataFrame([0, 0])
+    # DUMMY_DF = pd.DataFrame([0, 0])
 
     ROLES = [
         "None",

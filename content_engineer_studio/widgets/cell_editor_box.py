@@ -1,4 +1,5 @@
 import typing
+import pandas as pd
 from PyQt5.QtCore import (
     QEvent,
     QItemSelectionModel,
@@ -107,6 +108,21 @@ class CellEditorContainer(QWidget):
         # TODO: Add editing finished signal to textedit subclass
         self.analysis.textChanged.connect(self.save_analysis)
 
+    def populate_cell_selector(self):
+        """
+        Set model for combobox that displays "Editable" rows
+        """
+        # for _ in range(10):
+        #     self.cell_selector.addItem("Banana")
+        # return
+        self.pgdf.model["analysis_selector_proxy_model"] = AnalysisSelectorModel(
+            parent=self, df=self.analysis_df.df_unfiltered
+        )
+
+        self.cell_selector.setModel(
+            self.analysis_df.model["analysis_selector_proxy_model"]
+        )
+
     def populate_analysis(self):
 
         self.cell_editor.setPlainText(
@@ -134,6 +150,12 @@ class CellEditorContainer(QWidget):
             self.cell_selector.setCurrentIndex(0)
             return
         self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 1)
+
+    def btn_colorize(self):
+        self.analysis_excel.colorize(
+            self.row + 2,
+            self.cell_selector.currentIndex() + self.cell_selector_start + 1,
+        )
 
 
 class CellEdit(QTextEdit):
@@ -165,3 +187,78 @@ class CellEdit(QTextEdit):
         if e.key() == Qt.Key_Tab:
             self.container.btn_right()
         return super().keyPressEvent(e)
+
+
+class AnalysisSelectorModel(QtCore.QAbstractListModel):
+    def __init__(self, parent, df) -> None:
+        super().__init__(parent)
+        self.gui = parent
+        self.df = df
+
+    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
+        if not isinstance(self.df.columns, pd.MultiIndex):
+            return 0
+        # print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
+        return sum(i == "Editable" for i in self.df.columns.get_level_values(1))
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        if not isinstance(self.df.columns, pd.MultiIndex):
+            return None
+
+        if role == QtCore.Qt.DisplayRole:
+            row = index.row()
+            # print(row)
+            # print(str(self.pgdf.df.columns[row]))
+            rows = tuple(x[0] for x in self.df.columns if x[1] == "Editable")
+            # print(rows)
+            # print(self.df.columns)
+            return rows[row]
+
+
+class AnalysisSelectorModel(QtCore.QAbstractListModel):
+    def __init__(self, parent, df) -> None:
+        super().__init__(parent)
+        self.gui = parent
+        self.df = df
+
+    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
+        if not isinstance(self.df.columns, pd.MultiIndex):
+            return 0
+        # print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
+        return sum(i == "Editable" for i in self.df.columns.get_level_values(1))
+
+    def data(self, index, role):
+        if not index.isValid():
+            return None
+
+        if not isinstance(self.df.columns, pd.MultiIndex):
+            return None
+
+        if role == QtCore.Qt.DisplayRole:
+            row = index.row()
+            # print(row)
+            # print(str(self.pgdf.df.columns[row]))
+            rows = tuple(x[0] for x in self.df.columns if x[1] == "Editable")
+            # print(rows)
+            # print(self.df.columns)
+            return rows[row]
+
+    def flags(self, index):
+        """
+        https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
+        """
+        if index.isValid():
+            return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+        return Qt.ItemIsSelectable | Qt.ItemIsEnabled
+
+    def beginInsertRows(
+        self, parent: QtCore.QModelIndex, first: int, last: int
+    ) -> None:
+        return super().beginInsertRows(parent, first, last)
+
+    def endInsertRows(self) -> None:
+        return super().endInsertRows()

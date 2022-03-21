@@ -120,3 +120,24 @@ class AnalysisSuite(BaseSuite):
             setup = Worker(self.getChatlog, "activate_output")
             setup.signals.output.connect(self.populate_chat)
             self.gui.threadpool.start(setup)
+
+    def populate_status_bar(self, row: int, start: int, end: int):
+        self.status_bar.setText(
+            self.df.iloc[row : row + 1, start : end + 1].to_string(
+                header=False, index=False
+            )
+        )
+
+    def switchToTesting(self):
+        self.stackedWidget.setCurrentWidget(self.testing_suite)
+        self.populate_search_box()
+
+    def exportToTesting(self):
+        customer = self.getChatText(export=True)
+        if customer:
+            for message in customer:
+                # print(message)
+                item = QtGui.QStandardItem(message)
+                self.auto_queue_model.appendRow(item)
+        self.stackedWidget.setCurrentWidget(self.testing_suite)
+        self.populate_search_box()

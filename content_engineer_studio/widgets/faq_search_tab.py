@@ -49,6 +49,7 @@ class FaqSearchTabContainer(QWidget):
         self.main_grid = QtWidgets.QGridLayout(self)
         self.main_grid.setContentsMargins(0, 0, 0, 0)
         self.main_grid.setObjectName("main_grid")
+
         self.searchbar = QtWidgets.QLineEdit(self)
         self.searchbar.setMinimumSize(QtCore.QSize(0, 30))
         font = QtGui.QFont()
@@ -56,16 +57,19 @@ class FaqSearchTabContainer(QWidget):
         self.searchbar.setFont(font)
         self.searchbar.setObjectName("searchbar")
         self.main_grid.addWidget(self.searchbar, 0, 0, 1, 1)
+
         self.main_gridsearch_column_select = QtWidgets.QComboBox(self.faq)
         self.main_gridsearch_column_select.setMinimumSize(QtCore.QSize(150, 0))
         self.main_gridsearch_column_select.setObjectName(
             "main_gridsearch_column_select"
         )
         self.main_grid.addWidget(self.main_gridsearch_column_select, 0, 1, 1, 1)
+
         self.close_faq = QtWidgets.QPushButton(self.faq)
         self.close_faq.setMaximumSize(QtCore.QSize(60, 16777215))
         self.close_faq.setObjectName("close_faq")
         self.main_grid.addWidget(self.close_faq, 0, 2, 1, 1)
+
         self.search_box = QtWidgets.QTableView(self.faq)
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
@@ -85,3 +89,23 @@ class FaqSearchTabContainer(QWidget):
         self.search_box.horizontalHeader().setStretchLastSection(True)
         self.search_box.verticalHeader().setVisible(False)
         self.main_grid.addWidget(self.search_box, 1, 0, 1, 3)
+        self.search_box.installEventFilter(self)
+
+    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent):
+        """
+        Filters Events and calls the respective functions
+        """
+        # Navigate back to working view
+        if source.objectName() == "search_box_3":
+            if event.type() == 82:
+                index = self.search_box_3.selectionModel().currentIndex()
+                value = index.sibling(index.row(), index.column()).data()
+                self.search_column_select_3.setCurrentIndex(index.column())
+                self.searchbar.setText(
+                    value
+                ) if self.current_work_area == 0 else self.searchbar_2.setText(value)
+                self.stackedWidget.setCurrentIndex(self.current_work_area)
+                self.populate_search_box()
+                self.search_box.setMinimumHeight(100)
+                self.search_box_2.setMinimumHeight(100)
+        return super().eventFilter(source, event)

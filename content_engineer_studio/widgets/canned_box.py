@@ -69,6 +69,20 @@ class Canned(QtWidgets.QTableView):
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
 
+    def populate_canned(self):
+        """
+        Add model to multiple choice selection box
+        """
+
+        self.analysis_df.model["analysis_canned_model"] = CannedSelectionModel(
+            parent=self, pgdf=self.analysis_df, mode="analysis"
+        )
+        self.canned.setModel(self.analysis_df.model["analysis_canned_model"])
+        self.canned.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.canned.horizontalHeader().resizeSection(1, 50)
+        self.canned.horizontalHeader().resizeSection(2, 70)
+        self.canned.horizontalHeader().resizeSection(3, 100)
+
 
 class CannedSelectionModel(QtCore.QAbstractTableModel):
     def __init__(self, parent, pgdf: PandasGuiDataFrameStore, mode) -> None:
@@ -111,3 +125,43 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
                 return Qt.Checked
             else:
                 return Qt.Unchecked
+
+    def setData(
+        self, index: QtCore.QModelIndex, value: typing.Any, role: int = Qt.EditRole
+    ) -> bool:
+        if not index.isValid():
+            return False
+
+        if role == Qt.CheckStateRole:
+            row = index.row()
+            column = index.column()
+            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
+            self.pgdf.edit_data(
+                row=self.gui.analysis_row
+                if self.mode == "analysis"
+                else self.gui.testing_row,
+                col=(rows[row], "Multi-Choice"),
+                text=multiple_choice[column],
+            )
+            self.dataChanged.emit(index, index)
+            # text=np.nan if value == 2 else multiple_choice[column]
+            return True
+
+        return False
+
+    def flags(self, index):
+        """
+        https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
+        """
+        if index.isValid():
+            return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
+
+        return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
+
+    def beginInsertRows(
+        self, parent: QtCore.QModelIndex, first: int, last: int
+    ) -> None:
+        return super().beginInsertRows(parent, first, last)
+
+    def endInsertRows(self) -> None:
+        return super().endInsertRows()

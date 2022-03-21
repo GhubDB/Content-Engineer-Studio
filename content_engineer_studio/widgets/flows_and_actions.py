@@ -67,6 +67,13 @@ class Flows(QListView):
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
 
+    def populate_flows(self, flows):
+        self.flows.setColumnCount(1)
+        self.flows.setRowCount(len(flows))
+        for idx, row in enumerate(flows):
+            self.flows.setItem(idx, 0, QTableWidgetItem(row))
+        self.flows.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
 
 class Actions(QListView):
     def __init__(self, parent=None) -> None:
@@ -91,3 +98,11 @@ class Actions(QListView):
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setHighlightSections(False)
+
+    def populate_actions(self, actions):
+        self.actions.setColumnCount(1)
+        self.actions.setRowCount(len(actions))
+        for idx, row in enumerate(actions):
+            self.actions.setItem(idx, 0, QTableWidgetItem(row))
+        self.actions.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # self.actions.resizeColumnsToContents()

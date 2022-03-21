@@ -110,6 +110,62 @@ class FaqSearchBoxContainer(QWidget):
         )
         self.populate_search_box()
 
+    def populate_search_box(self):
+        """
+        Populates the search box with values from FAQ excel sheet
+        """
+        # Synchronize selectors
+        page = self.stackedWidget.currentIndex()
+        if page == 0:
+            index = self.search_column_select.currentIndex()
+            self.search_column_select_2.setCurrentIndex(index)
+            self.search_column_select_3.setCurrentIndex(index)
+        elif page == 1:
+            index = self.search_column_select_2.currentIndex()
+            self.search_column_select.setCurrentIndex(index)
+            self.search_column_select_3.setCurrentIndex(index)
+        elif page == 3:
+            index = self.search_column_select_3.currentIndex()
+            self.search_column_select.setCurrentIndex(index)
+            self.search_column_select_2.setCurrentIndex(index)
+
+        # Set table column to filter by
+        try:
+            if index == len(self.faq_df.columns):
+                # Set to filter by all columns
+                self.faq_auto_search_model.setFilterKeyColumn(-1)
+            else:
+                self.faq_auto_search_model.setFilterKeyColumn(index)
+        except UnboundLocalError as e:
+            pass
+
+        # Show/hide columns according to current selection
+        if (page == 0 or page == 1) and index != len(self.faq_df.columns):
+            for i in range(0, len(self.faq_df.index)):
+                if i != index:
+                    self.search_box.hideColumn(
+                        i
+                    ) if page == 0 else self.search_box_2.hideColumn(i)
+                else:
+                    self.search_box.showColumn(
+                        i
+                    ) if page == 0 else self.search_box_2.showColumn(i)
+
+    def populate_search_column_select(self):
+        """
+        Set model for FAQ search selector
+        """
+        model = QStandardItemModel(len(self.faq_df.columns), 0)
+        for idx, item in enumerate(list(self.faq_df.columns.values)):
+            item = QStandardItem(item)
+            model.setItem(idx, 0, item)
+
+        # For searching all columns
+        item = QStandardItem("Search in all columns")
+        model.setItem(len(self.faq_df.columns), 0, item)
+        self.search_column_select.setModel(model)
+        self.search_column_select_3.setModel(model)
+
 
 class FaqDisplayBox(QTableView):
     def __init__(self, parent: typing.Optional[QWidget] = None) -> None:

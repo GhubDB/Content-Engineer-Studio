@@ -5,6 +5,7 @@ class Sidebar(QtWidgets.QTableView):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.gui = parent
+
         self.setMinimumSize(QtCore.QSize(35, 0))
         self.setMaximumSize(QtCore.QSize(35, 16777215))
         font = QtGui.QFont()
@@ -25,6 +26,15 @@ class Sidebar(QtWidgets.QTableView):
         self.horizontalHeader().setDefaultSectionSize(42)
         self.verticalHeader().setVisible(False)
         self.verticalHeader().setDefaultSectionSize(26)
+
+    def populate_sidebar(self):
+
+        sidebar_proxy_model = SideBarProxyModel(parent=self)
+        sidebar_proxy_model.setSourceModel(
+            self.analysis_df.model["header_model_vertical"]
+        )
+        self.setModel(sidebar_proxy_model)
+        self.selectionModel().selectionChanged.connect(self.row_selector)
 
 
 class SideBarProxyModel(QtCore.QIdentityProxyModel):
@@ -52,10 +62,4 @@ class SideBarProxyModel(QtCore.QIdentityProxyModel):
 
         super().paint(painter, option, index)
 
-    # def __init__(self, parent) -> None:
-    #     super().__init__(parent)
-
-    # def data(self, proxyIndex: QtCore.QModelIndex, role: int = ...) -> typing.Any:
-
     # TODO: add a way to insert a different background color for completed rows
-    # return super().data(proxyIndex, role)

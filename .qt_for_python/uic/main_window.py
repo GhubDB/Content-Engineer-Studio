@@ -676,7 +676,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuSwitch_View.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.stackedWidget.setCurrentIndex(5)
+        self.stackedWidget.setCurrentIndex(3)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         MainWindow.setTabOrder(self.switch_to_testing_suite, self.chat_2)
         MainWindow.setTabOrder(self.chat_2, self.analysis)

@@ -57,6 +57,15 @@ class AutoqueueAndHistoryContainer(QWidget):
 
         self.clear.clicked.connect(lambda: self.auto_queue_model.clear())
 
+
+    def populateHistory(self, input):
+        item = QtGui.QStandardItem(input)
+        if self.dialog_num % 2 == 0:
+            item.setBackground(QColor(70, 81, 70))
+        else:
+            item.setBackground(QColor(74, 69, 78))
+        self.history_model.appendRow(item)
+
     def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent):
         # Delete items from Auto Queue
         if event.type() == QEvent.KeyPress:

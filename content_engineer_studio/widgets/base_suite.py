@@ -205,3 +205,26 @@ class BaseSuite(QWidget):
         """
         # Saving chat messages
         customer, bot = self.chat.getChatText()
+
+    def btn_up(self):
+        if self.row > 0:
+            index = self.sidebar.model().index(self.row - 1, 0)
+            self.sidebar.selectionModel().select(
+                index,
+                QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current,
+            )
+
+    def btn_down(self):
+        if self.row < self.index_len:
+            index = self.sidebar.model().index(self.row + 1, 0)
+            self.sidebar.selectionModel().select(
+                index,
+                QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current,
+            )
+
+    def btn_save(self):
+        self.saveOnRowChange()
+
+    def workingView(self, idx):
+        if idx == 0 | idx == 1:
+            self.current_work_area = idx
