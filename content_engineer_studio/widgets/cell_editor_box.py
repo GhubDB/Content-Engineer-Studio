@@ -117,18 +117,18 @@ class CellEditorContainer(QWidget):
         # for _ in range(10):
         #     self.cell_selector.addItem("Banana")
         # return
-        self.pgdf.model["analysis_selector_proxy_model"] = AnalysisSelectorModel(
-            parent=self, df=self.analysis_df.df_unfiltered
-        )
+        self.suite.viewer.pgdf.model[
+            "analysis_selector_proxy_model"
+        ] = AnalysisSelectorModel(parent=self, df=self.suite.viewer.pgdf.df_unfiltered)
 
         self.cell_selector.setModel(
-            self.analysis_df.model["analysis_selector_proxy_model"]
+            self.suite.viewer.pgdf.model["analysis_selector_proxy_model"]
         )
 
     def populate_analysis(self):
 
         self.cell_editor.setPlainText(
-            self.pgdf.df_unfiltered.loc[
+            self.suite.viewer.pgdf.df_unfiltered.loc[
                 self.suite.row, (self.cell_selector.currentText(), "Editable")
             ]
         )
@@ -137,7 +137,7 @@ class CellEditorContainer(QWidget):
         """
         Saves current analysis text to dataframe
         """
-        self.pgdf.edit_data(
+        self.suite.viewer.pgdf.edit_data(
             self.suite.row,
             (self.cell_selector.currentText(), "Editable"),
             self.cell_editor.toPlainText(),

@@ -32,7 +32,8 @@ class SideBarProxyModel(QtCore.QIdentityProxyModel):
 class Sidebar(QtWidgets.QTableView):
     def __init__(self, parent) -> None:
         super().__init__(parent)
-        self.gui = parent
+        self.gui = parent.gui
+        self.suite = parent
 
         self.setMinimumSize(QtCore.QSize(35, 0))
         self.setMaximumSize(QtCore.QSize(35, 16777215))
@@ -56,10 +57,9 @@ class Sidebar(QtWidgets.QTableView):
         self.verticalHeader().setDefaultSectionSize(26)
 
     def populate_sidebar(self):
-
         sidebar_proxy_model = SideBarProxyModel(parent=self)
         sidebar_proxy_model.setSourceModel(
-            self.analysis_df.model["header_model_vertical"]
+            self.suite.viewer.pgdf.model["header_model_vertical"]
         )
         self.setModel(sidebar_proxy_model)
-        self.selectionModel().selectionChanged.connect(self.row_selector)
+        self.selectionModel().selectionChanged.connect(self.suite.row_selector)

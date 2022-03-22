@@ -60,6 +60,7 @@ class DragDropLabel(QLabel):
             event.ignore()
 
     def dropEvent(self, event: QEvent):
+        # Check if the dropped item is a valid dataframe
         if event.mimeData().hasFormat("text/plain"):
             if self.name == "analysis":
                 self.setText("Analysis:\n" + event.mimeData().text())
@@ -70,13 +71,14 @@ class DragDropLabel(QLabel):
             else:
                 raise "Not a valid Dataframe"
 
+            # Add styling and text to drop label to show that the item has been added
             font = QFont("MS Shell Dlg 2", 10, QFont.Bold)
             self.setFont(font)
-            self.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
+            # self.setAlignment(Qt.AlignCenter | Qt.AlignCenter)
             self.setWordWrap(True)
 
             # set up the working dataframe for analysis or testing
-            self.gui.set_df(event.mimeData().text(), self.name)
+            self.gui.set_df(df_title=event.mimeData().text(), mode=self.name)
 
     def eventFilter(self, source, event: QEvent) -> bool:
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:

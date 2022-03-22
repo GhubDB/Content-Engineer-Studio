@@ -97,8 +97,6 @@ class BaseSuite(QWidget):
         self.dataframe_chat_splitter.setOrientation(QtCore.Qt.Vertical)
         self.dataframe_chat_grid.addWidget(self.dataframe_chat_splitter, 0, 0)
         self.dataframe_container = QWidget()
-        self.dataframe_layout = QtWidgets.QHBoxLayout(self.dataframe_container)
-        self.dataframe_layout.setContentsMargins(0, 0, 0, 0)
 
         # This Button allows users to add dataframes to the working view
         self.add_dataframe = QtWidgets.QPushButton()
@@ -112,7 +110,8 @@ class BaseSuite(QWidget):
         )
         self.add_dataframe.setSizePolicy(sizePolicy)
         self.add_dataframe.setText("Add Dataframe")
-        self.dataframe_layout.addWidget(self.add_dataframe)
+        self.add_dataframe.setObjectName("add_dataframe")
+        self.dataframe_chat_splitter.addWidget(self.add_dataframe)
 
         # This widget displays chat messages
         self.chat = ChatWidgetContainer(parent=self)
@@ -181,6 +180,12 @@ class BaseSuite(QWidget):
         #####################################################
         """Methods"""
         #####################################################
+
+    def switch_in_dataframe_viewer(self):
+        if self.dataframe_chat_splitter.findChild(QPushButton, "add_dataframe"):
+            self.dataframe_chat_splitter.replaceWidget(0, self.viewer)
+        else:
+            self.dataframe_chat_splitter.insertWidget(0, self.viewer)
 
     def row_selector(self, selected: QtCore.QObject):
         """

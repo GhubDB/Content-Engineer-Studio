@@ -825,6 +825,16 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     ###################################
     # Other
 
+    def switch_back_dataframe_viewer(self, mode: str):
+        if mode == "analysis":
+            self.dataframe_explorer.dataframe_dock.setWidget(
+                self.gui.analysis_suite.viewer
+            )
+        if mode == "testing":
+            self.dataframe_explorer.dataframe_dock.setWidget(
+                self.gui.testing_suite.viewer
+            )
+
     def data_changed(self):
         self.refresh_ui()
         self.refresh_statistics()

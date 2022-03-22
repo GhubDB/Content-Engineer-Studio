@@ -188,14 +188,21 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         index = self.gui.stackedWidget.currentIndex()
         if index == 0:
             hasSelection = (
-                self.gui.analysis_roles_view.column_viewer.selectionModel().hasSelection()
+                self.gui.analysis_suite.roles_view.column_viewer.selectionModel().hasSelection()
             )
             if hasSelection:
                 selectedRows = (
-                    self.gui.analysis_roles_view.column_viewer.selectionModel().selectedRows()
+                    self.gui.analysis_suite.roles_view.column_viewer.selectionModel().selectedRows()
                 )
-        # if index == 1:
-        if index == 5:
+        if index == 1:
+            hasSelection = (
+                self.gui.testing_suite.roles_view.column_viewer.selectionModel().hasSelection()
+            )
+            if hasSelection:
+                selectedRows = (
+                    self.gui.testing_suite.roles_view.column_viewer.selectionModel().selectedRows()
+                )
+        if index == 3:
             hasSelection = self.column_viewer.selectionModel().hasSelection()
             if hasSelection:
                 selectedRows = self.column_viewer.selectionModel().selectedRows()
@@ -304,7 +311,6 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
         column: int,
         parent: QtCore.QModelIndex,
     ) -> bool:
-
         selected = sorted(
             self.dataframe_explorer.roles_view.get_source_from_selection()
         )

@@ -47,6 +47,9 @@ from PandasGUI.PandasGUI.pandasgui.store import PandasGuiDataFrameStore
 class Canned(QtWidgets.QTableView):
     def __init__(self, parent: typing.Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self.gui = parent.gui
+        self.suite = parent
+
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred
         )
@@ -74,23 +77,23 @@ class Canned(QtWidgets.QTableView):
         Add model to multiple choice selection box
         """
 
-        self.analysis_df.model["analysis_canned_model"] = CannedSelectionModel(
-            parent=self, pgdf=self.analysis_df, mode="analysis"
+        self.suite.viewer.pgdf.model["analysis_canned_model"] = CannedSelectionModel(
+            parent=self, pgdf=self.suite.viewer.pgdf
         )
-        self.canned.setModel(self.analysis_df.model["analysis_canned_model"])
-        self.canned.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
-        self.canned.horizontalHeader().resizeSection(1, 50)
-        self.canned.horizontalHeader().resizeSection(2, 70)
-        self.canned.horizontalHeader().resizeSection(3, 100)
+        self.setModel(self.suite.viewer.pgdf.model["analysis_canned_model"])
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self.horizontalHeader().resizeSection(1, 50)
+        self.horizontalHeader().resizeSection(2, 70)
+        self.horizontalHeader().resizeSection(3, 100)
 
 
 class CannedSelectionModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent, pgdf: PandasGuiDataFrameStore, mode) -> None:
+    def __init__(self, parent, pgdf: PandasGuiDataFrameStore) -> None:
         super().__init__(parent)
-        self.gui = parent
+        self.gui = parent.gui
+        self.suite = parent.suite
         self.pgdf = pgdf
         self.df = pgdf.df_unfiltered
-        self.mode = mode
 
     def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
         return len(Data.MULTIPLE_CHOICE)
@@ -119,7 +122,7 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             row = index.row()
             if (
-                self.df.loc[self.gui.row, (rows[row], "Multi-Choice")]
+                self.df.loc[self.suite.row, (rows[row], "Multi-Choice")]
                 == Data.MULTIPLE_CHOICE[column]
             ):
                 return Qt.Checked
@@ -137,9 +140,7 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             column = index.column()
             rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
             self.pgdf.edit_data(
-                row=self.gui.analysis_row
-                if self.mode == "analysis"
-                else self.gui.testing_row,
+                row=self.suite.row,
                 col=(rows[row], "Multi-Choice"),
                 text=Data.MULTIPLE_CHOICE[column],
             )

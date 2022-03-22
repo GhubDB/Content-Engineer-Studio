@@ -111,6 +111,9 @@ class MainWindow(QMainWindow):
         self.df_2 = self.testing_excel.load("csv/testing.xlsx", "Sheet1")
         self.faq_df = self.faq_excel.load("csv/recipes.xlsx", "Sheet1")
 
+        self.analysis_df_name = False
+        self.testing_df_name = False
+
         self.threadpool = QThreadPool()
 
         # Stores what view the user has worked in last
@@ -711,49 +714,27 @@ class MainWindow(QMainWindow):
 
     def set_df(self, df_title: str, mode: str):
         """
-        Assigns dataframes to analysis and testing suite
+        Assigns dataframe_viewers to analysis and testing suite and switches out models
         """
         if mode == "analysis":
-            self.analysis_df = self.store.data[df_title]
-            if self.analysis_viewer == None:
-                self.analysis_viewer = DataFrameViewer(pgdf=self.analysis_df)
-                self.analysis_dataframe_layout.replaceWidget(
-                    self.add_analysis_dataframe,
-                    self.analysis_viewer,
-                )
-                self.add_analysis_dataframe.deleteLater()
-
-                # Add Header Roles View
-                self.analysis_roles_view = HeaderRolesViewContainer(
-                    parent=self.analysis_df.dataframe_explorer
-                )
-                self.analysis_column_viewer_layout.addWidget(self.analysis_roles_view)
+            # Assigning viewers
+            self.analysis_suite.viewer = self.store.data[df_title].dataframe_viewer
+            self.analysis_df_name = df_title
 
             # Switch out models
-            self.analysis_viewer.replace_models(pgdf=self.analysis_df)
-            self.analysis_roles_view.replace_model(pgdf=self.analysis_df)
-            self.populate_sidebar()
-            self.populate_cell_selector()
-            self.populate_canned()
+            self.analysis_suite.roles_view.replace_model(pgdf=self.store.data[df_title])
+            self.analysis_suite.sidebar.populate_sidebar()
+            self.analysis_suite.cell_editor.populate_cell_selector()
+            self.analysis_suite.canned.populate_canned()
 
         elif mode == "testing":
-            self.testing_df = self.store.data[df_title]
-            if self.testing_viewer == None:
-                self.testing_viewer = DataFrameViewer(pgdf=self.testing_df)
-                self.testing_dataframe_layout.replaceWidget(
-                    self.add_testing_dataframe,
-                    self.testing_viewer,
-                )
-                self.add_testing_dataframe.deleteLater()
+            self.testing_suite.viewer = self.store.data[df_title].dataframe_viewer
+            self.testing_df_name = df_title
 
-                self.analysis_roles_view = HeaderRolesViewContainer(
-                    parent=self.testing_df.dataframe_explorer
-                )
-                self.analysis_column_viewer_layout.addWidget(self.analysis_roles_view)
-
-            self.testing_viewer.replace_models(pgdf=self.testing_df)
-            self.testing_roles_view.replace_model(pgdf=self.testing_df)
-            self.populate_sidebar_2()
+            self.testing_suite.roles_view.replace_model(pgdf=self.store.data[df_title])
+            self.testing_suite.sidebar.populate_sidebar()
+            self.testing_suite.cell_editor.populate_cell_selector()
+            self.testing_suite.canned.populate_canned()
 
     def keyPressEvent(self, event):
         """
@@ -772,8 +753,27 @@ class MainWindow(QMainWindow):
             self.stackedWidget.setCurrentIndex(3)
 
     def workingView(self, idx):
-        if idx == 0 | idx == 1:
+        """
+        Switches in dataframe viewers and keeps track of the current working view
+        """
+        # Switch viewer to workarea
+        if idx in [1, 0]:
             self.current_work_area = idx
+            if idx == 0 and self.analysis_suite.viewer is not None:
+                self.analysis_suite.switch_in_dataframe_viewer()
+            elif idx == 1 and self.testing_suite.viewer is not None:
+                self.testing_suite.switch_in_dataframe_viewer()
+
+        # Switch viewers back to dataframe_viewer
+        if idx == 3:
+            if self.analysis_df_name:
+                self.store.data[self.analysis_df_name].switch_back_dataframe_viewer(
+                    mode="analysis"
+                )
+            if self.testing_df_name:
+                self.store.data[self.testing_df_name].switch_back_dataframe_viewer(
+                    mode="testing"
+                )
 
 
 if __name__ == "__main__":

@@ -56,6 +56,7 @@ class TestingSuite(BaseSuite):
         #####################################################
 
         self.browsers = [Browser() for i in range(0, Data.BUFFER)]
+        self.viewer = None
 
         # Breaks the buffering loop
         self.buffering = False

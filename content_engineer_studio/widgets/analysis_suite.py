@@ -54,6 +54,7 @@ class AnalysisSuite(BaseSuite):
         #####################################################
 
         self.browser = Browser()
+        self.viewer = None
 
         #####################################################
         """Seting up components"""
