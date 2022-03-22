@@ -18,8 +18,10 @@ add status_messsage_decorator to methods in all views
 add a way to view pandasgui on second monitor
 add resizeRowsToContents button to Dataframe Viewer
 make links clickable
+add internal move drag drop to auto_queue
 fix column asc/desc sorting in working views
 limit thread_resize_rows resource usage
+make sure all browser windows are closed when program is closed
 implement undo/redo for row deletion, move_row and so on
 check if store -> def remove_item(self, name_or_index): actually deletes the widget.
 turn sidebar from tablewidget into tableview

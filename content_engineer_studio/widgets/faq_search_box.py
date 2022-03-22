@@ -82,6 +82,9 @@ class FaqSearchBoxContainer(QWidget):
 
         # Adding event filters
         self.search_box.installEventFilter(self)
+        self.search_column_select.currentIndexChanged.connect(
+            self.gui.update_search_box
+        )
 
 
 class FaqDisplayBox(QTableView):

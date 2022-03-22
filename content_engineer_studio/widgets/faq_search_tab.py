@@ -77,6 +77,10 @@ class FaqSearchTabContainer(QWidget):
         self.search_box = FaqDisplay(parent=self)
         self.main_grid.addWidget(self.search_box, 1, 0, 1, 3)
 
+        self.search_column_select.currentIndexChanged.connect(
+            self.gui.update_search_box
+        )
+
 
 class FaqDisplay(QTableView):
     def __init__(self, parent=None) -> None:
@@ -113,7 +117,7 @@ class FaqDisplay(QTableView):
             self.container.search_column_select.setCurrentIndex(index.column())
             self.gui.analysis_suite.faq_search_box.searchbar.setText(
                 value
-            ) if self.gui.current_work_area == 0 else self.gui.testing_suite.faq_search_box.searchbar.searchbar.setText(
+            ) if self.gui.current_work_area == 0 else self.gui.testing_suite.faq_search_box.searchbar.setText(
                 value
             )
 

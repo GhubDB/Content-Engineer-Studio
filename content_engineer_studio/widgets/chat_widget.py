@@ -226,7 +226,14 @@ class ChatWidgetContainer(QWidget):
     ) -> None:
         super().__init__(parent)
         self.gui = parent.gui
+        self.suite = parent
+        self.highlighters = {}
+        self.dialog_num = 0
+        self.current_browser = 0
 
+        self.is_webscraping = False
+
+        # Chat Widget
         self.chat = ChatWindow(parent=self)
         self.main_layout = QVBoxLayout(self)
         self.main_layout.addWidget(self.chat)
@@ -236,9 +243,9 @@ class ChatWidgetContainer(QWidget):
         """
         Accesses URL and downloads chat log - used in Analysis
         """
-        if not self.browsers[0].getURL(url=self.df.iloc[self.row, 3]):
-            self.browsers[0].setUp(url=self.df.iloc[self.row, 3])
-        chat_text = self.browsers[self.current_browser].getCleverbotStatic()
+        if not self.suite.browsers[0].getURL(url=self.df.iloc[self.row, 3]):
+            self.suite.browsers[0].setUp(url=self.df.iloc[self.row, 3])
+        chat_text = self.suite.browsers[self.current_browser].getCleverbotStatic()
         output.emit(chat_text)
 
     def populate_chat_analysis(self, chat: list[list[str]]):
@@ -296,11 +303,11 @@ class ChatWidgetContainer(QWidget):
         [
             output.append(message)
             for message in chat
-            if message not in self.sent_messages and "" not in message
+            if message not in self.suite.sent_messages and "" not in message
         ]
-        self.chat_2.setColumnCount(1)
-        length = len(self.sent_messages)
-        self.chat_2.setRowCount(length + len(output))
+        self.chat.setColumnCount(1)
+        length = len(self.suite.sent_messages)
+        self.chat.setRowCount(length + len(output))
         for (
             idx,
             sender,
@@ -316,7 +323,7 @@ class ChatWidgetContainer(QWidget):
                     participant="customer",
                     index=idx,
                 )
-            self.chat_2.setCellWidget(idx, 0, combo)
+            self.chat.setCellWidget(idx, 0, combo)
             combo.setText(sender[1])
             combo.setContextMenuPolicy(Qt.PreventContextMenu)
             combo.installEventFilter(self)
@@ -328,33 +335,33 @@ class ChatWidgetContainer(QWidget):
                 combo.setStyleSheet(Stylesheets.customer)
             # Add auto resizing of editor and highlighting
             combo.textChanged.connect(
-                lambda idx=idx: self.chat_2.resizeRowToContents(idx)
+                lambda idx=idx: self.chat.resizeRowToContents(idx)
             )
-            combo.cursorPositionChanged.connect(self.highlight_selection_2)
-        [self.sent_messages.append(message) for message in output]
-        self.chat_2.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            combo.cursorPositionChanged.connect(self.highlight_selection)
+        [self.suite.sent_messages.append(message) for message in output]
+        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
     def setUpNewDialog(self, browser_num=None):
         """
         Sets up (singular) new chat session
         """
-        self.browsers[self.current_browser].setUp(url=self.livechat_url)
-        self.browsers[self.current_browser].clickCleverbotAgree()
+        self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
+        self.suite.browsers[self.current_browser].clickCleverbotAgree()
         # clear chat
         self.dialog_num += 1
-        self.chat_2.clear()
-        self.chat_2.setRowCount(0)
-        self.sent_messages = []
+        self.chat.clear()
+        self.chat.setRowCount(0)
+        self.suite.sent_messages = []
         return
 
     def setUpNewAutoDialog(self, i: int) -> None:
         """
         Prebuffers browser windows and asks auto_queue questions
         """
-        # self.browsers[i].tearDown()
-        if self.browsers[i].setUp(url=self.livechat_url):
-            self.browsers[i].clickCleverbotAgree()
-            self.browsers[i].prebufferAutoTab(self.questions)
+        # self.suite.browsers[i].tearDown()
+        if self.suite.browsers[i].setUp(url=Data.LIVECHAT_URL):
+            self.suite.browsers[i].clickCleverbotAgree()
+            self.suite.browsers[i].prebufferAutoTab(self.suite.questions)
         return
 
     def initializeWebscraping(self):
@@ -367,9 +374,9 @@ class ChatWidgetContainer(QWidget):
             # Pass the function to execute
             live_webscraper = Worker(self.chatWebscrapingLoop, "activate_output")
             # Catch signal of new chat messages
-            live_webscraper.signals.output.connect(self.populate_chat_2)
+            live_webscraper.signals.output.connect(self.populate_chat_testing)
             # Execute
-            self.threadpool.start(live_webscraper)
+            self.gui.threadpool.start(live_webscraper)
 
     def chatWebscrapingLoop(self, output: QtCore.pyqtSignal):
         """
@@ -377,7 +384,7 @@ class ChatWidgetContainer(QWidget):
         """
         while self.is_webscraping:
             try:
-                chats = self.browsers[self.current_browser].getCleverbotLive()
+                chats = self.suite.browsers[self.current_browser].getCleverbotLive()
                 if chats:
                     output.emit(chats)
                 time.sleep(5)

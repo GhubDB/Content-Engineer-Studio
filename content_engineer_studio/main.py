@@ -638,30 +638,31 @@ class MainWindow(QMainWindow):
         """
         Updates the search box with values from FAQ excel sheet
         """
+
         # Synchronize selectors
         page = self.stackedWidget.currentIndex()
         if page == 0:
             index = (
                 self.analysis_suite.faq_search_box.search_column_select.currentIndex()
             )
-            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
+            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(
                 index
             )
             self.faq_search_tab.search_column_select.setCurrentIndex(index)
         elif page == 1:
             index = (
-                self.analysis_suite.faq_search_box.search_column_select.currentIndex()
+                self.testing_suite.faq_search_box.search_column_select.currentIndex()
             )
             self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
                 index
             )
             self.faq_search_tab.search_column_select.setCurrentIndex(index)
-        elif page == 3:
+        elif page == 2:
             index = self.faq_search_tab.search_column_select.currentIndex()
             self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
                 index
             )
-            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
+            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(
                 index
             )
 
@@ -681,13 +682,13 @@ class MainWindow(QMainWindow):
                 if i != index:
                     self.analysis_suite.faq_search_box.search_box.hideColumn(
                         i
-                    ) if page == 0 else self.analysis_suite.faq_search_box.search_box.hideColumn(
+                    ) if page == 0 else self.testing_suite.faq_search_box.search_box.hideColumn(
                         i
                     )
                 else:
                     self.analysis_suite.faq_search_box.search_box.showColumn(
                         i
-                    ) if page == 0 else self.analysis_suite.faq_search_box.search_box.showColumn(
+                    ) if page == 0 else self.testing_suite.faq_search_box.search_box.showColumn(
                         i
                     )
 
@@ -695,6 +696,7 @@ class MainWindow(QMainWindow):
         """
         Set model for FAQ search selector
         """
+
         model = QStandardItemModel(len(self.faq_df.columns), 0)
         for idx, item in enumerate(list(self.faq_df.columns.values)):
             item = QStandardItem(item)
@@ -706,16 +708,6 @@ class MainWindow(QMainWindow):
         self.analysis_suite.faq_search_box.search_column_select.setModel(model)
         self.testing_suite.faq_search_box.search_column_select.setModel(model)
         self.faq_search_tab.search_column_select.setModel(model)
-
-        self.analysis_suite.faq_search_box.search_column_select.currentIndexChanged.connect(
-            self.populate_search_box
-        )
-        self.analysis_suite.faq_search_box.search_column_select.currentIndexChanged.connect(
-            self.populate_search_box
-        )
-        self.faq_search_tab.search_column_select.currentIndexChanged.connect(
-            self.populate_search_box
-        )
 
     def set_df(self, df_title: str, mode: str):
         """

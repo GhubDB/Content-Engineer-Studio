@@ -42,7 +42,7 @@ from qtstylish import qtstylish
 
 from utils.selenium_helpers import Browser
 from utils.worker_thread import Worker
-from widgets.autoqueue_and_history import AutoqueueAndHistoryContainer
+from widgets.auto_history import AutoqueueAndHistoryContainer
 from widgets.base_suite import BaseSuite
 from utils.data_variables import Data
 
@@ -210,12 +210,14 @@ class TestingSuite(BaseSuite):
         self.auto_history.auto_queue.selectionModel().select(
             index, QItemSelectionModel.Deselect
         )
-        index = index.row() + 1
-        self.auto_history.auto_queue.selectRow(index)
+        index = self.auto_history.auto_queue.model().index(index.row() + 1, 0)
+        self.auto_history.auto_queue.setCurrentIndex(index)
 
         # Jump back to the beginning
         if self.auto_history.auto_queue.selectedIndexes() == []:
-            self.auto_history.auto_queue.selectRow(0)
+            self.auto_history.auto_queue.setCurrentIndex(
+                self.auto_history.auto_queue.model().index(0, 0)
+            )
 
     def switchToAnalysis(self):
         self.is_webscraping = False

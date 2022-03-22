@@ -54,7 +54,6 @@ class AnalysisSuite(BaseSuite):
         #####################################################
 
         self.browser = Browser()
-        self.highlighters = {}
 
         #####################################################
         """Seting up components"""
@@ -130,7 +129,7 @@ class AnalysisSuite(BaseSuite):
 
     def switchToTesting(self):
         self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
-        self.populate_search_box()
+        self.gui.populate_search_box()
 
     def exportToTesting(self):
         customer = self.getChatText(export=True)
@@ -138,6 +137,6 @@ class AnalysisSuite(BaseSuite):
             for message in customer:
                 # print(message)
                 item = QtGui.QStandardItem(message)
-                self.auto_queue_model.appendRow(item)
+                self.gui.testing_suite.auto_history.auto_queue_model.appendRow(item)
         self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
-        self.populate_search_box()
+        self.gui.populate_search_box()

@@ -52,6 +52,10 @@ class Stylesheets:
 				selection-color: rgb(255, 255, 255);
 				selection-background-color: rgb(55, 92, 123);
 			}
+			QListView {
+				selection-color: rgb(255, 255, 255);
+				selection-background-color: rgb(55, 92, 123);
+			}
 			#colorize {
 				background-color: rgba(255, 255, 40, 170);
 				border-style: inset;
