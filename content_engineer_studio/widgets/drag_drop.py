@@ -46,7 +46,7 @@ class DragDropLabel(QLabel):
     def __init__(self, name: str, parent: QWidget):
         super().__init__(name, parent)
         self.name = name
-        self.parent = parent
+        self.gui = parent
         self.setAcceptDrops(True)
         self.setScaledContents(True)
         self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
@@ -76,12 +76,12 @@ class DragDropLabel(QLabel):
             self.setWordWrap(True)
 
             # set up the working dataframe for analysis or testing
-            self.parent.set_df(event.mimeData().text(), self.name)
+            self.gui.set_df(event.mimeData().text(), self.name)
 
-    def eventFilter(self, source: "QObject", event: QEvent) -> bool:
+    def eventFilter(self, source, event: QEvent) -> bool:
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
             if source.name == "analysis":
-                self.parent.stackedWidget.setCurrentIndex(0)
+                self.gui.stackedWidget.setCurrentIndex(0)
             else:
-                self.parent.stackedWidget.setCurrentIndex(1)
+                self.gui.stackedWidget.setCurrentIndex(1)
         return super().eventFilter(source, event)
