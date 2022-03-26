@@ -140,8 +140,8 @@ class BaseSuite(QWidget):
         self.component_splitter.addWidget(self.canned)
 
         # This container holds the cell editor
-        self.cell_editor = CellEditorContainer(parent=self)
-        self.component_splitter.addWidget(self.cell_editor)
+        self.cell_editor_box = CellEditorContainer(parent=self)
+        self.component_splitter.addWidget(self.cell_editor_box)
 
         # Up / Save / Down
         self.up_save_down_container = QWidget(self.component_splitter)
@@ -207,7 +207,7 @@ class BaseSuite(QWidget):
             self.viewer.pgdf.model["canned_model"].beginResetModel()
             self.viewer.pgdf.model["canned_model"].endResetModel()
 
-        self.cell_editor.populate_analysis()
+        self.cell_editor_box.populate_analysis()
 
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollTo(self.sidebar.model().index(self.row, 0))
@@ -216,6 +216,9 @@ class BaseSuite(QWidget):
         """
         Saves current states to Excel
         """
+        # Saving analysis
+        self.cell_editor_box.cell_editor.signals.editing_done.emit()
+
         # Getting and saving chat messages
         customer, bot = self.chat.getChatText()
         if customer:

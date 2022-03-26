@@ -729,7 +729,7 @@ class MainWindow(QMainWindow):
                 dataframe_explorer=self.store.data[df_title].dataframe_explorer,
             )
             self.analysis_suite.sidebar.populate_sidebar()
-            self.analysis_suite.cell_editor.populate_cell_selector()
+            self.analysis_suite.cell_editor_box.populate_cell_selector()
             self.analysis_suite.canned.populate_canned()
 
         elif mode == "testing":
@@ -742,7 +742,7 @@ class MainWindow(QMainWindow):
                 dataframe_explorer=self.store.data[df_title].dataframe_explorer,
             )
             self.testing_suite.sidebar.populate_sidebar()
-            self.testing_suite.cell_editor.populate_cell_selector()
+            self.testing_suite.cell_editor_box.populate_cell_selector()
             self.testing_suite.canned.populate_canned()
 
     def keyPressEvent(self, event):

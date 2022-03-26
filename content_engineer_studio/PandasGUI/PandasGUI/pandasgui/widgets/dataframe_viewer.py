@@ -477,7 +477,6 @@ class DataFrameViewer(QtWidgets.QWidget):
         for model in [
             self.pgdf.model["data_table_model"],
             self.pgdf.model["header_model_horizontal"],
-            self.pgdf.model["analysis_selector_proxy_model"],
             self.pgdf.model["column_search_model"],
             self.pgdf.model["canned_model"],
         ]:

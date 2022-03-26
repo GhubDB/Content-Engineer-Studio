@@ -44,6 +44,10 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from utils.data_variables import Data
 
 
+class CellEditorSignals(QWidget):
+    editing_done = pyqtSignal()
+
+
 class CellEditorContainer(QWidget):
     def __init__(self, parent: typing.Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -110,6 +114,8 @@ class CellEditorContainer(QWidget):
         self.right.clicked.connect(self.btn_right)
         self.colorize.clicked.connect(self.btn_colorize)
 
+        self.cell_editor.signals.editing_done.connect(self.save_analysis)
+
         # TODO: Add editing finished signal to textedit subclass
         # self.analysis.textChanged.connect(self.save_analysis)
 
@@ -148,16 +154,6 @@ class CellEditorContainer(QWidget):
 
         return str(value)
 
-    def save_analysis(self):
-        """
-        Saves current analysis text to dataframe
-        """
-        self.suite.viewer.pgdf.edit_data(
-            self.suite.row,
-            (self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
-            self.cell_editor.toPlainText(),
-        )
-
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
@@ -174,12 +170,25 @@ class CellEditorContainer(QWidget):
             self.cell_selector.currentIndex() + self.cell_selector_start + 1,
         )
 
+    # @QtCore.pyqtSlot()
+    def save_analysis(self):
+        """
+        Saves current analysis text to dataframe
+        """
+        self.suite.viewer.pgdf.edit_data(
+            self.suite.row,
+            (self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+            self.cell_editor.toPlainText(),
+        )
+
 
 class CellEdit(QTextEdit):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.suite = parent.suite
         self.container = parent
+
+        self.signals = CellEditorSignals()
 
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding
@@ -202,8 +211,14 @@ class CellEdit(QTextEdit):
 
     def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
         if e.key() == Qt.Key_Tab:
+            self.signals.editing_done.emit()
             self.container.btn_right()
+            return
         return super().keyPressEvent(e)
+
+    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
+        self.signals.editing_done.emit()
+        return super().focusOutEvent(e)
 
 
 class AnalysisSelectorModel(QtCore.QAbstractListModel):
