@@ -8,19 +8,22 @@ class Data:
     # Sets the number of prebuffered windows for auto mode
     BUFFER = 2
 
+    # Defines what window to show on startup
+    START_INDEX = 3
+
     LIVECHAT_URL = "https://www.cleverbot.com/"
 
     # DUMMY_DF = pd.DataFrame([0, 0])
 
-    ROLES = [
-        "None",
-        "Bot",
-        "Customer",
-        "Multi-Choice",
-        "Editable",
-        "Correct FAQ",
-        "Link",
-    ]
+    ROLES = {
+        "NONE": "None",
+        "BOT": "Bot",
+        "CUSTOMER": "Customer",
+        "MULTI_CHOICE": "Multi-Choice",
+        "EDITABLE": "Editable",
+        "CORRECT_FAQ": "Correct FAQ",
+        "LINK": "Link",
+    }
 
     MULTIPLE_CHOICE = ["", "Ja", "Nein", "Teilweise"]
 

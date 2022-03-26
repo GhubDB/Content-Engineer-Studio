@@ -183,6 +183,7 @@ class BaseSuite(QWidget):
 
     def switch_in_dataframe_viewer(self):
         if self.dataframe_chat_splitter.findChild(QPushButton, "add_dataframe"):
+            # Replace add_dataframe button with dataframe_viewer
             self.dataframe_chat_splitter.replaceWidget(0, self.viewer)
         else:
             self.dataframe_chat_splitter.insertWidget(0, self.viewer)
@@ -193,15 +194,20 @@ class BaseSuite(QWidget):
         """
         # Save and clean up before next row is loaded
         self.saveOnRowChange()
-        self.clearChat()
-        if self.analysis_df.model["analysis_canned_model"]:
-            self.analysis_df.model["analysis_canned_model"].beginResetModel()
-            self.analysis_df.model["analysis_canned_model"].endResetModel()
+        self.chat.clearChat()
 
         # Updates the self.row property
+        # print(self.row)
         idx = selected.indexes()
-        if len(idx) > 0 and idx != self.row:
+        if len(idx) > 0 and idx[0].row() != self.row:
             self.row = idx[0].row()
+        # print(self.row)
+
+        if self.viewer.pgdf.model["canned_model"]:
+            self.viewer.pgdf.model["canned_model"].beginResetModel()
+            self.viewer.pgdf.model["canned_model"].endResetModel()
+
+        self.cell_editor.populate_analysis()
 
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollTo(self.sidebar.model().index(self.row, 0))
@@ -210,26 +216,58 @@ class BaseSuite(QWidget):
         """
         Saves current states to Excel
         """
-        # Saving chat messages
+        # Getting and saving chat messages
         customer, bot = self.chat.getChatText()
+        if customer:
+            self.select_and_edit_column_data(
+                role=Data.ROLES["CUSTOMER"], value=customer
+            )
+        if bot:
+            self.select_and_edit_column_data(role=Data.ROLES["BOT"], value=bot)
+
+        # Saving correct FAQ
+        index = self.faq_search_box.search_box.selectionModel().currentIndex()
+        if index.isValid():
+            value = index.sibling(index.row(), index.column()).data()
+            if value:
+                self.select_and_edit_column_data(
+                    role=Data.ROLES["CORRECT_FAQ"], value=value
+                )
+
+    def select_and_edit_column_data(self, role: str, value: str):
+        tuples = tuple(
+            x for x in self.viewer.pgdf.df_unfiltered.columns if x[1] == role
+        )
+        for column in tuples:
+            self.viewer.pgdf.edit_data(self.row, column, value)
 
     def btn_up(self):
+        if self.viewer is None:
+            return
         if self.row > 0:
+            # self.sidebar.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
             index = self.sidebar.model().index(self.row - 1, 0)
+            # self.sidebar.selectionModel().clear()
             self.sidebar.selectionModel().select(
                 index,
                 QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current,
             )
+            # self.sidebar.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 
     def btn_down(self):
-        if self.row < self.index_len:
+        if self.viewer is None:
+            return
+        if self.row < self.viewer.pgdf.df.index.size - 1:
             index = self.sidebar.model().index(self.row + 1, 0)
+            print(index.row())
             self.sidebar.selectionModel().select(
                 index,
                 QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current,
             )
 
     def btn_save(self):
+        if self.viewer is None:
+            return
         self.saveOnRowChange()
 
     def workingView(self, idx):

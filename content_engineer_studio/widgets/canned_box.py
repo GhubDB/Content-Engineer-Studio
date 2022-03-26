@@ -77,10 +77,10 @@ class Canned(QtWidgets.QTableView):
         Add model to multiple choice selection box
         """
 
-        self.suite.viewer.pgdf.model["analysis_canned_model"] = CannedSelectionModel(
+        self.suite.viewer.pgdf.model["canned_model"] = CannedSelectionModel(
             parent=self, pgdf=self.suite.viewer.pgdf
         )
-        self.setModel(self.suite.viewer.pgdf.model["analysis_canned_model"])
+        self.setModel(self.suite.viewer.pgdf.model["canned_model"])
         self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.horizontalHeader().resizeSection(1, 50)
         self.horizontalHeader().resizeSection(2, 70)
@@ -101,7 +101,9 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.df.columns, pd.MultiIndex):
             return 0
-        return sum(i == "Multi-Choice" for i in self.df.columns.get_level_values(1))
+        return sum(
+            i == Data.ROLES["MULTI_CHOICE"] for i in self.df.columns.get_level_values(1)
+        )
 
     def data(self, index, role):
         if not index.isValid():
@@ -112,17 +114,21 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
 
         column = index.column()
         if role == QtCore.Qt.DisplayRole:
-            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
+            rows = tuple(
+                x[0] for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
+            )
             row = index.row()
             if column == 0:
                 return rows[row]
             else:
                 return Data.MULTIPLE_CHOICE[column]
         elif role == Qt.CheckStateRole and column in [1, 2, 3]:
-            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
+            rows = tuple(
+                x[0] for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
+            )
             row = index.row()
             if (
-                self.df.loc[self.suite.row, (rows[row], "Multi-Choice")]
+                self.df.loc[self.suite.row, (rows[row], Data.ROLES["MULTI_CHOICE"])]
                 == Data.MULTIPLE_CHOICE[column]
             ):
                 return Qt.Checked
@@ -138,10 +144,12 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
         if role == Qt.CheckStateRole:
             row = index.row()
             column = index.column()
-            rows = tuple(x[0] for x in self.df.columns if x[1] == "Multi-Choice")
+            rows = tuple(
+                x[0] for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
+            )
             self.pgdf.edit_data(
                 row=self.suite.row,
-                col=(rows[row], "Multi-Choice"),
+                col=(rows[row], Data.ROLES["MULTI_CHOICE"]),
                 text=Data.MULTIPLE_CHOICE[column],
             )
             self.dataChanged.emit(index, index)

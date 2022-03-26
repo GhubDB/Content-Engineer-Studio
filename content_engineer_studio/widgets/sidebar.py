@@ -8,23 +8,23 @@ class SideBarProxyModel(QtCore.QIdentityProxyModel):
     def setSourceModel(self, sourceModel: QtCore.QAbstractItemModel) -> None:
         return super().setSourceModel(sourceModel)
 
-    def paint(
-        self,
-        painter: QtGui.QPainter,
-        option: QtWidgets.QStyleOptionViewItem,
-        index: QtCore.QModelIndex,
-    ) -> None:
+    # def paint(
+    #     self,
+    #     painter: QtGui.QPainter,
+    #     option: QtWidgets.QStyleOptionViewItem,
+    #     index: QtCore.QModelIndex,
+    # ) -> None:
 
-        # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
-        if option.state & QtWidgets.QStyle.State_HasFocus:
-            option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
+    #     # Remove dotted border on cell focus.  https://stackoverflow.com/a/55252650/3620725
+    #     if option.state & QtWidgets.QStyle.State_HasFocus:
+    #         option.state = option.state ^ QtWidgets.QStyle.State_HasFocus
 
-        options = QtWidgets.QStyleOptionViewItem(option)
-        option.widget.style().drawControl(
-            QtWidgets.QStyle.CE_ItemViewItem, option, painter, options.widget
-        )
+    #     options = QtWidgets.QStyleOptionViewItem(option)
+    #     option.widget.style().drawControl(
+    #         QtWidgets.QStyle.CE_ItemViewItem, option, painter, options.widget
+    #     )
 
-        super().paint(painter, option, index)
+    #     super().paint(painter, option, index)
 
     # TODO: add a way to insert a different background color for completed rows
 
@@ -38,7 +38,7 @@ class Sidebar(QtWidgets.QTableView):
         self.setMinimumSize(QtCore.QSize(35, 0))
         self.setMaximumSize(QtCore.QSize(35, 16777215))
         font = QtGui.QFont()
-        font.setPointSize(11)
+        font.setPointSize(12)
         self.setFont(font)
         self.viewport().setProperty(
             "cursor", QtGui.QCursor(QtCore.Qt.PointingHandCursor)

@@ -256,6 +256,7 @@ class MainWindow(QMainWindow):
         self.pandasgui_grid.setContentsMargins(0, 0, 0, 0)
         self.pandasgui_grid.addWidget(self.pandasgui_splitter, 0, 0, 0, 0)
         self.stackedWidget.addWidget(self.pandasgui_container)
+        self.stackedWidget.setCurrentIndex(Data.START_INDEX)
 
         # makes the find toolbar
         self.find_bar = FindToolbar(self)
@@ -722,7 +723,11 @@ class MainWindow(QMainWindow):
             self.analysis_df_name = df_title
 
             # Switch out models
-            self.analysis_suite.roles_view.replace_model(pgdf=self.store.data[df_title])
+            self.analysis_suite.roles_view.replace_model(
+                pgdf=self.store.data[df_title],
+                parent=self,
+                dataframe_explorer=self.store.data[df_title].dataframe_explorer,
+            )
             self.analysis_suite.sidebar.populate_sidebar()
             self.analysis_suite.cell_editor.populate_cell_selector()
             self.analysis_suite.canned.populate_canned()
@@ -731,7 +736,11 @@ class MainWindow(QMainWindow):
             self.testing_suite.viewer = self.store.data[df_title].dataframe_viewer
             self.testing_df_name = df_title
 
-            self.testing_suite.roles_view.replace_model(pgdf=self.store.data[df_title])
+            self.testing_suite.roles_view.replace_model(
+                pgdf=self.store.data[df_title],
+                parent=self,
+                dataframe_explorer=self.store.data[df_title].dataframe_explorer,
+            )
             self.testing_suite.sidebar.populate_sidebar()
             self.testing_suite.cell_editor.populate_cell_selector()
             self.testing_suite.canned.populate_canned()

@@ -759,7 +759,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             model.endResetModel()
 
         if self.dataframe_viewer is not None:
-            self.dataframe_viewer.refresh_ui()
+            self.dataframe_viewer._refresh_ui()
 
     @staticmethod
     def cast(df: Union[PandasGuiDataFrameStore, pd.DataFrame, pd.Series, Iterable]):

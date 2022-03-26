@@ -40,23 +40,14 @@ class ColumnMenu(QtWidgets.QMenu):
                     [df.columns, ["None"]]
                 )
 
-            if text == "Editable":
-                # TODO: account for analysis/testing
-                self.pgdf.gui.cell_selector.model().beginInsertRows(
-                    QtCore.QModelIndex(),
-                    self.pgdf.gui.cell_selector.model().rowCount(),
-                    1,
-                )
             # Altering and replacing the existing index
             tuples = self.pgdf.df_unfiltered.columns.tolist()
             tuples[self.column_ix] = (tuples[self.column_ix][0], text)
             self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(tuples)
-            if text == "Editable":
-                self.pgdf.gui.cell_selector.model().endInsertRows()
             self.pgdf.refresh_ui()
 
         self.header_role_selector = QtWidgets.QComboBox()
-        for item in Data.ROLES:
+        for item in Data.ROLES.values():
             self.header_role_selector.addItem(item)
         self.add_widget(self.header_role_selector)
 
@@ -198,7 +189,7 @@ class ColumnMenu(QtWidgets.QMenu):
             "Color by None",
             lambda: [
                 setattr(self.pgdf.dataframe_viewer, "color_mode", None),
-                self.pgdf.dataframe_viewer.refresh_ui(),
+                self.pgdf.dataframe_viewer._refresh_ui(),
             ],
         )
 
@@ -206,7 +197,7 @@ class ColumnMenu(QtWidgets.QMenu):
             "Color by columns",
             lambda: [
                 setattr(self.pgdf.dataframe_viewer, "color_mode", "column"),
-                self.pgdf.dataframe_viewer.refresh_ui(),
+                self.pgdf.dataframe_viewer._refresh_ui(),
             ],
         )
 
@@ -214,7 +205,7 @@ class ColumnMenu(QtWidgets.QMenu):
             "Color by rows",
             lambda: [
                 setattr(self.pgdf.dataframe_viewer, "color_mode", "row"),
-                self.pgdf.dataframe_viewer.refresh_ui(),
+                self.pgdf.dataframe_viewer._refresh_ui(),
             ],
         )
 
@@ -222,7 +213,7 @@ class ColumnMenu(QtWidgets.QMenu):
             "Color by all",
             lambda: [
                 setattr(self.pgdf.dataframe_viewer, "color_mode", "all"),
-                self.pgdf.dataframe_viewer.refresh_ui(),
+                self.pgdf.dataframe_viewer._refresh_ui(),
             ],
         )
 

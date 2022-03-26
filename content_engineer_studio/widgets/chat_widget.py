@@ -28,6 +28,7 @@ from PyQt5.QtWidgets import (
     QButtonGroup,
     QRadioButton,
     QApplication,
+    QMessageBox,
 )
 from PyQt5.QtGui import (
     QStandardItemModel,
@@ -187,7 +188,7 @@ class Highlighter(QSyntaxHighlighter):
         super().__init__(parent)
         self._mapping = {}
         self.name = name
-        self.gui = parent
+        self.container = parent
 
         # Email addresses
         class_format = QTextCharFormat()
@@ -215,7 +216,7 @@ class Highlighter(QSyntaxHighlighter):
         for pattern, fmt in self._mapping.items():
             for match in re.finditer(pattern, text_block):
                 start, end = match.span()
-                self.gui.auto_anonymized.append([self.name, start, end])
+                self.container.auto_anonymized.append([self.name, start, end])
                 # self.setFormat(start, end-start, fmt) # Original implementation
 
 
@@ -228,6 +229,7 @@ class ChatWidgetContainer(QWidget):
         self.gui = parent.gui
         self.suite = parent
         self.highlighters = {}
+        self.auto_anonymized = []
         self.dialog_num = 0
         self.current_browser = 0
 
@@ -243,9 +245,22 @@ class ChatWidgetContainer(QWidget):
         """
         Accesses URL and downloads chat log - used in Analysis
         """
-        if not self.suite.browsers[0].getURL(url=self.df.iloc[self.row, 3]):
-            self.suite.browsers[0].setUp(url=self.df.iloc[self.row, 3])
-        chat_text = self.suite.browsers[self.current_browser].getCleverbotStatic()
+        tuples = tuple(
+            x
+            for x in self.suite.viewer.pgdf.df_unfiltered.columns
+            if x[1] == Data.ROLES["LINK"]
+        )
+
+        if len(tuples) < 1:
+            return
+
+        if not self.suite.browser.getURL(
+            url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
+        ):
+            self.suite.browser.setUp(
+                url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
+            )
+        chat_text = self.suite.browser.getCleverbotStatic()
         output.emit(chat_text)
 
     def populate_chat_analysis(self, chat: list[list[str]]):
@@ -274,7 +289,7 @@ class ChatWidgetContainer(QWidget):
             # Add auto highlighting
             if sender[0] == "customer":
                 self.highlighters[idx] = Highlighter(
-                    document=combo.document(), name=combo
+                    document=combo.document(), name=combo, parent=self
                 )
 
             combo.setText(sender[1])
@@ -345,8 +360,8 @@ class ChatWidgetContainer(QWidget):
         """
         Sets up (singular) new chat session
         """
-        self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
-        self.suite.browsers[self.current_browser].clickCleverbotAgree()
+        self.suite.browser.setUp(url=Data.LIVECHAT_URL)
+        self.suite.browser.clickCleverbotAgree()
         # clear chat
         self.dialog_num += 1
         self.chat.clear()
@@ -384,7 +399,7 @@ class ChatWidgetContainer(QWidget):
         """
         while self.is_webscraping:
             try:
-                chats = self.suite.browsers[self.current_browser].getCleverbotLive()
+                chats = self.suite.browser.getCleverbotLive()
                 if chats:
                     output.emit(chats)
                 time.sleep(5)
@@ -441,7 +456,10 @@ class ChatWidgetContainer(QWidget):
                     customer.append(message_html.get_text().strip())
         if export:
             return customer
-        return "\n".join(customer), "\n".join(bot)
+        return (
+            "\n".join(customer) if customer != [] else False,
+            "\n".join(bot) if bot != [] else False,
+        )
 
     def clearChat(self):
         # self.chat.clear()

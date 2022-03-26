@@ -721,7 +721,6 @@ class DataTableView(QtWidgets.QTableView):
         """
 
         resizer = Worker(QTimer.singleShot(0, self.resizeRowsToContents))
-        # live_webscraper.signals.output.connect(self.populate_chat_2)
         self.threadpool.start(resizer)
         event.accept()
 

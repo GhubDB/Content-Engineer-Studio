@@ -194,7 +194,7 @@ class DataFrameViewer(QtWidgets.QWidget):
         for column_index in range(self.columnHeader.model().columnCount()):
             self.auto_size_column(column_index)
 
-        self.refresh_ui()
+        self._refresh_ui()
 
         self.dataView.already_resized = False
 
@@ -414,12 +414,12 @@ class DataFrameViewer(QtWidgets.QWidget):
                 view.setColumnWidth(j, column_widths[j])
 
         if refresh:
-            self.refresh_ui()
+            self._refresh_ui()
 
     def _add_column(self, first, last, refresh=True):
 
         if refresh:
-            self.refresh_ui()
+            self._refresh_ui()
         return
         for model in [
             self.pgdf.model["data_table_model"],
@@ -458,7 +458,7 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         # TODO fix column widths to be analogous to the move rows function
 
-    def refresh_ui(self):
+    def _refresh_ui(self):
         # Update models
         # self.models = []
         # self.models += [
@@ -470,11 +470,17 @@ class DataFrameViewer(QtWidgets.QWidget):
         #     self.pgdf.model["header_roles_model"],
         # ]
 
-        # for model in self.models:
+        # for model in self.pgdf.model.values():
         #     model.beginResetModel()
         #     model.endResetModel()
 
-        for model in self.pgdf.model.values():
+        for model in [
+            self.pgdf.model["data_table_model"],
+            self.pgdf.model["header_model_horizontal"],
+            self.pgdf.model["analysis_selector_proxy_model"],
+            self.pgdf.model["column_search_model"],
+            self.pgdf.model["canned_model"],
+        ]:
             model.beginResetModel()
             model.endResetModel()
 
@@ -497,9 +503,9 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self.dataframe_viewer: DataFrameViewer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
 
-    def headerData(self, section, orientation, role=None):
-        # Headers for DataTableView are hidden. Header data is shown in HeaderView
-        pass
+    # def headerData(self, section, orientation, role=None):
+    #     # Headers for DataTableView are hidden. Header data is shown in HeaderView
+    #     pass
 
     def columnCount(self, parent=None):
         return self.pgdf.df.columns.shape[0]
@@ -824,7 +830,6 @@ class DataTableView(QtWidgets.QTableView):
             gridline-color: rgb(60, 60, 60);"""
         )
 
-    # @status_message_decorator("Resizing rows...")
     def showEvent(self, event: QShowEvent) -> None:
         """
         Handles resizing of all rows on show event

@@ -1,5 +1,6 @@
 import typing
 import pandas as pd
+import numpy as np
 from PyQt5.QtCore import (
     QEvent,
     QItemSelectionModel,
@@ -39,6 +40,8 @@ from PyQt5.QtGui import (
     QTextCursor,
 )
 from PyQt5 import QtWidgets, QtGui, QtCore
+
+from utils.data_variables import Data
 
 
 class CellEditorContainer(QWidget):
@@ -112,7 +115,7 @@ class CellEditorContainer(QWidget):
 
     def populate_cell_selector(self):
         """
-        Set model for combobox that displays "Editable" rows
+        Set model for combobox that displays Data.ROLES['EDITABLE'] rows
         """
         # for _ in range(10):
         #     self.cell_selector.addItem("Banana")
@@ -126,12 +129,24 @@ class CellEditorContainer(QWidget):
         )
 
     def populate_analysis(self):
+        if self.cell_selector.model().rowCount() > 0:
+            self.cell_editor.setPlainText(
+                self.get_string_from_dataframe(
+                    self.suite.viewer.pgdf.df_unfiltered.loc[
+                        self.suite.row,
+                        (self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+                    ]
+                )
+            )
 
-        self.cell_editor.setPlainText(
-            self.suite.viewer.pgdf.df_unfiltered.loc[
-                self.suite.row, (self.cell_selector.currentText(), "Editable")
-            ]
-        )
+    def get_string_from_dataframe(self, value):
+        if pd.isna(value):
+            return ""
+
+        if isinstance(value, (float, np.floating)):
+            return str(round(value, 3))
+
+        return str(value)
 
     def save_analysis(self):
         """
@@ -139,7 +154,7 @@ class CellEditorContainer(QWidget):
         """
         self.suite.viewer.pgdf.edit_data(
             self.suite.row,
-            (self.cell_selector.currentText(), "Editable"),
+            (self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
             self.cell_editor.toPlainText(),
         )
 
@@ -200,8 +215,10 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.df.columns, pd.MultiIndex):
             return 0
-        # print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
-        return sum(i == "Editable" for i in self.df.columns.get_level_values(1))
+        # print(sum(i == Data.ROLES['EDITABLE'] for i in self.df.columns.get_level_values(1)))
+        return sum(
+            i == Data.ROLES["EDITABLE"] for i in self.df.columns.get_level_values(1)
+        )
 
     def data(self, index, role):
         if not index.isValid():
@@ -214,36 +231,9 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
             row = index.row()
             # print(row)
             # print(str(self.pgdf.df.columns[row]))
-            rows = tuple(x[0] for x in self.df.columns if x[1] == "Editable")
-            # print(rows)
-            # print(self.df.columns)
-            return rows[row]
-
-
-class AnalysisSelectorModel(QtCore.QAbstractListModel):
-    def __init__(self, parent, df) -> None:
-        super().__init__(parent)
-        self.gui = parent
-        self.df = df
-
-    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
-        if not isinstance(self.df.columns, pd.MultiIndex):
-            return 0
-        # print(sum(i == "Editable" for i in self.df.columns.get_level_values(1)))
-        return sum(i == "Editable" for i in self.df.columns.get_level_values(1))
-
-    def data(self, index, role):
-        if not index.isValid():
-            return None
-
-        if not isinstance(self.df.columns, pd.MultiIndex):
-            return None
-
-        if role == QtCore.Qt.DisplayRole:
-            row = index.row()
-            # print(row)
-            # print(str(self.pgdf.df.columns[row]))
-            rows = tuple(x[0] for x in self.df.columns if x[1] == "Editable")
+            rows = tuple(
+                x[0] for x in self.df.columns if x[1] == Data.ROLES["EDITABLE"]
+            )
             # print(rows)
             # print(self.df.columns)
             return rows[row]

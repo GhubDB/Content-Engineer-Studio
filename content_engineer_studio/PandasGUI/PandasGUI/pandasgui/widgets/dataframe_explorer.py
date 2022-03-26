@@ -172,12 +172,14 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
             self.column_viewer.setModel(self.pgdf.model["column_search_model"])
             self.installEventFilter(self)
 
-    def replace_model(self, pgdf):
+    def replace_model(self, pgdf, parent, dataframe_explorer):
         self.pgdf = pgdf
         self.column_viewer.setModel(self.pgdf.model["column_search_model"])
         self.search_columns.textChanged.connect(
             self.pgdf.model["column_search_model"].setFilterRegExp
         )
+        self.gui = parent
+        self.dataframe_explorer = dataframe_explorer
 
     @pyqtSlot(QtCore.QItemSelection)
     def get_source_from_selection(self):

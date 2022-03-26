@@ -1,6 +1,6 @@
-'''
+"""
 Menu that appears on right clicking a column header. Contains options for modifying DataFrame columns
-'''
+"""
 
 import sys
 
@@ -26,21 +26,33 @@ class ColumnMenu(QtWidgets.QMenu):
         # Sorting
 
         def select_button():
-            self.sort_b1.setDown(self.pgdf.sort_state == 'Asc' and self.pgdf.sorted_column_ix == column_ix)
-            self.sort_b2.setDown(self.pgdf.sort_state == 'Desc' and self.pgdf.sorted_column_ix == column_ix)
-            self.sort_b3.setDown(self.pgdf.sort_state == 'None' or self.pgdf.sorted_column_ix != column_ix)
+            self.sort_b1.setDown(
+                self.pgdf.sort_state == "Asc"
+                and self.pgdf.sorted_column_ix == column_ix
+            )
+            self.sort_b2.setDown(
+                self.pgdf.sort_state == "Desc"
+                and self.pgdf.sorted_column_ix == column_ix
+            )
+            self.sort_b3.setDown(
+                self.pgdf.sort_state == "None"
+                or self.pgdf.sorted_column_ix != column_ix
+            )
 
         self.sort_b1 = QtWidgets.QPushButton("Asc")
-        self.sort_b1.clicked.connect(lambda: [self.pgdf.sort_column(self.column_ix, "Asc"),
-                                              select_button()])
+        self.sort_b1.clicked.connect(
+            lambda: [self.pgdf.sort_column(self.column_ix, "Asc"), select_button()]
+        )
 
         self.sort_b2 = QtWidgets.QPushButton("Desc")
-        self.sort_b2.clicked.connect(lambda: [self.pgdf.sort_column(self.column_ix, "Desc"),
-                                              select_button()])
+        self.sort_b2.clicked.connect(
+            lambda: [self.pgdf.sort_column(self.column_ix, "Desc"), select_button()]
+        )
 
         self.sort_b3 = QtWidgets.QPushButton("None")
-        self.sort_b3.clicked.connect(lambda: [self.pgdf.sort_column(self.column_ix, "None"),
-                                              select_button()])
+        self.sort_b3.clicked.connect(
+            lambda: [self.pgdf.sort_column(self.column_ix, "None"), select_button()]
+        )
 
         select_button()
 
@@ -49,7 +61,10 @@ class ColumnMenu(QtWidgets.QMenu):
         sort_control_layout.setSpacing(0)
         sort_control_layout.setContentsMargins(0, 0, 0, 0)
         sort_control.setLayout(sort_control_layout)
-        [sort_control_layout.addWidget(w) for w in [self.sort_b1, self.sort_b2, self.sort_b3]]
+        [
+            sort_control_layout.addWidget(w)
+            for w in [self.sort_b1, self.sort_b2, self.sort_b3]
+        ]
 
         self.add_widget(sort_control)
 
@@ -58,24 +73,47 @@ class ColumnMenu(QtWidgets.QMenu):
 
         col_name = self.pgdf.df.columns[column_ix]
         self.move_b1 = QtWidgets.QPushButton("<<")
-        self.move_b1.clicked.connect(lambda: [self.pgdf.move_column(column_ix, 0),
-                                              self.close(), self.pgdf.dataframe_viewer.show_column_menu(col_name)])
+        self.move_b1.clicked.connect(
+            lambda: [
+                self.pgdf.move_column(column_ix, 0),
+                self.close(),
+                self.pgdf.dataframe_viewer.show_column_menu(col_name),
+            ]
+        )
         self.move_b2 = QtWidgets.QPushButton("<")
-        self.move_b2.clicked.connect(lambda: [self.pgdf.move_column(column_ix, column_ix - 1),
-                                              self.close(), self.pgdf.dataframe_viewer.show_column_menu(col_name)])
+        self.move_b2.clicked.connect(
+            lambda: [
+                self.pgdf.move_column(column_ix, column_ix - 1),
+                self.close(),
+                self.pgdf.dataframe_viewer.show_column_menu(col_name),
+            ]
+        )
         self.move_b3 = QtWidgets.QPushButton(">")
-        self.move_b3.clicked.connect(lambda: [self.pgdf.move_column(column_ix, column_ix + 1),
-                                              self.close(), self.pgdf.dataframe_viewer.show_column_menu(col_name)])
+        self.move_b3.clicked.connect(
+            lambda: [
+                self.pgdf.move_column(column_ix, column_ix + 1),
+                self.close(),
+                self.pgdf.dataframe_viewer.show_column_menu(col_name),
+            ]
+        )
         self.move_b4 = QtWidgets.QPushButton(">>")
-        self.move_b4.clicked.connect(lambda: [self.pgdf.move_column(column_ix, len(df.columns)),
-                                              self.close(), self.pgdf.dataframe_viewer.show_column_menu(col_name)])
+        self.move_b4.clicked.connect(
+            lambda: [
+                self.pgdf.move_column(column_ix, len(df.columns)),
+                self.close(),
+                self.pgdf.dataframe_viewer.show_column_menu(col_name),
+            ]
+        )
 
         move_control = QtWidgets.QWidget()
         move_control_layout = QtWidgets.QHBoxLayout()
         move_control_layout.setSpacing(0)
         move_control_layout.setContentsMargins(0, 0, 0, 0)
         move_control.setLayout(move_control_layout)
-        [move_control_layout.addWidget(w) for w in [self.move_b1, self.move_b2, self.move_b3, self.move_b4]]
+        [
+            move_control_layout.addWidget(w)
+            for w in [self.move_b1, self.move_b2, self.move_b3, self.move_b4]
+        ]
 
         self.add_widget(move_control)
 
@@ -83,7 +121,9 @@ class ColumnMenu(QtWidgets.QMenu):
         # Delete
 
         button = QtWidgets.QPushButton("Delete Column")
-        button.clicked.connect(lambda: [self.pgdf.delete_column(column_ix), self.close()])
+        button.clicked.connect(
+            lambda: [self.pgdf.delete_column(column_ix), self.close()]
+        )
         self.add_widget(button)
 
         ########################
@@ -96,34 +136,50 @@ class ColumnMenu(QtWidgets.QMenu):
         ########################
         # Data Type
         col_type = self.pgdf.df_unfiltered.dtypes[column_ix]
-        types = list(dict.fromkeys([str(col_type)] + ['float', 'bool', 'category', 'str']))
+        types = list(
+            dict.fromkeys([str(col_type)] + ["float", "bool", "category", "str"])
+        )
         combo = QtWidgets.QComboBox()
         combo.addItems(types)
         combo.setCurrentText(str(col_type))
-        combo.currentTextChanged.connect(lambda x: [self.pgdf.change_column_type(column_ix, x)])
+        combo.currentTextChanged.connect(
+            lambda x: [self.pgdf.change_column_type(column_ix, x)]
+        )
         self.add_widget(combo)
 
         ########################
         # Coloring
-        self.add_action("Color by None",
-                        lambda: [setattr(self.pgdf.dataframe_viewer, 'color_mode', None),
-                                 self.pgdf.dataframe_viewer.refresh_ui()]
-                        )
+        self.add_action(
+            "Color by None",
+            lambda: [
+                setattr(self.pgdf.dataframe_viewer, "color_mode", None),
+                self.pgdf.dataframe_viewer._refresh_ui(),
+            ],
+        )
 
-        self.add_action("Color by columns",
-                        lambda: [setattr(self.pgdf.dataframe_viewer, 'color_mode', 'column'),
-                                 self.pgdf.dataframe_viewer.refresh_ui()]
-                        )
+        self.add_action(
+            "Color by columns",
+            lambda: [
+                setattr(self.pgdf.dataframe_viewer, "color_mode", "column"),
+                self.pgdf.dataframe_viewer._refresh_ui(),
+            ],
+        )
 
-        self.add_action("Color by rows",
-                        lambda: [setattr(self.pgdf.dataframe_viewer, 'color_mode', 'row'),
-                                 self.pgdf.dataframe_viewer.refresh_ui()]
-                        )
+        self.add_action(
+            "Color by rows",
+            lambda: [
+                setattr(self.pgdf.dataframe_viewer, "color_mode", "row"),
+                self.pgdf.dataframe_viewer._refresh_ui(),
+            ],
+        )
 
-        self.add_action("Color by all",
-                        lambda: [setattr(self.pgdf.dataframe_viewer, 'color_mode', 'all'),
-                                 self.pgdf.dataframe_viewer.refresh_ui()]
-                        )
+        self.add_action(
+            "Color by all",
+            lambda: [
+                setattr(self.pgdf.dataframe_viewer, "color_mode", "all"),
+                self.pgdf.dataframe_viewer._refresh_ui(),
+            ],
+        )
 
     def add_action(self, text, function):
         action = QtWidgets.QAction(text, self)

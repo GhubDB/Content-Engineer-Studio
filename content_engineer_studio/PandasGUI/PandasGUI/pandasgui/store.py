@@ -349,7 +349,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         header_roles_model -> Model for dragable header names listview
         column_search_model -> Searchable proxymodel for dragable header names listview
         analysis_selector_proxy_model -> Model for analysis QComboBox
-        analysis_canned_model -> Model for analysis canned response tableview
+        canned_model -> Model for analysis canned response tableview
         """
         self.model = {}
 
@@ -452,20 +452,17 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
     @status_message_decorator("Applying cell edit...")
     def edit_data(self, row, col, text):
-        intup = type(col)
 
-        column_dtype = self.df.dtypes[col].type
-        # type should always be str when being called from PyQt GUI but someone might call this directly
-        if type(text) == str:
-            value = parse_cell(text, column_dtype)
+        if text == "":
+            text = np.nan
 
         # Map the row number in the filtered df (which the user interacts with) to the unfiltered one
         row = self.filtered_index_map[row]
 
         # Save value to dataframe
         self.df_unfiltered.iat[
-            row, col if intup == int else list(self.df.columns).index(col)
-        ] = value
+            row, col if type(col) == int else list(self.df.columns).index(col)
+        ] = text
 
         self.apply_filters()
 
@@ -837,7 +834,10 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
     def data_changed(self):
         self.refresh_ui()
-        self.refresh_statistics()
+
+        # Disabled for now. TODO: Make this model based
+        # self.refresh_statistics()
+
         # Remake Grapher plot
         if self.dataframe_explorer is not None:
             self.dataframe_explorer.grapher.on_dragger_finished()
@@ -855,7 +855,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             model.endResetModel()
 
         if self.dataframe_viewer is not None:
-            self.dataframe_viewer.refresh_ui()
+            self.dataframe_viewer._refresh_ui()
 
     @staticmethod
     def cast(df: Union[PandasGuiDataFrameStore, pd.DataFrame, pd.Series, Iterable]):

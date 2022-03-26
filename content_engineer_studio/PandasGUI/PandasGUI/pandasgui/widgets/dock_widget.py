@@ -6,23 +6,30 @@ class DockWidget(QtWidgets.QDockWidget):
     # This signal is used to track which dock is considered active or focussed
     activated = QtCore.pyqtSignal()
 
-    def __init__(self, title: str, pgdf_name: str = 'Untitled'):
+    def __init__(self, title: str, pgdf_name: str = "Untitled"):
         super().__init__(title)
         self.title = title
         self.pgdf_name = pgdf_name
 
         self.setTitleBarWidget(QtWidgets.QWidget())
         self.dockLocationChanged.connect(self.on_dockLocationChanged)
-        self.setFeatures(self.DockWidgetFloatable |
-                         self.DockWidgetMovable |
-                         self.DockWidgetClosable)
+        self.setFeatures(
+            self.DockWidgetFloatable | self.DockWidgetMovable | self.DockWidgetClosable
+        )
 
-        self.visibilityChanged.connect(lambda visible: visible and self.activated.emit())
+        self.visibilityChanged.connect(
+            lambda visible: visible and self.activated.emit()
+        )
 
-    def eventFilter(self, obj, event):
-        if event.type() == QtCore.QEvent.MouseButtonPress:
+    def mousePressEvent(self, a0: QtGui.QMouseEvent) -> None:
+        if a0.type() == QtCore.QEvent.MouseButtonPress:
             self.activated.emit()
-        return super().eventFilter(obj, event)
+        return super().mousePressEvent(a0)
+
+    # def eventFilter(self, obj, event):
+    #     if event.type() == QtCore.QEvent.MouseButtonPress:
+    #         self.activated.emit()
+    #     return super().eventFilter(obj, event)
 
     def setWidget(self, widget) -> None:
         temp = super().setWidget(widget)
@@ -69,6 +76,7 @@ class DockWidget(QtWidgets.QDockWidget):
         else:
             main.addDockWidget(Qt.LeftDockWidgetArea, self)
 
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     main = QtWidgets.QMainWindow()
@@ -101,7 +109,9 @@ if __name__ == "__main__":
     main.tabifyDockWidget(dock1, dock2)
     main.addDockWidget(Qt.RightDockWidgetArea, dock3)
 
-    main.setDockOptions(main.GroupedDragging | main.AllowTabbedDocks | main.AllowNestedDocks)
+    main.setDockOptions(
+        main.GroupedDragging | main.AllowTabbedDocks | main.AllowNestedDocks
+    )
 
     main.setTabPosition(Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North)
     main.resize(400, 200)

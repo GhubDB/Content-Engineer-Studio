@@ -500,7 +500,7 @@ def parse_cell(text, column_dtype):
 
     if column_dtype == str:
         return text
-    # print(text)
+
     return text
 
     # Parse text using same logic as reading a CSV file by using a file buffer

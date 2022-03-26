@@ -112,21 +112,21 @@ class AnalysisSuite(BaseSuite):
         """
         Master Controller. Keeps the current row number updated. Reimplemented from base_suite
         """
-        super().row_selector()
+        super().row_selector(selected)
 
         # Loading web page, web scraping and adding results to self.chat
         if self.open_links.checkState():
             # Start a new thread to load the chat log
-            setup = Worker(self.getChatlog, "activate_output")
-            setup.signals.output.connect(self.populate_chat)
+            setup = Worker(self.chat.getChatlog, "activate_output")
+            setup.signals.output.connect(self.chat.populate_chat_analysis)
             self.gui.threadpool.start(setup)
 
-    def populate_status_bar(self, row: int, start: int, end: int):
-        self.status_bar.setText(
-            self.df.iloc[row : row + 1, start : end + 1].to_string(
-                header=False, index=False
-            )
-        )
+    # def populate_status_bar(self, row: int, start: int, end: int):
+    #     self.status_bar.setText(
+    #         self.df.iloc[row : row + 1, start : end + 1].to_string(
+    #             header=False, index=False
+    #         )
+    #     )
 
     def switchToTesting(self):
         self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
