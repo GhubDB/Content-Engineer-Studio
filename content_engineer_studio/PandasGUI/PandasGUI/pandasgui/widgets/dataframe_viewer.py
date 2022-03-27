@@ -3,6 +3,7 @@ import re
 import threading
 import os
 from typing import Union, Optional
+import typing
 
 import numpy as np
 import pandas as pd
@@ -459,26 +460,11 @@ class DataFrameViewer(QtWidgets.QWidget):
         # TODO fix column widths to be analogous to the move rows function
 
     def _refresh_ui(self):
-        # Update models
-        # self.models = []
-        # self.models += [
-        #     self.dataView.model(),
-        #     self.columnHeader.model(),
-        #     self.indexHeader.model(),
-        #     self.columnHeaderNames.model(),
-        #     self.indexHeaderNames.model(),
-        #     self.pgdf.model["header_roles_model"],
-        # ]
-
-        # for model in self.pgdf.model.values():
-        #     model.beginResetModel()
-        #     model.endResetModel()
-
         for model in [
             self.pgdf.model["data_table_model"],
             self.pgdf.model["header_model_horizontal"],
+            self.pgdf.model["header_roles_model"],
             self.pgdf.model["column_search_model"],
-            self.pgdf.model["canned_model"],
         ]:
             model.beginResetModel()
             model.endResetModel()
@@ -864,6 +850,9 @@ class DataTableView(QtWidgets.QTableView):
         # row = index.row()
         height = self.rowHeight(index)
         self.dataframe_viewer.indexHeader.setRowHeight(index, height)
+
+    def resizeRowToContents(self, row: int) -> None:
+        return super().resizeRowToContents(row)
 
     def on_selectionChanged(self):
         """

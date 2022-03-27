@@ -9,6 +9,7 @@ import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from pandasgui.store import PandasGuiDataFrameStore
+from pandasgui.utility import Signals
 
 from utils.data_variables import Data
 
@@ -36,15 +37,25 @@ class ColumnMenu(QtWidgets.QMenu):
         def assign_role(text):
             # if there is no multiindex, we add a second level with all values set to None
             if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
+                self.pgdf.model["header_model_horizontal"].beginInsertRows(
+                    QtCore.QModelIndex(), 1, 1
+                )
                 self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_product(
                     [df.columns, ["None"]]
                 )
+                self.pgdf.model["header_model_horizontal"].endInsertRows()
 
             # Altering and replacing the existing index
             tuples = self.pgdf.df_unfiltered.columns.tolist()
             tuples[self.column_ix] = (tuples[self.column_ix][0], text)
             self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(tuples)
             self.pgdf.refresh_ui()
+            self.pgdf.signals.reset_models.emit(
+                [
+                    "analysis_selector_proxy_model",
+                    "canned_model",
+                ]
+            )
 
         self.header_role_selector = QtWidgets.QComboBox()
         for item in Data.ROLES.values():

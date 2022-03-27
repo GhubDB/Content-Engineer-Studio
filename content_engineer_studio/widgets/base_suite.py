@@ -194,6 +194,7 @@ class BaseSuite(QWidget):
         """
         # Save and clean up before next row is loaded
         self.saveOnRowChange()
+        self.viewer.dataView.resizeRowToContents(self.row)
         self.chat.clearChat()
 
         # Updates the self.row property

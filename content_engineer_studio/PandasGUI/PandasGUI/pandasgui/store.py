@@ -36,6 +36,7 @@ from pandasgui.utility import (
     get_movements,
     column_generator,
     generate_index,
+    Signals,
 )
 from pandasgui.constants import LOCAL_DATA_DIR
 
@@ -340,8 +341,8 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.filters: List[Filter] = []
         self.filtered_index_map = df.reset_index().index
 
-        # Models
         """
+        Models
         Contents:
         data_table_model -> Main Table for dataframe viewer
         header_model_horizontal -> Header names for dataframe viewer
@@ -361,6 +362,10 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.data_changed()
 
         self.column_gen = column_generator()
+
+        self.signals = Signals()
+
+        self.signals.reset_models.connect(self.reset_models)
 
     @property
     def sorted_column_ix(self):
@@ -461,7 +466,8 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         # Save value to dataframe
         self.df_unfiltered.iat[
-            row, col if type(col) == int else list(self.df.columns).index(col)
+            row,
+            col if type(col) == int else list(self.df_unfiltered.columns).index(col),
         ] = text
 
         self.apply_filters()
@@ -569,9 +575,13 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     def move_column(self, src: int, dest: int):
         cols = list(self.df_unfiltered.columns)
         cols.insert(dest, cols.pop(src))
-        self.df_unfiltered.columns = generate_index(
-            ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex), columns=cols
-        )
+
+        # Original implementation changed because it  decoupled from df.columns
+        self.df_unfiltered = self.df_unfiltered.reindex(columns=cols)
+
+        # self.df_unfiltered.columns = generate_index(
+        #     ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex), columns=cols
+        # )
 
         self.add_history_item(
             "move_column",
@@ -588,6 +598,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
+        # Need to make new models for cell_editor and canned_box because the df has been copied
+        self.gui.signals.columns_reordered.emit(self.name)
+
     @status_message_decorator("Reordering columns...")
     def reorder_columns(self, selected: List[int], row: int):
         original = list(self.df_unfiltered.columns)
@@ -597,11 +610,14 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         row -= sum(i < row for i in selected)
         reordered[row:row] = moved
 
+        # Original implementation changed because it  decoupled from df.columns
+        self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
+
         # Make new index and overwrite the old one
-        self.df_unfiltered.columns = generate_index(
-            ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex),
-            columns=reordered,
-        )
+        # self.df_unfiltered.columns = generate_index(
+        #     ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex),
+        #     columns=reordered,
+        # )
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Move columns around in TableView to maintain column widths
@@ -609,6 +625,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             self.dataframe_viewer._move_column(src, dest, refresh=False)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
+
+        # Need to make new models for cell_editor and canned_box because the df has been copied
+        self.gui.signals.columns_reordered.emit(self.name)
 
         self.add_history_item(
             "reorder_columns", f"df = df.reindex(columns={reordered})"
@@ -836,7 +855,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.refresh_ui()
 
         # Disabled for now. TODO: Make this model based
-        # self.refresh_statistics()
+        self.refresh_statistics()
 
         # Remake Grapher plot
         if self.dataframe_explorer is not None:
@@ -856,6 +875,12 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         if self.dataframe_viewer is not None:
             self.dataframe_viewer._refresh_ui()
+
+    def reset_models(self, models: list):
+        print(models)
+        for model_string in models:
+            self.model[model_string].beginResetModel()
+            self.model[model_string].endResetModel()
 
     @staticmethod
     def cast(df: Union[PandasGuiDataFrameStore, pd.DataFrame, pd.Series, Iterable]):

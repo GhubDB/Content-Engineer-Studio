@@ -72,6 +72,13 @@ class Canned(QtWidgets.QTableView):
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
 
+        self.gui.signals.columns_reordered.connect(self.check_populate_canned)
+
+    def check_populate_canned(self, name):
+        if self.suite.viewer is not None:
+            if self.suite.viewer.pgdf.name == name:
+                self.populate_canned()
+
     def populate_canned(self):
         """
         Add model to multiple choice selection box
@@ -145,15 +152,14 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             row = index.row()
             column = index.column()
             rows = tuple(
-                x[0] for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
+                x for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
             )
             self.pgdf.edit_data(
                 row=self.suite.row,
-                col=(rows[row], Data.ROLES["MULTI_CHOICE"]),
+                col=(rows[row]),
                 text=Data.MULTIPLE_CHOICE[column],
             )
-            self.dataChanged.emit(index, index)
-            # text=np.nan if value == 2 else Data.MULTIPLE_CHOICE[column]
+            self.pgdf.signals.reset_models.emit(["canned_model"])
             return True
 
         return False

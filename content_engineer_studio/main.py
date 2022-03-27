@@ -80,7 +80,7 @@ import logging
 # My packages
 from utils.excel_helpers import Excel
 from utils.selenium_helpers import Browser
-from utils.data_variables import Data
+from utils.data_variables import Data, GuiSignals
 from widgets.analysis_suite import AnalysisSuite
 from widgets.drag_drop import DragDrop
 from utils.stylesheets import Stylesheets
@@ -115,6 +115,8 @@ class MainWindow(QMainWindow):
         self.testing_df_name = False
 
         self.threadpool = QThreadPool()
+
+        self.signals = GuiSignals()
 
         # Stores what view the user has worked in last
         self.current_work_area = 0

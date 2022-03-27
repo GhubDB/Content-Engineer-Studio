@@ -1,6 +1,6 @@
 import logging
 import pandas as pd
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 from typing import List, Union
 import sys
 import inspect
@@ -602,6 +602,10 @@ def column_generator():
     while True:
         yield "Column_" + str(n)
         n += 1
+
+
+class Signals(QtWidgets.QWidget):
+    reset_models = QtCore.pyqtSignal(list)
 
 
 event_lookup = {

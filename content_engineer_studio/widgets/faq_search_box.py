@@ -55,6 +55,7 @@ class FaqSearchBoxContainer(QWidget):
         self.searchbar_layout = QHBoxLayout()
         self.searchbar_layout.setContentsMargins(0, 0, 0, 0)
         self.searchbar = QtWidgets.QLineEdit()
+        self.searchbar.setPlaceholderText("Search FAQs")
         self.searchbar.setMinimumSize(QtCore.QSize(0, 30))
         font = QtGui.QFont()
         font.setPointSize(10)

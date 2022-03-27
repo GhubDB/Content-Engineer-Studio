@@ -1,6 +1,7 @@
 import pandas as pd
 from dataclasses import dataclass
 from enum import Enum, auto
+from PyQt5 import QtWidgets, QtCore
 
 
 class Data:
@@ -46,3 +47,8 @@ class Data:
         "Nunc et condimentum ligula. Vivamus porta volutpat gravida. Morbi molestie arcu vel commodo tempus. Duis aliquam quis felis at posuere. Aliquam aliquet ipsum erat, eu tincidunt dolor vehicula at. Sed dolor augue, maximus ut blandit at, iaculis vitae dolor. Vestibulum quis erat egestas, fringilla tortor non, mollis libero. ",
         "Aenean massa nisi, tincidunt non lectus ac, auctor commodo turpis.",
     ]
+
+
+class GuiSignals(QtWidgets.QWidget):
+    editing_done = QtCore.pyqtSignal()
+    columns_reordered = QtCore.pyqtSignal(str)

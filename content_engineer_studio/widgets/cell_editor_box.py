@@ -41,11 +41,7 @@ from PyQt5.QtGui import (
 )
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from utils.data_variables import Data
-
-
-class CellEditorSignals(QWidget):
-    editing_done = pyqtSignal()
+from utils.data_variables import Data, GuiSignals
 
 
 class CellEditorContainer(QWidget):
@@ -115,9 +111,12 @@ class CellEditorContainer(QWidget):
         self.colorize.clicked.connect(self.btn_colorize)
 
         self.cell_editor.signals.editing_done.connect(self.save_analysis)
+        self.gui.signals.columns_reordered.connect(self.check_populate_cell_selector)
 
-        # TODO: Add editing finished signal to textedit subclass
-        # self.analysis.textChanged.connect(self.save_analysis)
+    def check_populate_cell_selector(self, name):
+        if self.suite.viewer is not None:
+            if self.suite.viewer.pgdf.name == name:
+                self.populate_cell_selector()
 
     def populate_cell_selector(self):
         """
@@ -128,7 +127,7 @@ class CellEditorContainer(QWidget):
         # return
         self.suite.viewer.pgdf.model[
             "analysis_selector_proxy_model"
-        ] = AnalysisSelectorModel(parent=self, df=self.suite.viewer.pgdf.df_unfiltered)
+        ] = AnalysisSelectorModel(parent=self)
 
         self.cell_selector.setModel(
             self.suite.viewer.pgdf.model["analysis_selector_proxy_model"]
@@ -154,6 +153,16 @@ class CellEditorContainer(QWidget):
 
         return str(value)
 
+    def save_analysis(self):
+        """
+        Saves current analysis text to dataframe
+        """
+        self.suite.viewer.pgdf.edit_data(
+            row=self.suite.row,
+            col=(self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+            text=self.cell_editor.toPlainText(),
+        )
+
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
@@ -170,17 +179,6 @@ class CellEditorContainer(QWidget):
             self.cell_selector.currentIndex() + self.cell_selector_start + 1,
         )
 
-    # @QtCore.pyqtSlot()
-    def save_analysis(self):
-        """
-        Saves current analysis text to dataframe
-        """
-        self.suite.viewer.pgdf.edit_data(
-            self.suite.row,
-            (self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
-            self.cell_editor.toPlainText(),
-        )
-
 
 class CellEdit(QTextEdit):
     def __init__(self, parent) -> None:
@@ -188,7 +186,7 @@ class CellEdit(QTextEdit):
         self.suite = parent.suite
         self.container = parent
 
-        self.signals = CellEditorSignals()
+        self.signals = GuiSignals()
 
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Expanding
@@ -222,10 +220,10 @@ class CellEdit(QTextEdit):
 
 
 class AnalysisSelectorModel(QtCore.QAbstractListModel):
-    def __init__(self, parent, df) -> None:
+    def __init__(self, parent) -> None:
         super().__init__(parent)
-        self.gui = parent
-        self.df = df
+        self.container = parent
+        self.df = self.container.suite.viewer.pgdf.df_unfiltered
 
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.df.columns, pd.MultiIndex):

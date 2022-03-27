@@ -125,10 +125,13 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.button_layout = QtWidgets.QHBoxLayout()
         self.main_layout.addLayout(self.button_layout)
 
+        font = QtGui.QFont()
+        font.setPointSize(10)
         self.add_column_count = QtWidgets.QSpinBox()
         self.add_column_count.setMaximumSize(QtCore.QSize(35, 16777215))
         self.add_column_count.setMinimum(1)
         self.add_column = QtWidgets.QPushButton()
+        self.add_column_count.setFont(font)
         self.add_column.setText("Add Column(s)")
         self.delete_column = QtWidgets.QPushButton()
         self.delete_column.setText("Delete Column")
@@ -138,6 +141,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         self.button_layout.addWidget(self.delete_column)
 
         self.search_columns = QtWidgets.QLineEdit()
+        self.search_columns.setFont(font)
         self.search_columns.setPlaceholderText("Search columns")
         self.main_layout.addWidget(self.search_columns)
 
@@ -248,10 +252,6 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
 
     def rowCount(self, parent):
         return self.pgdf.df_unfiltered.columns.shape[0]
-
-    # def columnCount(self, parent: QtCore.QModelIndex) -> int:
-    #     print(self.pgdf.df_unfiltered.columns.nlevels)
-    #     return self.pgdf.df_unfiltered.columns.nlevels
 
     def data(self, index, role):
         if not index.isValid():
