@@ -133,10 +133,9 @@ class AnalysisSuite(BaseSuite):
         self.gui.populate_search_box()
 
     def exportToTesting(self):
-        customer = self.getChatText(export=True)
+        customer = self.chat.getChatText(export=True)
         if customer:
             for message in customer:
-                # print(message)
                 item = QtGui.QStandardItem(message)
                 self.gui.testing_suite.auto_history.auto_queue_model.appendRow(item)
         self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
