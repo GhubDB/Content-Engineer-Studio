@@ -18,8 +18,8 @@ class Data:
 
     ROLES = {
         "NONE": "None",
-        "BOT": "Bot",
         "CUSTOMER": "Customer",
+        "BOT": "Bot",
         "MULTI_CHOICE": "Multi-Choice",
         "EDITABLE": "Editable",
         "CORRECT_FAQ": "Correct FAQ",
@@ -51,4 +51,4 @@ class Data:
 
 class GuiSignals(QtWidgets.QWidget):
     editing_done = QtCore.pyqtSignal()
-    columns_reordered = QtCore.pyqtSignal(str)
+    faq_search_selector_index_changed = QtCore.pyqtSignal(int)

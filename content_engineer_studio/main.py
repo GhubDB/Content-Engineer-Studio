@@ -138,11 +138,10 @@ class MainWindow(QMainWindow):
         self.stackedWidget.setLineWidth(0)
         self.stackedWidget.setObjectName("stackedWidget")
         self.central_grid.addWidget(self.stackedWidget, 0, 0, 1, 1)
-
         self.faq_search_tab = FaqSearchTabContainer(parent=self)
         self.stackedWidget.insertWidget(2, self.faq_search_tab)
 
-        # # Setup main components
+        # Setup main components
         self.analysis_suite = AnalysisSuite(parent=self)
         self.stackedWidget.insertWidget(0, self.analysis_suite)
 
@@ -348,26 +347,26 @@ class MainWindow(QMainWindow):
             ],
             "Settings": [
                 MenuItem(name="Preferences...", func=self.edit_settings),
-                {
-                    "Context Menus": [
-                        MenuItem(
-                            name="Add PandasGUI To Context Menu",
-                            func=self.add_to_context_menu,
-                        ),
-                        MenuItem(
-                            name="Remove PandasGUI From Context Menu",
-                            func=self.remove_from_context_menu,
-                        ),
-                        MenuItem(
-                            name="Add JupyterLab To Context Menu",
-                            func=self.add_jupyter_to_context_menu,
-                        ),
-                        MenuItem(
-                            name="Remove JupyterLab From Context Menu",
-                            func=self.remove_jupyter_from_context_menu,
-                        ),
-                    ]
-                },
+                # {
+                # "Context Menus": [
+                #     MenuItem(
+                #         name="Add PandasGUI To Context Menu",
+                #         func=self.add_to_context_menu,
+                #     ),
+                #     MenuItem(
+                #         name="Remove PandasGUI From Context Menu",
+                #         func=self.remove_from_context_menu,
+                #     ),
+                #     MenuItem(
+                #         name="Add JupyterLab To Context Menu",
+                #         func=self.add_jupyter_to_context_menu,
+                #     ),
+                #     MenuItem(
+                #         name="Remove JupyterLab From Context Menu",
+                #         func=self.remove_jupyter_from_context_menu,
+                #     ),
+                # ]
+                # },
             ],
             "Debug": [
                 MenuItem(name="About", func=self.about),
@@ -484,67 +483,67 @@ class MainWindow(QMainWindow):
         self.store.add_dataframe(df)
 
     # https://stackoverflow.com/a/29769228/3620725
-    def add_to_context_menu(self):
-        import winreg
+    # def add_to_context_menu(self):
+    #     import winreg
 
-        key = winreg.HKEY_CURRENT_USER
-        command_value = rf'{sys.executable} -m pandasgui.run_with_args "%V"'
-        icon_value = rf"{os.path.dirname(pandasgui.__file__)}\resources\images\icon.ico"
+    #     key = winreg.HKEY_CURRENT_USER
+    #     command_value = rf'{sys.executable} -m pandasgui.run_with_args "%V"'
+    #     icon_value = rf"{os.path.dirname(pandasgui.__file__)}\resources\images\icon.ico"
 
-        handle = winreg.CreateKeyEx(
-            key,
-            "Software\Classes\*\shell\Open with PandasGUI\command",
-            0,
-            winreg.KEY_SET_VALUE,
-        )
-        winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
-        handle = winreg.CreateKeyEx(
-            key, "Software\Classes\*\shell\Open with PandasGUI", 0, winreg.KEY_SET_VALUE
-        )
-        winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
+    #     handle = winreg.CreateKeyEx(
+    #         key,
+    #         "Software\Classes\*\shell\Open with PandasGUI\command",
+    #         0,
+    #         winreg.KEY_SET_VALUE,
+    #     )
+    #     winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
+    #     handle = winreg.CreateKeyEx(
+    #         key, "Software\Classes\*\shell\Open with PandasGUI", 0, winreg.KEY_SET_VALUE
+    #     )
+    #     winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
 
-    def remove_from_context_menu(self):
-        import winreg
+    # def remove_from_context_menu(self):
+    #     import winreg
 
-        key = winreg.HKEY_CURRENT_USER
-        winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI\command")
-        winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI")
+    #     key = winreg.HKEY_CURRENT_USER
+    #     winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI\command")
+    #     winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI")
 
-    def add_jupyter_to_context_menu(self):
-        import winreg
+    # def add_jupyter_to_context_menu(self):
+    #     import winreg
 
-        key = winreg.HKEY_CURRENT_USER
-        command_value = rf'cmd.exe /k jupyter lab --notebook-dir="%V"'
-        icon_value = (
-            rf"{os.path.dirname(pandasgui.__file__)}\resources\images\jupyter_icon.ico"
-        )
+    #     key = winreg.HKEY_CURRENT_USER
+    #     command_value = rf'cmd.exe /k jupyter lab --notebook-dir="%V"'
+    #     icon_value = (
+    #         rf"{os.path.dirname(pandasgui.__file__)}\resources\images\jupyter_icon.ico"
+    #     )
 
-        handle = winreg.CreateKeyEx(
-            key,
-            "Software\Classes\directory\Background\shell\Open with JupyterLab\command",
-            0,
-            winreg.KEY_SET_VALUE,
-        )
-        winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
-        handle = winreg.CreateKeyEx(
-            key,
-            "Software\Classes\directory\Background\shell\Open with JupyterLab",
-            0,
-            winreg.KEY_SET_VALUE,
-        )
-        winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
+    #     handle = winreg.CreateKeyEx(
+    #         key,
+    #         "Software\Classes\directory\Background\shell\Open with JupyterLab\command",
+    #         0,
+    #         winreg.KEY_SET_VALUE,
+    #     )
+    #     winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
+    #     handle = winreg.CreateKeyEx(
+    #         key,
+    #         "Software\Classes\directory\Background\shell\Open with JupyterLab",
+    #         0,
+    #         winreg.KEY_SET_VALUE,
+    #     )
+    #     winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
 
-    def remove_jupyter_from_context_menu(self):
-        import winreg
+    # def remove_jupyter_from_context_menu(self):
+    #     import winreg
 
-        key = winreg.HKEY_CURRENT_USER
-        winreg.DeleteKey(
-            key,
-            "Software\Classes\directory\Background\shell\Open with JupyterLab\command",
-        )
-        winreg.DeleteKey(
-            key, "Software\Classes\directory\Background\shell\Open with JupyterLab"
-        )
+    #     key = winreg.HKEY_CURRENT_USER
+    #     winreg.DeleteKey(
+    #         key,
+    #         "Software\Classes\directory\Background\shell\Open with JupyterLab\command",
+    #     )
+    #     winreg.DeleteKey(
+    #         key, "Software\Classes\directory\Background\shell\Open with JupyterLab"
+    #     )
 
     def edit_settings(self):
 
@@ -618,6 +617,7 @@ class MainWindow(QMainWindow):
         self.faq_auto_search_model.setFilterKeyColumn(-1)
 
         # Adding search box models
+        # TODO: move some of these to base_suite
         self.analysis_suite.faq_search_box.search_box.setModel(
             self.faq_auto_search_model
         )
@@ -637,55 +637,41 @@ class MainWindow(QMainWindow):
             self.faq_auto_search_model.setFilterRegExp
         )
 
-        self.update_search_box()
+        self.update_search_box(idx=0)
         self.populate_search_column_select()
 
-    def update_search_box(self):
+    def update_search_box(self, idx: int):
         """
         Updates the search box with values from FAQ excel sheet
         """
-
         # Synchronize selectors
         page = self.stackedWidget.currentIndex()
         if page == 0:
-            index = (
-                self.analysis_suite.faq_search_box.search_column_select.currentIndex()
-            )
-            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(
-                index
-            )
-            self.faq_search_tab.search_column_select.setCurrentIndex(index)
+
+            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
+            self.faq_search_tab.search_column_select.setCurrentIndex(idx)
         elif page == 1:
-            index = (
-                self.testing_suite.faq_search_box.search_column_select.currentIndex()
-            )
-            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
-                index
-            )
-            self.faq_search_tab.search_column_select.setCurrentIndex(index)
+
+            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
+            self.faq_search_tab.search_column_select.setCurrentIndex(idx)
         elif page == 2:
-            index = self.faq_search_tab.search_column_select.currentIndex()
-            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(
-                index
-            )
-            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(
-                index
-            )
+            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
+            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
 
         # Set table column to filter by
         try:
-            if index == len(self.faq_df.columns):
+            if idx == len(self.faq_df.columns):
                 # Set to filter by all columns
                 self.faq_auto_search_model.setFilterKeyColumn(-1)
             else:
-                self.faq_auto_search_model.setFilterKeyColumn(index)
+                self.faq_auto_search_model.setFilterKeyColumn(idx)
         except UnboundLocalError as e:
             pass
 
         # Show/hide columns according to current selection
-        if (page == 0 or page == 1) and index != len(self.faq_df.columns):
+        if (page == 0 or page == 1) and idx != len(self.faq_df.columns):
             for i in range(0, len(self.faq_df.columns)):
-                if i != index:
+                if i != idx:
                     self.analysis_suite.faq_search_box.search_box.hideColumn(
                         i
                     ) if page == 0 else self.testing_suite.faq_search_box.search_box.hideColumn(
@@ -708,9 +694,10 @@ class MainWindow(QMainWindow):
             item = QStandardItem(item)
             model.setItem(idx, 0, item)
 
-        # For searching all columns<
+        # For searching all columns
         item = QStandardItem("Search in all columns")
         model.setItem(len(self.faq_df.columns), 0, item)
+
         self.analysis_suite.faq_search_box.search_column_select.setModel(model)
         self.testing_suite.faq_search_box.search_column_select.setModel(model)
         self.faq_search_tab.search_column_select.setModel(model)
@@ -763,7 +750,7 @@ class MainWindow(QMainWindow):
             # Switch to Dataframe Viewer
             self.stackedWidget.setCurrentIndex(3)
 
-    def workingView(self, idx):
+    def workingView(self, idx: int):
         """
         Switches in dataframe viewers and keeps track of the current working view
         """

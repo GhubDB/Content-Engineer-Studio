@@ -360,8 +360,9 @@ class ChatWidgetContainer(QWidget):
         """
         Sets up (singular) new chat session
         """
-        self.suite.browser.setUp(url=Data.LIVECHAT_URL)
-        self.suite.browser.clickCleverbotAgree()
+        self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
+        self.suite.browsers[self.current_browser].clickCleverbotAgree()
+
         # clear chat
         self.dialog_num += 1
         self.chat.clear()
@@ -399,7 +400,7 @@ class ChatWidgetContainer(QWidget):
         """
         while self.is_webscraping:
             try:
-                chats = self.suite.browser.getCleverbotLive()
+                chats = self.suite.browsers[self.current_browser].getCleverbotLive()
                 if chats:
                     output.emit(chats)
                 time.sleep(5)

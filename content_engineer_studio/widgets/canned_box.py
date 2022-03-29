@@ -1,43 +1,7 @@
 import typing
 import pandas as pd
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QHBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget, QHeaderView
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 from utils.data_variables import Data
@@ -72,18 +36,8 @@ class Canned(QtWidgets.QTableView):
         self.horizontalHeader().setVisible(False)
         self.verticalHeader().setVisible(False)
 
-        self.gui.signals.columns_reordered.connect(self.check_populate_canned)
-
-    def check_populate_canned(self, name):
-        if self.suite.viewer is not None:
-            if self.suite.viewer.pgdf.name == name:
-                self.populate_canned()
-
     def populate_canned(self):
-        """
-        Add model to multiple choice selection box
-        """
-
+        # Add model to multiple choice selection box
         self.suite.viewer.pgdf.model["canned_model"] = CannedSelectionModel(
             parent=self, pgdf=self.suite.viewer.pgdf
         )
@@ -99,43 +53,52 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
         super().__init__(parent)
         self.gui = parent.gui
         self.suite = parent.suite
-        self.pgdf = pgdf
-        self.df = pgdf.df_unfiltered
+        self.container = parent
+        self.pgdf = self.container.suite.viewer.pgdf
 
     def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
         return len(Data.MULTIPLE_CHOICE)
 
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
-        if not isinstance(self.df.columns, pd.MultiIndex):
+        if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return 0
         return sum(
-            i == Data.ROLES["MULTI_CHOICE"] for i in self.df.columns.get_level_values(1)
+            i == Data.ROLES["MULTI_CHOICE"]
+            for i in self.pgdf.df_unfiltered.columns.get_level_values(1)
         )
 
     def data(self, index, role):
         if not index.isValid():
             return None
 
-        if not isinstance(self.df.columns, pd.MultiIndex):
+        if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return None
 
         column = index.column()
         if role == QtCore.Qt.DisplayRole:
-            rows = tuple(
-                x[0] for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
-            )
             row = index.row()
+            rows = tuple(
+                x[0]
+                for x in self.pgdf.df_unfiltered.columns
+                if x[1] == Data.ROLES["MULTI_CHOICE"]
+            )
             if column == 0:
                 return rows[row]
             else:
                 return Data.MULTIPLE_CHOICE[column]
         elif role == Qt.CheckStateRole and column in [1, 2, 3]:
-            rows = tuple(
-                x[0] for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
-            )
+            # This allows users to select checkboxes
             row = index.row()
+            rows = tuple(
+                x[0]
+                for x in self.pgdf.df_unfiltered.columns
+                if x[1] == Data.ROLES["MULTI_CHOICE"]
+            )
+            # Check if value in Dataframe is equal to the checkbox that is checked
             if (
-                self.df.loc[self.suite.row, (rows[row], Data.ROLES["MULTI_CHOICE"])]
+                self.pgdf.df_unfiltered.loc[
+                    self.suite.row, (rows[row], Data.ROLES["MULTI_CHOICE"])
+                ]
                 == Data.MULTIPLE_CHOICE[column]
             ):
                 return Qt.Checked
@@ -152,7 +115,9 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             row = index.row()
             column = index.column()
             rows = tuple(
-                x for x in self.df.columns if x[1] == Data.ROLES["MULTI_CHOICE"]
+                x
+                for x in self.pgdf.df_unfiltered.columns
+                if x[1] == Data.ROLES["MULTI_CHOICE"]
             )
             self.pgdf.edit_data(
                 row=self.suite.row,
@@ -172,11 +137,3 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
             return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
 
         return Qt.ItemIsEnabled | Qt.ItemIsUserCheckable
-
-    def beginInsertRows(
-        self, parent: QtCore.QModelIndex, first: int, last: int
-    ) -> None:
-        return super().beginInsertRows(parent, first, last)
-
-    def endInsertRows(self) -> None:
-        return super().endInsertRows()

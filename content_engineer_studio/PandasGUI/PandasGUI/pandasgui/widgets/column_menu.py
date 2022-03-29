@@ -34,8 +34,15 @@ class ColumnMenu(QtWidgets.QMenu):
         ########################
         # Header Role
 
-        def assign_role(text):
-            # if there is no multiindex, we add a second level with all values set to None
+        def preselect_role() -> None:
+            # Preselect the currently set role
+            if isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
+                self.header_role_selector.setCurrentText(
+                    self.pgdf.df_unfiltered.columns.get_level_values(1)[column_ix]
+                )
+
+        def add_multiindex() -> None:
+            # if there is no multiindex, we add a second level with all values set to 'None'
             if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
                 self.pgdf.model["header_model_horizontal"].beginInsertRows(
                     QtCore.QModelIndex(), 1, 1
@@ -45,10 +52,20 @@ class ColumnMenu(QtWidgets.QMenu):
                 )
                 self.pgdf.model["header_model_horizontal"].endInsertRows()
 
+        def assign_role(text: str) -> None:
+            add_multiindex()
             # Altering and replacing the existing index
             tuples = self.pgdf.df_unfiltered.columns.tolist()
             tuples[self.column_ix] = (tuples[self.column_ix][0], text)
             self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(tuples)
+
+            # Clear current cell_edit text if there are no 'EDITABLE' columns selected
+            if (
+                text != Data.ROLES["EDITABLE"]
+                and self.pgdf.model["analysis_selector_proxy_model"].rowCount() < 1
+            ):
+                self.pgdf.model["analysis_selector_proxy_model"].clear_cell_edit()
+
             self.pgdf.refresh_ui()
             self.pgdf.signals.reset_models.emit(
                 [
@@ -57,16 +74,13 @@ class ColumnMenu(QtWidgets.QMenu):
                 ]
             )
 
+        # Set-up role selector combobox
         self.header_role_selector = QtWidgets.QComboBox()
         for item in Data.ROLES.values():
             self.header_role_selector.addItem(item)
         self.add_widget(self.header_role_selector)
 
-        # Preselect the currently set role
-        if isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
-            self.header_role_selector.setCurrentText(
-                self.pgdf.df_unfiltered.columns.get_level_values(1)[column_ix]
-            )
+        preselect_role()
         self.header_role_selector.currentTextChanged.connect(assign_role)
 
         ########################

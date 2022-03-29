@@ -236,12 +236,10 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
             return
         self.dataframe_explorer.pgdf.delete_column(rows)
 
-    def eventFilter(self, source: QtCore.QObject, event: QtCore.QEvent) -> bool:
-        # Enable deleting selected rows with DEL
-        if event.type() == QtCore.QEvent.KeyPress:
-            if event.key() == Qt.Key_Delete:
-                self.btn_delete_column()
-        return super().eventFilter(source, event)
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        if event.key() == Qt.Key_Delete:
+            self.btn_delete_column()
+        return super().keyPressEvent(event)
 
 
 class HeaderRolesModel(QtCore.QAbstractListModel):
@@ -380,88 +378,6 @@ class HeaderRolesView(QtWidgets.QListView):
     def dropEvent(self, event: QtGui.QDropEvent) -> None:
         event.setDropAction(Qt.MoveAction)
         super().dropEvent(event)
-
-    # def dragEnterEvent(self, event: QtGui.QDragEnterEvent) -> None:
-    #     if event.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
-    #         event.accept()
-    #     else:
-    #         event.ignore()
-
-    # def startDrag(
-    #     self, supportedActions: Union[QtCore.Qt.DropActions, QtCore.Qt.DropAction]
-    # ) -> None:
-    #     return super().startDrag(supportedActions)
-
-    #     # self.onDropSignal.emit()
-
-    # def dropIndicatorPosition(self) -> "QAbstractItemView.DropIndicatorPosition":
-    #     return super().dropIndicatorPosition()
-
-    # def showDropIndicator(self) -> bool:
-    #     return super().showDropIndicator()
-
-    # def setDropIndicatorShown(self, enable: bool) -> None:
-    #     return super().setDropIndicatorShown(enable)
-
-
-# class ColumnArranger(ColumnViewer):
-#     def __init__(self, pgdf: PandasGuiDataFrameStore):
-#         super().__init__(pgdf)
-#         pgdf = PandasGuiDataFrameStore.cast(pgdf)
-#         self.pgdf = pgdf
-
-#         self.tree.setAcceptDrops(True)
-#         self.tree.setDragEnabled(True)
-#         self.tree.setDefaultDropAction(Qt.MoveAction)
-#         self.tree.setHeaderLabels(["Name"])
-#         self.refresh()
-
-#         self.setContextMenuPolicy(Qt.CustomContextMenu)
-
-#         self.tree.onDropSignal.connect(self.columns_rearranged)
-#         self.tree.itemDoubleClicked.connect(self.on_double_click)
-
-#         self.tree.mouseReleaseEventSignal.connect(self.on_mouseReleaseEvent)
-
-#     def on_double_click(self, item: QtWidgets.QTreeWidgetItem):
-#         ix = self.tree.indexOfTopLevelItem(item)
-#         self.pgdf.dataframe_viewer.scroll_to_column(ix)
-
-#     def columns_rearranged(self):
-#         items = [
-#             self.tree.topLevelItem(x).text(0)
-#             for x in range(self.tree.topLevelItemCount())
-#         ]
-#         self.pgdf.reorder_columns(items)
-
-#     def sizeHint(self) -> QtCore.QSize:
-#         return QtCore.QSize(200, super().sizeHint().height())
-
-#     def on_mouseReleaseEvent(self, event):
-#         # TODO - Add context menu to move columns to front and end
-#         return
-#         if event.button() == Qt.RightButton:
-#             pos = event.pos()
-#             item = self.tree.itemAt(pos)
-#             ix = self.tree.indexAt(pos)
-#             ix_list = [
-#                 self.tree.indexOfTopLevelItem(x) for x in self.tree.selectedItems()
-#             ]
-#             if item:
-#                 menu = QtWidgets.QMenu(self.tree)
-
-#                 action1 = QtWidgets.QAction("Move To Front")
-#                 action1.triggered.connect(lambda: None)
-
-#                 action2 = QtWidgets.QAction("Move To End")
-#                 action2.triggered.connect(lambda: None)
-
-#                 for action in [action1, action2]:
-#                     menu.addAction(action)
-
-#                 menu.exec_(QtGui.QCursor().pos())
-
-#         super().mouseReleaseEvent(event)
 
 
 if __name__ == "__main__":

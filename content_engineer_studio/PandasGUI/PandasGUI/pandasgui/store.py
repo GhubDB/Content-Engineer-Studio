@@ -341,18 +341,19 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.filters: List[Filter] = []
         self.filtered_index_map = df.reset_index().index
 
-        """
-        Models
-        Contents:
-        data_table_model -> Main Table for dataframe viewer
-        header_model_horizontal -> Header names for dataframe viewer
-        header_model_vertical -> Index for dataframe viewer
-        header_roles_model -> Model for dragable header names listview
-        column_search_model -> Searchable proxymodel for dragable header names listview
-        analysis_selector_proxy_model -> Model for analysis QComboBox
-        canned_model -> Model for analysis canned response tableview
-        """
+        models = [
+            "data_table_model",  # -> Main Table for dataframe viewer
+            "header_model_horizontal",  # -> Header names for dataframe viewer
+            "header_model_vertical",  # -> Index for dataframe viewer
+            "header_roles_model",  # -> Model for dragable header names listview
+            "column_search_model",  # -> Searchable proxymodel for dragable header names listview
+            "analysis_selector_proxy_model",  # -> Model for analysis QComboBox
+            "canned_model",  # -> Model for analysis canned response tableview
+        ]
+
         self.model = {}
+        for model in models:
+            self.model[model] = None
 
         # Statistics
         self.column_statistics = None
@@ -598,9 +599,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
-        # Need to make new models for cell_editor and canned_box because the df has been copied
-        self.gui.signals.columns_reordered.emit(self.name)
-
     @status_message_decorator("Reordering columns...")
     def reorder_columns(self, selected: List[int], row: int):
         original = list(self.df_unfiltered.columns)
@@ -625,9 +623,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             self.dataframe_viewer._move_column(src, dest, refresh=False)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
-
-        # Need to make new models for cell_editor and canned_box because the df has been copied
-        self.gui.signals.columns_reordered.emit(self.name)
 
         self.add_history_item(
             "reorder_columns", f"df = df.reindex(columns={reordered})"
@@ -877,7 +872,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             self.dataframe_viewer._refresh_ui()
 
     def reset_models(self, models: list):
-        print(models)
         for model_string in models:
             self.model[model_string].beginResetModel()
             self.model[model_string].endResetModel()

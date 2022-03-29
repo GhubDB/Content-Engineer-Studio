@@ -111,12 +111,6 @@ class CellEditorContainer(QWidget):
         self.colorize.clicked.connect(self.btn_colorize)
 
         self.cell_editor.signals.editing_done.connect(self.save_analysis)
-        self.gui.signals.columns_reordered.connect(self.check_populate_cell_selector)
-
-    def check_populate_cell_selector(self, name):
-        if self.suite.viewer is not None:
-            if self.suite.viewer.pgdf.name == name:
-                self.populate_cell_selector()
 
     def populate_cell_selector(self):
         """
@@ -157,11 +151,12 @@ class CellEditorContainer(QWidget):
         """
         Saves current analysis text to dataframe
         """
-        self.suite.viewer.pgdf.edit_data(
-            row=self.suite.row,
-            col=(self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
-            text=self.cell_editor.toPlainText(),
-        )
+        if self.suite.viewer.pgdf.model["analysis_selector_proxy_model"].rowCount() > 0:
+            self.suite.viewer.pgdf.edit_data(
+                row=self.suite.row,
+                col=(self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+                text=self.cell_editor.toPlainText(),
+            )
 
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
@@ -223,32 +218,30 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
     def __init__(self, parent) -> None:
         super().__init__(parent)
         self.container = parent
-        self.df = self.container.suite.viewer.pgdf.df_unfiltered
+        self.pgdf = self.container.suite.viewer.pgdf
 
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
-        if not isinstance(self.df.columns, pd.MultiIndex):
+        if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return 0
-        # print(sum(i == Data.ROLES['EDITABLE'] for i in self.df.columns.get_level_values(1)))
         return sum(
-            i == Data.ROLES["EDITABLE"] for i in self.df.columns.get_level_values(1)
+            i == Data.ROLES["EDITABLE"]
+            for i in self.pgdf.df_unfiltered.columns.get_level_values(1)
         )
 
     def data(self, index, role):
         if not index.isValid():
             return None
 
-        if not isinstance(self.df.columns, pd.MultiIndex):
+        if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return None
 
         if role == QtCore.Qt.DisplayRole:
             row = index.row()
-            # print(row)
-            # print(str(self.pgdf.df.columns[row]))
             rows = tuple(
-                x[0] for x in self.df.columns if x[1] == Data.ROLES["EDITABLE"]
+                x[0]
+                for x in self.pgdf.df_unfiltered.columns
+                if x[1] == Data.ROLES["EDITABLE"]
             )
-            # print(rows)
-            # print(self.df.columns)
             return rows[row]
 
     def flags(self, index):
@@ -267,3 +260,6 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
 
     def endInsertRows(self) -> None:
         return super().endInsertRows()
+
+    def clear_cell_edit(self):
+        self.container.cell_editor.setPlainText("")

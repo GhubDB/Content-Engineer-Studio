@@ -67,6 +67,7 @@ class BaseSuite(QWidget):
         """Seting up components"""
         #####################################################
 
+        # Setup UI
         sizePolicy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
         )
@@ -80,7 +81,7 @@ class BaseSuite(QWidget):
         self.grid = QtWidgets.QGridLayout(self)
         self.grid.setContentsMargins(0, 0, 0, 0)
 
-        # Vertical row selection Sidebar
+        # Set up vertical row selection Sidebar
         self.sidebar = Sidebar(parent=self)
         self.grid.addWidget(self.sidebar, 0, 0, 1, 1)
 
@@ -125,10 +126,8 @@ class BaseSuite(QWidget):
         self.component_container = QWidget(self.main_splitter)
         self.component_grid = QGridLayout(self.component_container)
         self.component_grid.setContentsMargins(0, 0, 0, 0)
-
         self.component_splitter = QtWidgets.QSplitter(self.component_container)
         self.component_splitter.setOrientation(QtCore.Qt.Vertical)
-
         self.component_grid.addWidget(self.component_splitter, 0, 0)
 
         # FAQ search Box
@@ -143,7 +142,7 @@ class BaseSuite(QWidget):
         self.cell_editor_box = CellEditorContainer(parent=self)
         self.component_splitter.addWidget(self.cell_editor_box)
 
-        # Up / Save / Down
+        # Up / Save / Down buttons
         self.up_save_down_container = QWidget(self.component_splitter)
         self.up_save_down_layout = QtWidgets.QHBoxLayout(self.up_save_down_container)
         self.up_save_down_layout.setContentsMargins(0, 0, 0, 0)
@@ -161,6 +160,7 @@ class BaseSuite(QWidget):
         self.up_save_down_layout.addWidget(self.down)
         self.component_grid.addWidget(self.up_save_down_container, 1, 0)
 
+        # Adjust splitter sizing
         sizes = [99999, 1, 1]
         self.main_splitter.setSizes(sizes)
 
@@ -198,11 +198,9 @@ class BaseSuite(QWidget):
         self.chat.clearChat()
 
         # Updates the self.row property
-        # print(self.row)
         idx = selected.indexes()
         if len(idx) > 0 and idx[0].row() != self.row:
             self.row = idx[0].row()
-        # print(self.row)
 
         if self.viewer.pgdf.model["canned_model"]:
             self.viewer.pgdf.model["canned_model"].beginResetModel()
@@ -246,24 +244,16 @@ class BaseSuite(QWidget):
             self.viewer.pgdf.edit_data(self.row, column, value)
 
     def btn_up(self):
-        if self.viewer is None:
-            return
-        if self.row > 0:
-            # self.sidebar.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-            index = self.sidebar.model().index(self.row - 1, 0)
-            # self.sidebar.selectionModel().clear()
-            self.sidebar.selectionModel().select(
-                index,
-                QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current,
-            )
-            # self.sidebar.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.move_row_up_down(movement=-1)
 
     def btn_down(self):
+        self.move_row_up_down(movement=1)
+
+    def move_row_up_down(self, movement: int):
         if self.viewer is None:
             return
         if self.row < self.viewer.pgdf.df.index.size - 1:
-            index = self.sidebar.model().index(self.row + 1, 0)
-            print(index.row())
+            index = self.sidebar.model().index(self.row + movement, 0)
             self.sidebar.selectionModel().select(
                 index,
                 QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Current,
@@ -273,7 +263,3 @@ class BaseSuite(QWidget):
         if self.viewer is None:
             return
         self.saveOnRowChange()
-
-    def workingView(self, idx):
-        if idx == 0 | idx == 1:
-            self.current_work_area = idx

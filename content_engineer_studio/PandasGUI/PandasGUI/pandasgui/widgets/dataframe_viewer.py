@@ -961,12 +961,6 @@ class HeaderModel(QtCore.QAbstractTableModel):
             ):
                 return icon
 
-    def beginInsertRows(self, parent: QModelIndex, first: int, last: int) -> None:
-        return super().beginInsertRows(parent, first, last)
-
-    def endInsertRows(self) -> None:
-        return super().endInsertRows()
-
 
 class HeaderView(QtWidgets.QTableView):
     """
@@ -1167,6 +1161,7 @@ class HeaderView(QtWidgets.QTableView):
 
     # This sets spans to group together adjacent cells with the same values
     def set_spans(self):
+        # Disabled for Content Engineer Studio
         return
         df = self.pgdf.df
         self.clearSpans()

@@ -80,9 +80,6 @@ class FaqSearchBoxContainer(QWidget):
         self.searchbar.editingFinished.connect(
             lambda: self.search_box.setMinimumHeight(100)
         )
-
-        # Adding event filters
-        self.search_box.installEventFilter(self)
         self.search_column_select.currentIndexChanged.connect(
             self.gui.update_search_box
         )
@@ -112,7 +109,6 @@ class FaqDisplayBox(QTableView):
         self.verticalHeader().setVisible(False)
 
     def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
-
         # Show FAQ search table
         if e.button() == Qt.RightButton:
             index = self.selectionModel().currentIndex()
