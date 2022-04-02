@@ -505,7 +505,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     ###################################
     # Changing columns
     @status_message_decorator("Deleting column(s)...")
-    def delete_column(self, ix: int):
+    def delete_column(self, ix):
         if not hasattr(ix, "__iter__"):
             ix = [ix]
 
@@ -522,17 +522,22 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.apply_filters()
 
+    @status_message_decorator("Deleting row(s)...")
+    def delete_row(self, selected):
+
+        for idx, row in enumerate(selected):
+            index_name = self.df_unfiltered.index[row.row() - idx]
+            self.df_unfiltered = self.df_unfiltered.drop(index_name, axis=0)
+
+            # Need to inform the PyQt model too so column widths properly shift
+            self.dataframe_viewer._remove_row(row.row() - idx)
+
+            self.add_history_item("delete_row", f"df = df.drop('{index_name}', axis=0)")
+
+        self.apply_filters()
+
     @status_message_decorator("Adding column(s)...")
     def add_column(self, first: int, last: int, refresh=True):
-        # self.add_history_item(
-        #     "add_column(s)",
-        #     (
-        #         f"cols = list(df.columns)"
-        #         f"cols[{first}:{first}] = [self.column_generator() for _ in range(0, {last} - {first})]"
-        #         f"df = df.reindex(cols, axis=1)"
-        #     ),
-        # )
-
         self.dataframe_viewer.setUpdatesEnabled(False)
 
         self.model["data_table_model"].beginInsertColumns(
@@ -562,7 +567,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
-    # @status_message_decorator("Adding row(s)...")
+    @status_message_decorator("Adding row(s)...")
     def add_row(self, selected):
         first = selected[0].row()
         last = first + len(selected)
