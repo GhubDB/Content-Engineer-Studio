@@ -384,9 +384,6 @@ class DataFrameViewer(QtWidgets.QWidget):
             model.beginRemoveColumns(parent, ix, ix)
             model.endRemoveColumns()
 
-    def _remove_row(self, row):
-        pass
-
     def _move_column(self, ix, new_ix, refresh=True):
         for view in [self.dataView, self.columnHeader]:
             model = view.model()
@@ -399,16 +396,6 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         if refresh:
             self._refresh_ui()
-
-    def _add_column(self, first, last, refresh=True):
-
-        if refresh:
-            self._refresh_ui()
-
-        # TODO fix column widths to be analogous to the move rows function
-
-    def _add_row(self, first, last, refresh=True):
-        self._refresh_ui()
 
     def _refresh_ui(self):
         for model in [
@@ -972,29 +959,27 @@ class HeaderView(QtWidgets.QTableView):
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
 
-        if event.key() == 43 and self.orientation == Qt.Horizontal:  # key 43 = Numpad +
-            if self.selectionModel().hasSelection():
+        if self.selectionModel().hasSelection():
+            if (
+                event.key() == 43 and self.orientation == Qt.Horizontal
+            ):  # key 43 = Numpad +
                 n = self.pgdf.dataframe_explorer.roles_view.add_column_count.value()
                 selected_columns = self.selectionModel().selectedColumns()
                 first = selected_columns[0].column()
                 self.pgdf.add_column(first=first, last=first + n)
 
-        if event.key() == 43 and self.orientation == Qt.Vertical:  # key 43 = Numpad +
-            if self.selectionModel().hasSelection():
+            if event.key() == 43 and self.orientation == Qt.Vertical:
                 selected_rows = self.selectionModel().selectedRows()
-                print(selected_rows)
                 self.pgdf.add_row(selected=selected_rows)
 
-        if event.key() == Qt.Key_Delete and self.orientation == Qt.Vertical:
-            if self.selectionModel().hasSelection():
+            if event.key() == Qt.Key_Delete and self.orientation == Qt.Vertical:
                 selected_rows = self.selectionModel().selectedRows()
                 self.pgdf.delete_row(selected=selected_rows)
 
-        if event.key() == Qt.Key_Delete and self.orientation == Qt.Horizontal:
-            if self.selectionModel().hasSelection():
+            if event.key() == Qt.Key_Delete and self.orientation == Qt.Horizontal:
                 selected_columns = self.selectionModel().selectedColumns()
-                selected_columns = sorted([x.column() for x in selected_columns])
-                self.pgdf.delete_column(ix=selected_columns)
+                selected_columns = [x.column() for x in selected_columns]
+                self.pgdf.delete_column(columns=selected_columns)
 
         return super().keyPressEvent(event)
 

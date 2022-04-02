@@ -213,12 +213,10 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
             if hasSelection:
                 selectedRows = self.column_viewer.selectionModel().selectedRows()
         if hasSelection:
-            return sorted(
-                [
-                    self.pgdf.model["column_search_model"].mapToSource(row).row()
-                    for row in selectedRows
-                ]
-            )
+            return [
+                self.pgdf.model["column_search_model"].mapToSource(row).row()
+                for row in selectedRows
+            ]
 
     def btn_add_column(self):
         n = self.add_column_count.value()
@@ -231,10 +229,10 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         )
 
     def btn_delete_column(self):
-        rows = self.get_source_from_selection()
-        if not rows:
+        columns = self.get_source_from_selection()
+        if not columns:
             return
-        self.dataframe_explorer.pgdf.delete_column(rows)
+        self.dataframe_explorer.pgdf.delete_column(columns)
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         if event.key() == Qt.Key_Delete:
