@@ -604,6 +604,16 @@ def column_generator():
         n += 1
 
 
+column_gen = column_generator()
+
+
+def generate_unique_column_name(columns: pd.Index):
+    while True:
+        col_name = next(column_gen)
+        if col_name not in columns:
+            return col_name
+
+
 class Signals(QtWidgets.QWidget):
     reset_models = QtCore.pyqtSignal(list)
 

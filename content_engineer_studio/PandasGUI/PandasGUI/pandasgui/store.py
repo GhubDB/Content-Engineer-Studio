@@ -34,7 +34,7 @@ from pandasgui.utility import (
     parse_all_dates,
     parse_date,
     get_movements,
-    column_generator,
+    generate_unique_column_name,
     generate_index,
     Signals,
 )
@@ -362,8 +362,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.data_changed()
 
-        self.column_gen = column_generator()
-
         self.signals = Signals()
 
         self.signals.reset_models.connect(self.reset_models)
@@ -547,19 +545,10 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             QtCore.QModelIndex(), first, last
         )
 
-        # This inserts at the end.
-        # self.df_unfiltered[
-        #     [next(self.column_gen) for _ in range(0, last - first)]
-        # ] = pd.DataFrame([np.nan])
-
         for i in range(0, last - first):
-            # Make sure column name is unique:
-            evaluating = True
-            while evaluating:
-                col_name = next(self.column_gen)
-                if col_name not in self.df_unfiltered.columns.values:
-                    evaluating = False
-
+            col_name = generate_unique_column_name(
+                columns=self.df_unfiltered.columns.values
+            )
             self.df_unfiltered.insert(first + i, col_name, np.nan)
 
         self.model["data_table_model"].endInsertColumns()
@@ -568,21 +557,39 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         # Need to inform the PyQt model too so column widths properly shift
         # TODO: check if HeaderNamesModel also needs to be updated, fix multi index version
+        self.dataframe_viewer.setUpdatesEnabled(False)
         self.dataframe_viewer._add_column(first, last)
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
+
+    # @status_message_decorator("Adding row(s)...")
+    def add_row(self, selected):
+        first = selected[0].row()
+        last = first + len(selected)
+        self.model["header_model_vertical"].beginInsertRows(
+            QtCore.QModelIndex(), first, last - 1
+        )
+        self.model["data_table_model"].beginInsertRows(
+            QtCore.QModelIndex(), first, last - 1
+        )
+
+        inserted_index = [x + 0.5 for x in range(first, last)]
+        inserted_df = pd.DataFrame(index=inserted_index)
+        self.df_unfiltered = pd.concat([self.df_unfiltered, inserted_df]).sort_index()
+        self.df_unfiltered.reset_index(drop=True, inplace=True)
+
+        self.model["data_table_model"].endInsertRows()
+        self.model["header_model_vertical"].endInsertRows()
+
+        self.apply_filters()
+        self.signals.reset_models.emit(["header_model_vertical", "data_table_model"])
+        # self.dataframe_viewer._add_column(first, last)
 
     @status_message_decorator("Moving columns...")
     def move_column(self, src: int, dest: int):
         cols = list(self.df_unfiltered.columns)
         cols.insert(dest, cols.pop(src))
-
-        # Original implementation changed because it  decoupled from df.columns
         self.df_unfiltered = self.df_unfiltered.reindex(columns=cols)
-
-        # self.df_unfiltered.columns = generate_index(
-        #     ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex), columns=cols
-        # )
 
         self.add_history_item(
             "move_column",

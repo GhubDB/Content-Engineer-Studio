@@ -7,7 +7,7 @@ import typing
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import Qt, QTimer, QThreadPool, QEvent, QModelIndex, pyqtSignal
 from PyQt5.QtGui import (
     QColor,
@@ -178,26 +178,6 @@ class DataFrameViewer(QtWidgets.QWidget):
                 self.paste()
 
         return super().eventFilter(source, event)
-
-    def replace_models(self, pgdf: PandasGuiDataFrameStore):
-        # Replaces models with new selected working view models and refreshes UI
-        # self.pgdf = pgdf
-        # pgdf.dataframe_viewer = self  # check what is going on here
-
-        self.dataView.setModel(self.pgdf.model["data_table_model"])
-        self.columnHeader.setModel(self.pgdf.model["header_model_horizontal"])
-        self.indexHeader.setModel(self.pgdf.model["header_model_vertical"])
-        self.columnHeaderNames.setModel(
-            self.pgdf.model["horizontal_header_names_model"]
-        )
-        self.indexHeaderNames.setModel(self.pgdf.model["vertical_header_names_model"])
-
-        for column_index in range(self.columnHeader.model().columnCount()):
-            self.auto_size_column(column_index)
-
-        self._refresh_ui()
-
-        self.dataView.already_resized = False
 
     def set_styles(self):
         for item in [
@@ -421,43 +401,11 @@ class DataFrameViewer(QtWidgets.QWidget):
 
         if refresh:
             self._refresh_ui()
-        return
-        for model in [
-            self.pgdf.model["data_table_model"],
-            self.pgdf.model["header_model_horizontal"],
-        ]:
-            model.beginInsertColumns(QtCore.QModelIndex(), first, last)
-
-        model = self.pgdf.model["header_roles_model"]
-        model.beginInsertRows(QtCore.QModelIndex(), first, last)
-
-        cols = list(self.pgdf.df_unfiltered.columns)
-        # Insert list of generated columnn headers into column index list
-        # TODO: include a check to make column names unique
-        print(cols[first])
-        if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
-            cols[first:first] = [
-                next(self.pgdf.column_gen) for _ in range(0, last - first)
-            ]
-            self.pgdf.df_unfiltered.columns = pd.Index(cols)
-        else:
-            cols[first:first] = [
-                (next(self.pgdf.column_gen), "None") for _ in range(0, last - first)
-            ]
-            self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(cols)
-
-        # self.pgdf.df_unfiltered = self.pgdf.df_unfiltered.reindex(cols, axis=1)
-
-        for model in [
-            self.pgdf.model["data_table_model"],
-            self.pgdf.model["header_model_horizontal"],
-        ]:
-            model.endInsertColumns()
-
-        model = self.pgdf.model["header_roles_model"]
-        model.endInsertRows()
 
         # TODO fix column widths to be analogous to the move rows function
+
+    def _add_row(self, first, last, refresh=True):
+        self._refresh_ui()
 
     def _refresh_ui(self):
         for model in [
@@ -567,18 +515,6 @@ class DataTableModel(QtCore.QAbstractTableModel):
         else:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 
-    # # TODO check if this is needed for something
-    # def setData(self, index, value, role=None):
-    #     if role == QtCore.Qt.EditRole:
-    #         row = index.row()
-    #         col = index.column()
-    #         try:
-    #             self.pgdf.edit_data(row, col, value)
-    #         except Exception as e:
-    #             logger.exception(e)
-    #             return False
-    #         return True
-
 
 class DelegateRichTextEditor(QtWidgets.QTextEdit):
     """
@@ -616,25 +552,6 @@ class DelegateRichTextEditor(QtWidgets.QTextEdit):
         if self.storedSize != newSize:
             self.storedSize = newSize
             self.sizeHintChanged.emit()
-
-    def keyPressEvent(self, event):
-        """
-        Hotkeys
-        """
-        if event.modifiers() == QtCore.Qt.ControlModifier:
-            if event.key() in (QtCore.Qt.Key_Return,):
-                self.commit.emit(self)
-                return
-            elif event.key() == QtCore.Qt.Key_B:
-                if self.fontWeight() == QFont.Bold:
-                    self.setFontWeight(QFont.Normal)
-                else:
-                    self.setFontWeight(QFont.Bold)
-            elif event.key() == QtCore.Qt.Key_I:
-                self.setFontItalic(not self.fontItalic())
-            elif event.key() == QtCore.Qt.Key_U:
-                self.setFontUnderline(not self.fontUnderline())
-        super().keyPressEvent(event)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -1049,6 +966,15 @@ class HeaderView(QtWidgets.QTableView):
         # Fix index header so it does not get adjusted when drag resizing
         if self.orientation == Qt.Vertical:
             self.setFixedWidth(self.initial_size.width())
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+
+        if event.key() == 43 and self.orientation == Qt.Vertical:  # key 43 == Numpad +
+            if self.selectionModel().hasSelection():
+                selected_rows = self.selectionModel().selectedRows()
+                self.pgdf.add_row(selected=selected_rows)
+
+        return super().keyPressEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         point = event.pos()
