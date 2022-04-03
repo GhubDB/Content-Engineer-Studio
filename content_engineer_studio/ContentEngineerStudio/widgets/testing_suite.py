@@ -40,11 +40,11 @@ from PyQt5.QtGui import (
 from PyQt5 import QtCore, QtGui, QtWidgets
 from qtstylish import qtstylish
 
-from utils.selenium_helpers import Browser
-from utils.worker_thread import Worker
-from widgets.auto_history import AutoqueueAndHistoryContainer
-from widgets.base_suite import BaseSuite
-from utils.data_variables import Data
+from ContentEngineerStudio.utils.selenium_helpers import Browser
+from ContentEngineerStudio.utils.worker_thread import Worker
+from ContentEngineerStudio.widgets.auto_history import AutoqueueAndHistoryContainer
+from ContentEngineerStudio.widgets.base_suite import BaseSuite
+from ContentEngineerStudio.utils.data_variables import Data
 
 
 class TestingSuite(BaseSuite):

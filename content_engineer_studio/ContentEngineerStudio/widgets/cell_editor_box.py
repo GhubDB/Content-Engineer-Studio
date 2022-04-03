@@ -41,7 +41,7 @@ from PyQt5.QtGui import (
 )
 from PyQt5 import QtWidgets, QtGui, QtCore
 
-from utils.data_variables import Data, GuiSignals
+from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
 
 
 class CellEditorContainer(QWidget):

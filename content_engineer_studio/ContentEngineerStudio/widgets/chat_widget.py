@@ -42,10 +42,10 @@ from PyQt5.QtGui import (
 )
 from PyQt5 import QtCore, QtWidgets, QtGui
 from bs4 import BeautifulSoup
-from utils.data_variables import Data
+from ContentEngineerStudio.utils.data_variables import Data
 
-from utils.stylesheets import Stylesheets
-from utils.worker_thread import Worker
+from ContentEngineerStudio.utils.stylesheets import Stylesheets
+from ContentEngineerStudio.utils.worker_thread import Worker
 
 
 class ChatWindow(QTableWidget):

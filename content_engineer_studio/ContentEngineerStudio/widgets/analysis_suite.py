@@ -40,9 +40,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from qtstylish import qtstylish
 
 
-from utils.selenium_helpers import Browser
-from utils.worker_thread import Worker
-from widgets.base_suite import BaseSuite
+from ContentEngineerStudio.utils.selenium_helpers import Browser
+from ContentEngineerStudio.utils.worker_thread import Worker
+from ContentEngineerStudio.widgets.base_suite import BaseSuite
 
 
 class AnalysisSuite(BaseSuite):

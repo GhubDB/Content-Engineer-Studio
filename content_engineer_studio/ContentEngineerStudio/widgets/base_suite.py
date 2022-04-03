@@ -40,14 +40,14 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 # Pandasgui imports
 from pandasgui.widgets.dataframe_explorer import HeaderRolesViewContainer
-from widgets.canned_box import Canned
-from widgets.cell_editor_box import CellEditorContainer
-from widgets.faq_search_box import FaqSearchBoxContainer
+from ContentEngineerStudio.widgets.canned_box import Canned
+from ContentEngineerStudio.widgets.cell_editor_box import CellEditorContainer
+from ContentEngineerStudio.widgets.faq_search_box import FaqSearchBoxContainer
 
 # Content Engineer Studio imports
-from utils.data_variables import Data
-from widgets.sidebar import Sidebar
-from widgets.chat_widget import ChatWidgetContainer
+from ContentEngineerStudio.utils.data_variables import Data
+from ContentEngineerStudio.widgets.sidebar import Sidebar
+from ContentEngineerStudio.widgets.chat_widget import ChatWidgetContainer
 
 
 class BaseSuite(QWidget):

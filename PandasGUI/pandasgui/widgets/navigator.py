@@ -86,12 +86,18 @@ class Navigator(FlatDraggableTree):
         super().mouseReleaseEvent(event)
 
     def dragEnterEvent(self, e):
+        if e.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
+            e.ignore()
+            return
         if e.mimeData().hasUrls:
             e.accept()
         else:
             e.ignore()
 
     def dropEvent(self, e):
+        if e.mimeData().hasFormat("application/x-qabstractitemmodeldatalist"):
+            e.ignore()
+            return
         if e.mimeData().hasUrls:
             e.setDropAction(QtCore.Qt.CopyAction)
             e.accept()

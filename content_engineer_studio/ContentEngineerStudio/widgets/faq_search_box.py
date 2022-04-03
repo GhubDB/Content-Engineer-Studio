@@ -39,7 +39,7 @@ from PyQt5.QtGui import (
     QTextCursor,
 )
 from PyQt5 import QtWidgets, QtGui, QtCore
-from utils.model_test import ModelTest
+from ContentEngineerStudio.utils.model_test import ModelTest
 
 
 class FaqSearchBoxContainer(QWidget):
