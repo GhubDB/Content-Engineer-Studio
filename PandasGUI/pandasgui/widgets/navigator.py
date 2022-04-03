@@ -145,7 +145,8 @@ class Navigator(FlatDraggableTree):
         for name in names:
             item = self.store.data[name]
             if isinstance(item, PandasGuiDataFrameStore):
-                extension = ".csv"
+                extension = ".xlsx"
+                # extension = ".csv" # Original implementation
             elif isinstance(item, JsonViewer):
                 extension = ".json"
             else:
@@ -158,7 +159,8 @@ class Navigator(FlatDraggableTree):
             def write_to_file(path=path, item=item, widget=self, file_name=file_name):
                 with widget.store.status_message_context(f"Exporting {file_name}..."):
                     if isinstance(item, PandasGuiDataFrameStore):
-                        item.df.to_csv(path, index=False)
+                        item.df.to_excel(path, index=False, sheet_name=item.name)
+                        # item.df.to_csv(path, index=False) # Original implementation
 
                     elif isinstance(item, JsonViewer):
                         import json
