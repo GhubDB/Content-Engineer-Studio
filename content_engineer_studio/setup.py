@@ -1,8 +1,7 @@
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup, find_packages
 
 setup(
-    name="Content Engineer Studio",
+    name="ContentEngineerStudio",
     version="0.0.1",
     description="A workflow optimization tool",
     packages=find_packages(),

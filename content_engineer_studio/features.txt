@@ -165,10 +165,6 @@ maybe allow users to add tested questions directly to variants with the necessar
 
 have FAQ search field check if this question has been tested. show green for untested , red for tested recently, orange for tested a long time ago
 have search field check other excel lists for questions similar to the one asked and suggest search terms to the user.
-#################################################################
-Future prospects
--
-
 
 ##################################################################
 requires further access/data
