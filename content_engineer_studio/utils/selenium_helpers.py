@@ -1,4 +1,5 @@
-import time, traceback, psutil
+import time
+import traceback
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -15,7 +16,6 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.common.exceptions import WebDriverException
 from urllib.parse import urlencode
-from bs4 import BeautifulSoup
 
 
 class Browser:

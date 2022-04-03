@@ -534,7 +534,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
             for model in ["data_table_model", "header_model_vertical"]:
                 self.model[model].beginRemoveRows(parent, row - idx, row - idx)
+
             self.df_unfiltered = self.df_unfiltered.drop(index_name, axis=0)
+
             for model in ["data_table_model", "header_model_vertical"]:
                 self.model[model].endRemoveRows()
 
@@ -545,34 +547,22 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.dataframe_viewer.setUpdatesEnabled(True)
 
     @status_message_decorator("Adding column(s)...")
-    def add_column(self, first: int, last: int, refresh=True):
-        self.dataframe_viewer.setUpdatesEnabled(False)
-
+    def add_column(self, first: int, last: int):
         parent = QtCore.QModelIndex()
-
         self.dataframe_viewer.setUpdatesEnabled(False)
+
         for i in range(0, last - first):
-            self.model["data_table_model"].beginInsertColumns(
-                parent, first + i, first + i
-            )
-            self.model["header_model_horizontal"].beginInsertColumns(
-                parent, first + i, first + i
-            )
-            # self.model["header_roles_model"].beginInsertRows(
-            #     parent, first + i, first + i
-            # )
+            for model in ["data_table_model", "header_model_horizontal"]:
+                self.model[model].beginInsertColumns(parent, first + i, first + i)
 
             col_name = generate_unique_column_name(
                 columns=self.df_unfiltered.columns.values
             )
             self.df_unfiltered.insert(first + i, col_name, np.nan)
 
-            self.model["data_table_model"].endInsertColumns()
-            self.model["header_model_horizontal"].endInsertColumns()
-            # self.model["header_roles_model"].endInsertRows()
+            for model in ["data_table_model", "header_model_horizontal"]:
+                self.model[model].endInsertColumns()
 
-        # Need to inform the PyQt model too so column widths properly shift
-        # TODO: check if HeaderNamesModel also needs to be updated, fix multi index version
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
 
@@ -581,11 +571,10 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         first = selected[0].row()
         last = first + len(selected)
 
-        self.dataframe_viewer.setUpdatesEnabled(False)
-
         inserted_index = [x + 0.5 for x in range(first, last)]
 
         parent = QtCore.QModelIndex()
+        self.dataframe_viewer.setUpdatesEnabled(False)
 
         for i in range(first + 1, last + 1):
             for model in ["header_model_vertical", "data_table_model"]:
@@ -595,12 +584,11 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.df_unfiltered = pd.concat([self.df_unfiltered, inserted_df]).sort_index()
         self.df_unfiltered.reset_index(drop=True, inplace=True)
 
-        for i in range(first, last):
+        for _ in range(first, last):
             for model in ["header_model_vertical", "data_table_model"]:
                 self.model[model].endInsertRows()
 
         self.apply_filters()
-        self.signals.reset_models.emit(["header_model_vertical", "data_table_model"])
         self.dataframe_viewer.setUpdatesEnabled(True)
 
     @status_message_decorator("Moving columns...")
@@ -633,14 +621,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         row -= sum(i < row for i in selected)
         reordered[row:row] = moved
 
-        # Original implementation changed because it  decoupled from df.columns
         self.df_unfiltered = self.df_unfiltered.reindex(columns=reordered)
-
-        # Make new index and overwrite the old one
-        # self.df_unfiltered.columns = generate_index(
-        #     ismulti=isinstance(self.df_unfiltered.columns, pd.MultiIndex),
-        #     columns=reordered,
-        # )
 
         self.dataframe_viewer.setUpdatesEnabled(False)
         # Move columns around in TableView to maintain column widths

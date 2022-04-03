@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # d = {
 #     "col1": [1, 2, 3, 4],
@@ -30,18 +31,24 @@ import pandas as pd
 
 # print(df.loc[("sidewinder", "mark i"), "shield"])
 
-bla = "blabla"
+# bla = "blabla"
 
 
-class thebla:
-    def __init__(self, bla) -> None:
-        self.bla = bla
+# class thebla:
+#     def __init__(self, bla) -> None:
+#         self.bla = bla
 
 
-class bla2(thebla):
-    def __init__(self, bla):
-        super().__init__(bla)
-        print(self.bla)
+# class bla2(thebla):
+#     def __init__(self, bla):
+#         super().__init__(bla)
+#         print(self.bla)
 
 
-blablabla = bla2(bla)
+# blablabla = bla2(bla)
+
+
+s = pd.DataFrame(
+    np.random.randint(low=0, high=10, size=(5, 5)), columns=["a", "b", "c", "d", "e"]
+)
+print(s)
