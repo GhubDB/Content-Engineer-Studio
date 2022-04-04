@@ -3,15 +3,11 @@ Menu that appears on right clicking a column header. Contains options for modify
 """
 
 import sys
-import traceback
+
 import pandas as pd
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-from pandasgui.store import PandasGuiDataFrameStore
-from pandasgui.utility import Signals
-
 from ContentEngineerStudio.utils.data_variables import Data
+from pandasgui.store import PandasGuiDataFrameStore
+from PyQt5 import QtWidgets
 
 
 class ColumnMenu(QtWidgets.QMenu):
@@ -41,39 +37,6 @@ class ColumnMenu(QtWidgets.QMenu):
                     self.pgdf.df_unfiltered.columns.get_level_values(1)[column_ix]
                 )
 
-        def add_multiindex() -> None:
-            # if there is no multiindex, we add a second level with all values set to 'None'
-            if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
-                self.pgdf.model["header_model_horizontal"].beginInsertRows(
-                    QtCore.QModelIndex(), 1, 1
-                )
-                self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_product(
-                    [df.columns, ["None"]]
-                )
-                self.pgdf.model["header_model_horizontal"].endInsertRows()
-
-        def assign_role(text: str) -> None:
-            add_multiindex()
-            # Altering and replacing the existing index
-            tuples = self.pgdf.df_unfiltered.columns.tolist()
-            tuples[self.column_ix] = (tuples[self.column_ix][0], text)
-            self.pgdf.df_unfiltered.columns = pd.MultiIndex.from_tuples(tuples)
-
-            # Clear current cell_edit text if there are no 'EDITABLE' columns selected
-            if (
-                text != Data.ROLES["EDITABLE"]
-                and self.pgdf.model["analysis_selector_proxy_model"].rowCount() < 1
-            ):
-                self.pgdf.model["analysis_selector_proxy_model"].clear_cell_edit()
-
-            self.pgdf.refresh_ui()
-            self.pgdf.signals.reset_models.emit(
-                [
-                    "analysis_selector_proxy_model",
-                    "canned_model",
-                ]
-            )
-
         # Set-up role selector combobox
         self.header_role_selector = QtWidgets.QComboBox()
         for item in Data.ROLES.values():
@@ -81,7 +44,9 @@ class ColumnMenu(QtWidgets.QMenu):
         self.add_widget(self.header_role_selector)
 
         preselect_role()
-        self.header_role_selector.currentTextChanged.connect(assign_role)
+        self.header_role_selector.currentTextChanged.connect(
+            lambda text: self.pgdf.assign_role(text, index=column_ix)
+        )
 
         ########################
         # Sorting
@@ -264,8 +229,8 @@ class ColumnMenu(QtWidgets.QMenu):
 if __name__ == "__main__":
     # Create a QtWidgets.QApplication instance or use the existing one if it exists
     app = QtWidgets.QApplication(sys.argv)
-    from pandasgui.datasets import pokemon
     from pandasgui import show
+    from pandasgui.datasets import pokemon
 
     # gui = show(pokemon)
 

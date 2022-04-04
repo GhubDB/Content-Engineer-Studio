@@ -1,45 +1,10 @@
 import typing
-import pandas as pd
+
 import numpy as np
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QHBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
-from PyQt5 import QtWidgets, QtGui, QtCore
+import pandas as pd
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QGridLayout, QHBoxLayout, QTextEdit, QWidget
 
 from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
 
@@ -220,7 +185,7 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
         self.container = parent
         self.pgdf = self.container.suite.viewer.pgdf
 
-    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
+    def rowCount(self) -> int:
         if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return 0
         return sum(
@@ -252,14 +217,6 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
             return Qt.ItemIsSelectable | Qt.ItemIsEnabled
 
         return Qt.ItemIsSelectable | Qt.ItemIsEnabled
-
-    def beginInsertRows(
-        self, parent: QtCore.QModelIndex, first: int, last: int
-    ) -> None:
-        return super().beginInsertRows(parent, first, last)
-
-    def endInsertRows(self) -> None:
-        return super().endInsertRows()
 
     def clear_cell_edit(self):
         self.container.cell_editor.setPlainText("")

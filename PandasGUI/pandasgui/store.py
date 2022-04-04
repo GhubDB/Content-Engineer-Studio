@@ -9,6 +9,8 @@ import logging
 import contextlib
 from abc import abstractmethod
 
+from ContentEngineerStudio.utils.data_variables import Data
+
 if typing.TYPE_CHECKING:
     from pandasgui.gui import PandasGui
     from pandasgui.widgets.filter_viewer import FilterViewer
@@ -455,7 +457,13 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
     # Editing cell data
 
     @status_message_decorator("Applying cell edit...")
-    def edit_data(self, row, col, text):
+    def edit_data(
+        self,
+        row: int,
+        col: int,
+        text: str,
+        index: typing.Optional[QtCore.QModelIndex] = None,
+    ):
 
         if text == "":
             text = np.nan
@@ -466,10 +474,12 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         # Save value to dataframe
         self.df_unfiltered.iat[
             row,
-            col if type(col) == int else list(self.df_unfiltered.columns).index(col),
+            col
+            if isinstance(col, int)
+            else list(self.df_unfiltered.columns).index(col),
         ] = text
 
-        self.apply_filters()
+        self.apply_filters(index=index)
 
         # self.add_history_item("edit_data", f"df.iat[{row}, {col}] = {repr(value)}")
 
@@ -634,6 +644,40 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             "reorder_columns", f"df = df.reindex(columns={reordered})"
         )
 
+    def assign_role(self, text: str, index: int) -> None:
+        self.add_multiindex()
+        # Altering and replacing the existing index
+        tuples = self.df_unfiltered.columns.tolist()
+        tuples[index] = (tuples[index][0], text)
+        self.df_unfiltered.columns = pd.MultiIndex.from_tuples(tuples)
+
+        # Clear current cell_edit text if there are no 'EDITABLE' columns selected
+        if self.model["analysis_selector_proxy_model"] is not None:
+            if (
+                text != Data.ROLES["EDITABLE"]
+                and self.model["analysis_selector_proxy_model"].rowCount() < 1
+            ):
+                self.model["analysis_selector_proxy_model"].clear_cell_edit()
+
+        self.dataframe_viewer.columnHeader.updateGeometry()
+        self.signals.reset_models.emit(
+            [
+                "analysis_selector_proxy_model",
+                "canned_model",
+            ]
+        )
+
+    def add_multiindex(self) -> None:
+        # if there is no multiindex, we add a second level with all values set to 'None'
+        if not isinstance(self.df_unfiltered.columns, pd.MultiIndex):
+            self.model["header_model_horizontal"].beginInsertRows(
+                QtCore.QModelIndex(), 1, 1
+            )
+            self.df_unfiltered.columns = pd.MultiIndex.from_product(
+                [self.df_unfiltered.columns, ["None"]]
+            )
+            self.model["header_model_horizontal"].endInsertRows()
+
     ###################################
     # Sorting
 
@@ -772,7 +816,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters()
 
     @status_message_decorator("Applying filters...")
-    def apply_filters(self):
+    def apply_filters(self, index: typing.Optional[QtCore.QModelIndex] = None):
         df = self.df_unfiltered.copy()
         df["_temp_range_index"] = df.reset_index().index
 
@@ -792,6 +836,10 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         df = df.drop("_temp_range_index", axis=1)
 
         self.df = df
+        if index is not None:
+            self.model["data_table_model"].dataChanged.emit(
+                index, index
+            )  # , QtCore.Qt.DisplayRole
         self.data_changed()
 
     # Convert all columns to datetime where possible
@@ -853,6 +901,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             )
 
     def data_changed(self):
+
         self.refresh_ui()
 
         # Disabled for now. TODO: Make this model based
@@ -874,13 +923,14 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             model.beginResetModel()
             model.endResetModel()
 
-        if self.dataframe_viewer is not None:
-            self.dataframe_viewer._refresh_ui()
+        # if self.dataframe_viewer is not None:
+        #     self.dataframe_viewer._refresh_ui()
 
     def reset_models(self, models: list):
         for model_string in models:
-            self.model[model_string].beginResetModel()
-            self.model[model_string].endResetModel()
+            if self.model[model_string] is not None:
+                self.model[model_string].beginResetModel()
+                self.model[model_string].endResetModel()
 
     @staticmethod
     def cast(df: Union[PandasGuiDataFrameStore, pd.DataFrame, pd.Series, Iterable]):

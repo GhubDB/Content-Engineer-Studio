@@ -121,7 +121,7 @@ class FaqDisplay(QTableView):
                 value
             )
 
-            self.gui.stackedWidget.setCurrentIndex(self.gui.current_work_area)
+            self.gui.central_stacked_widget.setCurrentIndex(self.gui.current_work_area)
             self.gui.populate_search_box()
             self.gui.testing_suite.faq_search_box.search_box.setMinimumHeight(100)
             self.gui.testing_suite.faq_search_box.search_box.setMinimumHeight(100)

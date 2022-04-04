@@ -172,7 +172,7 @@ class BaseSuite(QWidget):
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save)
         self.add_dataframe.clicked.connect(
-            lambda: self.gui.stackedWidget.setCurrentWidget(
+            lambda: self.gui.central_stacked_widget.setCurrentWidget(
                 self.gui.pandasgui_container
             )
         )

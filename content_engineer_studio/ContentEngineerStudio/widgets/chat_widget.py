@@ -1,49 +1,22 @@
+import re
 import time
 import typing
-import re
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QTableWidget,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-    QMessageBox,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
-from PyQt5 import QtCore, QtWidgets, QtGui
-from bs4 import BeautifulSoup
-from ContentEngineerStudio.utils.data_variables import Data
 
+from bs4 import BeautifulSoup
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
+from PyQt5.QtWidgets import (
+    QGridLayout,
+    QHeaderView,
+    QPushButton,
+    QTableWidget,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
+
+from ContentEngineerStudio.utils.data_variables import Data
 from ContentEngineerStudio.utils.stylesheets import Stylesheets
 from ContentEngineerStudio.utils.worker_thread import Worker
 
@@ -90,6 +63,7 @@ class TextEdit(QTextEdit):
         self.participant = participant
         self.index = index
         self.selected = False
+        self.new_variant = None
 
     # Handles setting style change when user selects a message
     # as well as setting the selection status.
@@ -356,7 +330,7 @@ class ChatWidgetContainer(QWidget):
         [self.suite.sent_messages.append(message) for message in output]
         self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
 
-    def setUpNewDialog(self, browser_num=None):
+    def setUpNewDialog(self):
         """
         Sets up (singular) new chat session
         """
@@ -415,12 +389,12 @@ class ChatWidgetContainer(QWidget):
         sender = self.sender()
         cursor = sender.textCursor()
         current_color = cursor.charFormat().background().color().rgb()
-        format = QTextCharFormat()
-        if cursor.hasSelection() and current_color != 4282679021:
-            format.setBackground(QColor(68, 126, 237))
+        fmt = QTextCharFormat()
+        if fmt.hasSelection() and current_color != 4282679021:
+            fmt.setBackground(QColor(68, 126, 237))
         else:
-            format.clearBackground()
-        cursor.setCharFormat(format)
+            fmt.clearBackground()
+        cursor.setCharFormat(fmt)
 
     def anynomyzify(self):
         """

@@ -1,43 +1,9 @@
 import typing
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-    QListView,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QEvent, Qt
+from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtWidgets import QGridLayout, QListView, QWidget
 
 
 class AutoQueue(QListView):
@@ -114,11 +80,11 @@ class AutoqueueAndHistoryContainer(QWidget):
             items = QtGui.QStandardItem(item)
             self.history_model.appendRow(items)
 
-        self.clear_auto_queue.clicked.connect(lambda: self.auto_queue_model.clear())
-        self.clear_history.clicked.connect(lambda: self.history_model.clear())
+        self.clear_auto_queue.clicked.connect(self.auto_queue_model.clear)
+        self.clear_history.clicked.connect(self.history_model.clear)
 
-    def populateHistory(self, input):
-        item = QtGui.QStandardItem(input)
+    def populate_history(self, item_to_add):
+        item = QtGui.QStandardItem(item_to_add)
         # if self.dialog_num % 2 == 0:
         #     item.setBackground(QColor(70, 81, 70))
         # else:

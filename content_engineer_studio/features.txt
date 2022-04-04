@@ -1,5 +1,4 @@
 priorities:
-fix csv export or change to xlsx export
 make edit_data more efficient by emiting dataChanged instead of reseting everything
 add a decorator to dataframe edits to tell models that the data has changed
 use column viewer to display columns and their roles (bot, customer, analysis, canned)

@@ -19,7 +19,6 @@ CATEGORICAL_THRESHOLD = 50
 
 
 class Completer(QtWidgets.QCompleter):
-
     def pathFromIndex(self, index):
         # This way it'll reevaluate
         path = QtWidgets.QCompleter.pathFromIndex(self, index)
@@ -33,9 +32,12 @@ class Completer(QtWidgets.QCompleter):
 
         if len(lst) > 1:
             end_at = -1
-            if lst[-2] in (' `', ' "'):  # dropping the delimiter from list since it is already in path
+            if lst[-2] in (
+                " `",
+                ' "',
+            ):  # dropping the delimiter from list since it is already in path
                 end_at = -2
-            path = '%s %s' % (''.join(lst[:end_at]), path)
+            path = "%s %s" % ("".join(lst[:end_at]), path)
 
         return path
 
@@ -45,7 +47,7 @@ class Completer(QtWidgets.QCompleter):
 
         # on values, we split on [space]" or [space]` but need to prepend that in the return
         try:
-            if s_lst[-2] in (' `', ' "') and s_path == "":
+            if s_lst[-2] in (" `", ' "') and s_path == "":
                 s_path = s_lst[-2][-1]
         except IndexError:
             pass
@@ -67,16 +69,22 @@ class FilterViewer(QtWidgets.QWidget):
         columns = self.pgdf.df_unfiltered.columns
         valid_values = [f"`{col}`" for col in columns]
         categoricals = columns[self.pgdf.df_unfiltered.dtypes == "category"]
-        low_cardinality = columns[nunique(self.pgdf.df_unfiltered) < CATEGORICAL_THRESHOLD]
+        low_cardinality = columns[
+            nunique(self.pgdf.df_unfiltered) < CATEGORICAL_THRESHOLD
+        ]
 
         # make unique the column names
         all_categoricals = list(set(categoricals) | set(low_cardinality))
 
         for col in all_categoricals:
             if col in categoricals:
-                in_dataset = [f'"{val}"' for val in self.pgdf.df_unfiltered[col].cat.categories]
+                in_dataset = [
+                    f'"{val}"' for val in self.pgdf.df_unfiltered[col].cat.categories
+                ]
             else:
-                in_dataset = [f'"{val}"' for val in unique(self.pgdf.df_unfiltered[col])]
+                in_dataset = [
+                    f'"{val}"' for val in unique(self.pgdf.df_unfiltered[col])
+                ]
             valid_values.extend(in_dataset)
 
         self.completer = Completer(valid_values)
@@ -87,8 +95,11 @@ class FilterViewer(QtWidgets.QWidget):
         self.text_input.setCompleter(self.completer)
         self.text_input.setPlaceholderText("Enter query expression")
         self.text_input_label = QtWidgets.QLabel(
-            '''<a style="color: #1e81cc;" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html">What's a query expression?</a>''')
-        self.text_input_label.linkActivated.connect(lambda link: QDesktopServices.openUrl(QUrl(link)))
+            """<a style="color: #1e81cc;" href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html">What's a query expression?</a>"""
+        )
+        self.text_input_label.linkActivated.connect(
+            lambda link: QDesktopServices.openUrl(QUrl(link))
+        )
         self.text_input.setValidator(None)
         self.text_input.setCompleter(self.completer)
 
@@ -124,8 +135,12 @@ class FilterViewer(QtWidgets.QWidget):
                 col = self.palette().placeholderText().color()
                 painter.setPen(col)
                 fm = self.fontMetrics()
-                elided_text = fm.elidedText("No filters defined", QtCore.Qt.ElideRight, self.viewport().width())
-                painter.drawText(self.viewport().rect(), QtCore.Qt.AlignCenter, elided_text)
+                elided_text = fm.elidedText(
+                    "No filters defined", QtCore.Qt.ElideRight, self.viewport().width()
+                )
+                painter.drawText(
+                    self.viewport().rect(), QtCore.Qt.AlignCenter, elided_text
+                )
                 painter.restore()
 
     class ListModel(QtCore.QAbstractListModel):
@@ -157,10 +172,12 @@ class FilterViewer(QtWidgets.QWidget):
             return len(self.pgdf.filters)
 
         def flags(self, index):
-            return (QtCore.Qt.ItemIsEditable |
-                    QtCore.Qt.ItemIsEnabled |
-                    QtCore.Qt.ItemIsSelectable |
-                    QtCore.Qt.ItemIsUserCheckable)
+            return (
+                QtCore.Qt.ItemIsEditable
+                | QtCore.Qt.ItemIsEnabled
+                | QtCore.Qt.ItemIsSelectable
+                | QtCore.Qt.ItemIsUserCheckable
+            )
 
         def setData(self, index, value, role=QtCore.Qt.DisplayRole):
             row = index.row()
@@ -185,14 +202,15 @@ if __name__ == "__main__":
 
     stacked_widget = QtWidgets.QStackedWidget()
     pokemon = PandasGuiDataFrameStore(pokemon)
-    pokemon.add_filter('Generation > 3', enabled=False)
-    pokemon.add_filter('Attack > 50', enabled=True)
-    pokemon.add_filter('Defense < 30', enabled=True)
+    pokemon.add_filter("Generation > 3", enabled=False)
+    pokemon.add_filter("Attack > 50", enabled=True)
+    pokemon.add_filter("Defense < 30", enabled=True)
     fv = FilterViewer(pokemon)
     stacked_widget.addWidget(fv)
     stacked_widget.show()
-    app.setStyle(QtWidgets.QStyleFactory.create('Fusion'))
+    app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
     import qtstylish
+
     fv.setStyleSheet(qtstylish.light())
 
     app.exec_()

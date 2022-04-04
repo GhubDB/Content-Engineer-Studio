@@ -191,7 +191,7 @@ class HeaderRolesViewContainer(QtWidgets.QWidget):
         Map Proxy model selection to source model selection and return list of selected rows
         https://stackoverflow.com/questions/61268687/access-original-index-in-qabstracttablemodel-from-selected-row-in-qtableview
         """
-        index = self.gui.stackedWidget.currentIndex()
+        index = self.gui.central_stacked_widget.currentIndex()
         if index == 0:
             hasSelection = (
                 self.gui.analysis_suite.roles_view.column_viewer.selectionModel().hasSelection()

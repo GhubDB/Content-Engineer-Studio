@@ -1,50 +1,14 @@
-import sys
 import traceback
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
-from PyQt5 import QtCore, QtGui, QtWidgets
-from qtstylish import qtstylish
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QItemSelectionModel
+from PyQt5.QtWidgets import QWidget
+
+from ContentEngineerStudio.utils.data_variables import Data
 from ContentEngineerStudio.utils.selenium_helpers import Browser
 from ContentEngineerStudio.utils.worker_thread import Worker
 from ContentEngineerStudio.widgets.auto_history import AutoqueueAndHistoryContainer
 from ContentEngineerStudio.widgets.base_suite import BaseSuite
-from ContentEngineerStudio.utils.data_variables import Data
 
 
 class TestingSuite(BaseSuite):
@@ -126,10 +90,10 @@ class TestingSuite(BaseSuite):
         """
         Sends chat messages
         """
-        input = self.chat_input.text()
-        if input:
-            self.browsers[self.current_browser].setCleverbotLive(input)
-            self.auto_history.populateHistory(input)
+        input_string = self.chat_input.text()
+        if input_string:
+            self.browsers[self.current_browser].setCleverbotLive(input_string)
+            self.auto_history.populate_history(input_string)
             self.chat_input.clear()
 
     def new_dialog_btn(self):
@@ -169,18 +133,15 @@ class TestingSuite(BaseSuite):
         if signal == 2:
             self.questions = []
 
-            try:
+            if isinstance(self.auto_history.auto_queue_model):
                 # Get current questions in auto_queue
                 for i in range(0, self.auto_history.auto_queue_model.rowCount()):
                     index = self.auto_history.auto_queue_model.index(i, 0)
                     self.questions.append(
                         index.sibling(index.row(), index.column()).data()
                     )
-            except:
-                traceback.print_exc()
-                return
 
-            if self.questions != []:
+            if self.questions:
 
                 # Set up Data.BUFFER new browser windows and ask the questions in the auto_queue
                 for i in range(0, Data.BUFFER):
@@ -188,14 +149,12 @@ class TestingSuite(BaseSuite):
                     if not self.is_webscraping and i == 0:
                         setup.signals.finished.connect(self.chat.initializeWebscraping)
                     self.gui.threadpool.start(setup)
-                    print(f"setting up {i}")
-            print("setup done")
 
         if signal == 0:
             # If auto is disabled, close browser windows
             self.is_webscraping = False
             for i in range(0, Data.BUFFER):
-                setup = Worker(lambda: self.browsers[i].tearDown())
+                setup = Worker(self.browsers[i].tearDown)
                 self.gui.threadpool.start(setup)
 
     def next_btn(self):
@@ -220,7 +179,7 @@ class TestingSuite(BaseSuite):
                 self.auto_history.auto_queue.model().index(0, 0)
             )
 
-    def switchToAnalysis(self):
+    def switch_to_analysis(self):
         self.is_webscraping = False
-        self.gui.stackedWidget.setCurrentWidget(self.gui.analysis_suite)
+        self.gui.central_stacked_widget.setCurrentWidget(self.gui.analysis_suite)
         self.gui.populate_search_box()

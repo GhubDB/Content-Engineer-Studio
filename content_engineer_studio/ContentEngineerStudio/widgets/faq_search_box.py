@@ -1,45 +1,8 @@
 import typing
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QHBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-    QTableView,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
-from PyQt5 import QtWidgets, QtGui, QtCore
-from ContentEngineerStudio.utils.model_test import ModelTest
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QGridLayout, QHBoxLayout, QTableView, QWidget
 
 
 class FaqSearchBoxContainer(QWidget):
@@ -113,7 +76,7 @@ class FaqDisplayBox(QTableView):
         if e.button() == Qt.RightButton:
             index = self.selectionModel().currentIndex()
             value = index.sibling(index.row(), index.column()).data()
-            self.gui.stackedWidget.setCurrentWidget(self.gui.faq_search_tab)
+            self.gui.central_stacked_widget.setCurrentWidget(self.gui.faq_search_tab)
             self.gui.faq_search_tab.searchbar.setText(value)
 
         return super().mouseReleaseEvent(e)

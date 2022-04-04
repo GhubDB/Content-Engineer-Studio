@@ -5,9 +5,6 @@ class SideBarProxyModel(QtCore.QIdentityProxyModel):
     def __init__(self, parent) -> None:
         super().__init__(parent)
 
-    def setSourceModel(self, sourceModel: QtCore.QAbstractItemModel) -> None:
-        return super().setSourceModel(sourceModel)
-
     # def paint(
     #     self,
     #     painter: QtGui.QPainter,

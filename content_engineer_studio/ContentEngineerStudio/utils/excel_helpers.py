@@ -1,6 +1,5 @@
 import pandas as pd
 import xlwings as xw
-import datetime as dt
 
 from pathlib import Path
 
@@ -35,11 +34,11 @@ class Excel:
         df = df.reset_index()
         return df
 
-    def updateCells(self, input, column, row):
+    def updateCells(self, text, column, row):
         """
         Inserts values into excel sheet
         """
-        self.sheet.range(column, row).value = input
+        self.sheet.range(column, row).value = text
 
     def saveWB(self):
         """
@@ -68,7 +67,7 @@ class Excel:
         Cleans up and closes Excel session
         """
         self.sheet.autofit()
-        self.saveWB(wb)
+        self.saveWB()
         # Close excel if wb is the only open wb. Else close the instance.
         if len(wb.app.books) == 1:
             wb.app.quit()
@@ -113,34 +112,3 @@ df.describe()
 # df = sheet.range('A2').options(pd.DataFrame, expand='table', empty='NA').value
 
 """
-#################
-# WEBSCRAPING
-#################
-# driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-
-# driver.get('')
-
-# login = driver.find_element(By.ID, 'old-username')
-# login.send_keys('')
-
-# login = driver.find_element(By.ID, 'old-password')
-# login.send_keys('')
-# login.send_keys('\n')
-
-# driver.get('')
-
-
-# favourites = WebDriverWait(driver, 10).until(
-#     EC.presence_of_element_located((By.CLASS_NAME, "card-list__items"))
-# )
-
-# releases = favourites.find_elements_by_class_name('user-card ')
-# cells = []
-# for idx, release in enumerate(releases):
-#     name = release.find_element(By.CLASS_NAME, 'user-card__name')
-#     updated = release.find_element(By.CLASS_NAME, 'user-card__updated')
-#     cells.append(name.text)
-#     cells.append(str(updated.text))
-
-# print(cells)
-# sheet.range('A1').value = cells

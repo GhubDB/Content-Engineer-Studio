@@ -1,21 +1,21 @@
 import time
 import traceback
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium import webdriver
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import (
-    NoSuchElementException,
-    ElementNotVisibleException,
-)
-from selenium.webdriver.common.alert import Alert
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.common.exceptions import WebDriverException
 from urllib.parse import urlencode
+
+from selenium import webdriver
+from selenium.common.exceptions import (
+    ElementNotVisibleException,
+    NoSuchElementException,
+    TimeoutException,
+    WebDriverException,
+)
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.alert import Alert
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Browser:
@@ -183,14 +183,14 @@ class Browser:
         except:
             traceback.print_exc()
 
-    def setCleverbotLive(self, input):
+    def setCleverbotLive(self, text):
         try:
             WebDriverWait(self.driver, 10).until(
                 # EC.presence_of_element_located((By.NAME, 'stimulus'))
                 EC.element_to_be_clickable((By.NAME, "stimulus"))
             )
             # self.driver.find_element(By.NAME, 'stimulus').clear()
-            self.driver.find_element(By.NAME, "stimulus").send_keys(input)
+            self.driver.find_element(By.NAME, "stimulus").send_keys(text)
             self.driver.find_element(By.NAME, "stimulus").send_keys("\ue007")
         except:
             traceback.print_exc()

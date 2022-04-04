@@ -33,7 +33,7 @@
 [33me81d8e0[m HEAD@{32}: commit: Preparing to add pandas viewer
 [33m557407f[m HEAD@{33}: commit: variants window added.
 [33m2a555ac[m HEAD@{34}: commit: faq view and view switching implemented
-[33m3be40b5[m HEAD@{35}: commit: Adding FaqAutoSearch to StackedWidget
+[33m3be40b5[m HEAD@{35}: commit: Adding FaqAutoSearch to central_stacked_widget
 [33mec4bf95[m HEAD@{36}: commit: Auto anyonymize working
 [33m163b300[m HEAD@{37}: commit: auto highlighting is freezing text edit
 [33m83c7c44[m HEAD@{38}: commit: Auto highlighting working. auto anonymizing is not

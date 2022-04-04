@@ -1,41 +1,36 @@
-import sys
-import re
-import threading
+import logging
 import os
-from typing import Union, Optional
+import re
+import sys
+import threading
 import typing
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtCore import Qt, QTimer, QThreadPool, QEvent, QModelIndex, pyqtSignal
-from PyQt5.QtGui import (
-    QColor,
-    QBrush,
-    QPalette,
-    QFont,
-    QKeySequence,
-    QPainter,
-    QTextDocument,
-    QShowEvent,
-    QIcon,
-    QCursor,
-    QFontMetrics,
-    QDropEvent,
-    QMouseEvent,
-    QDragEnterEvent,
-)
-
-from typing_extensions import Literal
-from pandasgui.store import PandasGuiDataFrameStore
-from pandasgui.store import status_message_decorator
 import pandasgui
-
-import logging
-
-from pandasgui.widgets.column_menu import ColumnMenu
-
 from ContentEngineerStudio.utils.worker_thread import Worker, WorkerSignals
+from pandasgui.store import PandasGuiDataFrameStore, status_message_decorator
+from pandasgui.widgets.column_menu import ColumnMenu
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QEvent, QModelIndex, Qt, QThreadPool, QTimer, pyqtSignal
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QCursor,
+    QDragEnterEvent,
+    QDropEvent,
+    QFont,
+    QFontMetrics,
+    QIcon,
+    QKeySequence,
+    QMouseEvent,
+    QPainter,
+    QPalette,
+    QShowEvent,
+    QTextDocument,
+)
+from typing_extensions import Literal
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +84,8 @@ class DataFrameViewer(QtWidgets.QWidget):
         # Turn off default scrollbars
         self.dataView.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.dataView.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        # Disable scrolling on the headers. Even though the scrollbars are hidden, scrolling by dragging desyncs them
+        # Disable scrolling on the headers. Even though the scrollbars are hidden,
+        # scrolling by dragging desyncs them
         self.indexHeader.horizontalScrollBar().valueChanged.connect(lambda: None)
 
         class CornerWidget(QtWidgets.QWidget):
@@ -612,7 +608,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         col = index.column()
         value = editor.toPlainText()
         try:
-            model.pgdf.edit_data(row, col, value)
+            model.pgdf.edit_data(row, col, value, index=index)
         except Exception as e:
             logger.exception(e)
 
@@ -965,6 +961,7 @@ class HeaderView(QtWidgets.QTableView):
             ):  # key 43 = Numpad +
                 n = self.pgdf.dataframe_explorer.roles_view.add_column_count.value()
                 selected_columns = self.selectionModel().selectedColumns()
+                print(selected_columns)
                 first = selected_columns[0].column()
                 self.pgdf.add_column(first=first, last=first + n)
 
@@ -1529,7 +1526,7 @@ class TrackingSpacer(QtWidgets.QFrame):
 # Examples
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    from pandasgui.datasets import pokemon, mi_manufacturing
+    from pandasgui.datasets import mi_manufacturing, pokemon
 
     view = DataFrameViewer(pokemon)
     view2 = DataFrameViewer(mi_manufacturing)

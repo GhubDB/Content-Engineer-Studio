@@ -1,3 +1,4 @@
+import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets, sip
 from PyQt5.QtCore import Qt
 
@@ -159,7 +160,10 @@ class Navigator(FlatDraggableTree):
             def write_to_file(path=path, item=item, widget=self, file_name=file_name):
                 with widget.store.status_message_context(f"Exporting {file_name}..."):
                     if isinstance(item, PandasGuiDataFrameStore):
-                        item.df.to_excel(path, index=False, sheet_name=item.name)
+                        if isinstance(item.df.columns, pd.MultiIndex):
+                            item.df.to_excel(path, sheet_name=item.name)
+                        else:
+                            item.df.to_excel(path, index=False, sheet_name=item.name)
                         # item.df.to_csv(path, index=False) # Original implementation
 
                     elif isinstance(item, JsonViewer):

@@ -1,11 +1,12 @@
 import typing
+
 import pandas as pd
+from pandasgui.store import PandasGuiDataFrameStore
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QHeaderView
-from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtWidgets import QHeaderView, QWidget
 
 from ContentEngineerStudio.utils.data_variables import Data
-from pandasgui.store import PandasGuiDataFrameStore
 
 
 class Canned(QtWidgets.QTableView):
@@ -49,17 +50,17 @@ class Canned(QtWidgets.QTableView):
 
 
 class CannedSelectionModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent, pgdf: PandasGuiDataFrameStore) -> None:
+    def __init__(self, parent) -> None:
         super().__init__(parent)
         self.gui = parent.gui
         self.suite = parent.suite
         self.container = parent
         self.pgdf = self.container.suite.viewer.pgdf
 
-    def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
+    def columnCount(self) -> int:
         return len(Data.MULTIPLE_CHOICE)
 
-    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
+    def rowCount(self) -> int:
         if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return 0
         return sum(

@@ -1,44 +1,5 @@
-import sys
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
 from PyQt5 import QtCore, QtGui, QtWidgets
-from qtstylish import qtstylish
-
+from PyQt5.QtWidgets import QWidget
 
 from ContentEngineerStudio.utils.selenium_helpers import Browser
 from ContentEngineerStudio.utils.worker_thread import Worker
@@ -101,7 +62,7 @@ class AnalysisSuite(BaseSuite):
         self.export_to_testing_suite.setText("Export to Testing")
         self.dataframe_chat_grid.addWidget(self.toolbar_container, 1, 0)
 
-        self.export_to_testing_suite.clicked.connect(self.exportToTesting)
+        self.export_to_testing_suite.clicked.connect(self.export_to_testing)
         self.switch_to_testing_suite.clicked.connect(self.switchToTesting)
 
         #####################################################
@@ -129,14 +90,14 @@ class AnalysisSuite(BaseSuite):
     #     )
 
     def switchToTesting(self):
-        self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
+        self.gui.central_stacked_widget.setCurrentWidget(self.gui.testing_suite)
         self.gui.populate_search_box()
 
-    def exportToTesting(self):
+    def export_to_testing(self):
         customer = self.chat.getChatText(export=True)
         if customer:
             for message in customer:
                 item = QtGui.QStandardItem(message)
                 self.gui.testing_suite.auto_history.auto_queue_model.appendRow(item)
-        self.gui.stackedWidget.setCurrentWidget(self.gui.testing_suite)
+        self.gui.central_stacked_widget.setCurrentWidget(self.gui.testing_suite)
         self.gui.populate_search_box()

@@ -1,93 +1,36 @@
-import sys
-import re
-import time
-import traceback
-from warnings import filters
-
-from PyQt5.uic import loadUi
-from PyQt5.QtCore import (
-    QEvent,
-    QItemSelectionModel,
-    Qt,
-    QObject,
-    pyqtSignal,
-    pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
-)
-from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
-    QFont,
-    QFontDatabase,
-    QColor,
-    QSyntaxHighlighter,
-    QTextCharFormat,
-    QTextCursor,
-)
-
-# from utils.model_test import ModelTest
-import qtstylish
-
-from bs4 import BeautifulSoup
-
 # PandasGUI imports
-import inspect
-import os
-import pprint
-from typing import Callable, Union, List, Optional
+import logging
+import sys
 from dataclasses import dataclass
-import pandas as pd
-import pkg_resources
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+from typing import Callable, List, Optional, Union
 
+import pandas as pd
 # This needs to be pip -e filepath installed for development mode
 import pandasgui
-
+import pkg_resources
+# from utils.model_test import ModelTest
+import qtstylish
+from IPython.core.magic import register_line_magic
 from pandasgui.store import PandasGuiStore
-from pandasgui.utility import as_dict, fix_ipython, get_figure_type, resize_widget
+from pandasgui.utility import as_dict, fix_ipython
 from pandasgui.widgets.find_toolbar import FindToolbar
 from pandasgui.widgets.json_viewer import JsonViewer
 from pandasgui.widgets.navigator import Navigator
-from pandasgui.widgets.figure_viewer import FigureViewer
 from pandasgui.widgets.settings_editor import SettingsEditor
-from pandasgui.widgets.python_highlighter import PythonHighlighter
-from pandasgui.widgets.dataframe_explorer import (
-    DataFrameViewer,
-    HeaderRolesViewContainer,
-)
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QSortFilterProxyModel, Qt, QThreadPool
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget
 
-from IPython.core.magic import register_line_magic
-import logging
-
+from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
 # My packages
 from ContentEngineerStudio.utils.excel_helpers import Excel
-from ContentEngineerStudio.utils.selenium_helpers import Browser
-from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
+from ContentEngineerStudio.utils.stylesheets import Stylesheets
 from ContentEngineerStudio.widgets.analysis_suite import AnalysisSuite
 from ContentEngineerStudio.widgets.drag_drop import DragDrop
-from ContentEngineerStudio.utils.stylesheets import Stylesheets
-from ContentEngineerStudio.utils.worker_thread import Worker, WorkerSignals
 from ContentEngineerStudio.widgets.faq_search_tab import FaqSearchTabContainer
 from ContentEngineerStudio.widgets.testing_suite import TestingSuite
+
 
 ############################################################################
 # Main
@@ -134,20 +77,20 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.centralwidget)
         self.central_grid = QtWidgets.QGridLayout(self.centralwidget)
         self.central_grid.setObjectName("central_grid")
-        self.stackedWidget = QtWidgets.QStackedWidget(self.centralwidget)
-        self.stackedWidget.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.stackedWidget.setLineWidth(0)
-        self.stackedWidget.setObjectName("stackedWidget")
-        self.central_grid.addWidget(self.stackedWidget, 0, 0, 1, 1)
+        self.central_stacked_widget = QtWidgets.QStackedWidget(self.centralwidget)
+        self.central_stacked_widget.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.central_stacked_widget.setLineWidth(0)
+        self.central_stacked_widget.setObjectName("central_stacked_widget")
+        self.central_grid.addWidget(self.central_stacked_widget, 0, 0, 1, 1)
         self.faq_search_tab = FaqSearchTabContainer(parent=self)
-        self.stackedWidget.insertWidget(2, self.faq_search_tab)
+        self.central_stacked_widget.insertWidget(2, self.faq_search_tab)
 
         # Setup main components
         self.analysis_suite = AnalysisSuite(parent=self)
-        self.stackedWidget.insertWidget(0, self.analysis_suite)
+        self.central_stacked_widget.insertWidget(0, self.analysis_suite)
 
         self.testing_suite = TestingSuite(parent=self)
-        self.stackedWidget.insertWidget(1, self.testing_suite)
+        self.central_stacked_widget.insertWidget(1, self.testing_suite)
 
         # Populate search box in analysis, testing and faq_search_tab
         self.populate_search_box()
@@ -162,7 +105,7 @@ class MainWindow(QMainWindow):
         self.setMenuBar(self.menubar)
 
         # Connecting functions
-        self.stackedWidget.currentChanged.connect(self.workingView)
+        self.central_stacked_widget.currentChanged.connect(self.workingView)
 
         #####################################################
         """Adding Pandasgui"""
@@ -257,8 +200,8 @@ class MainWindow(QMainWindow):
         self.pandasgui_grid = QGridLayout(self.pandasgui_container)
         self.pandasgui_grid.setContentsMargins(0, 0, 0, 0)
         self.pandasgui_grid.addWidget(self.pandasgui_splitter, 0, 0, 0, 0)
-        self.stackedWidget.addWidget(self.pandasgui_container)
-        self.stackedWidget.setCurrentIndex(Data.START_INDEX)
+        self.central_stacked_widget.addWidget(self.pandasgui_container)
+        self.central_stacked_widget.setCurrentIndex(Data.START_INDEX)
 
         # makes the find toolbar
         self.find_bar = FindToolbar(self)
@@ -294,25 +237,25 @@ class MainWindow(QMainWindow):
             "Switch View": [
                 MenuItem(
                     name="Analysis",
-                    func=lambda: self.stackedWidget.setCurrentWidget(
+                    func=lambda: self.central_stacked_widget.setCurrentWidget(
                         self.analysis_suite
                     ),
                 ),
                 MenuItem(
                     name="Testing",
-                    func=lambda: self.stackedWidget.setCurrentWidget(
+                    func=lambda: self.central_stacked_widget.setCurrentWidget(
                         self.testing_suite
                     ),
                 ),
                 MenuItem(
                     name="FAQ",
-                    func=lambda: self.stackedWidget.setCurrentWidget(
+                    func=lambda: self.central_stacked_widget.setCurrentWidget(
                         self.faq_search_tab
                     ),
                 ),
                 MenuItem(
                     name="Dataframe Viewer",
-                    func=lambda: self.stackedWidget.setCurrentWidget(
+                    func=lambda: self.central_stacked_widget.setCurrentWidget(
                         self.pandasgui_container
                     ),
                 ),
@@ -399,6 +342,7 @@ class MainWindow(QMainWindow):
     PandasGUI Methods
     """
     ################################################################################################
+
     def apply_settings(self):
         theme = self.store.settings.theme.value
         if theme == "classic":
@@ -573,8 +517,9 @@ class MainWindow(QMainWindow):
         dialog.show()
 
     def show_sample_datasets(self):
-        from pandasgui.datasets import LOCAL_DATASET_DIR
         import os
+
+        from pandasgui.datasets import LOCAL_DATASET_DIR
 
         os.startfile(LOCAL_DATASET_DIR, "explore")
 
@@ -646,7 +591,7 @@ class MainWindow(QMainWindow):
         Updates the search box with values from FAQ excel sheet
         """
         # Synchronize selectors
-        page = self.stackedWidget.currentIndex()
+        page = self.central_stacked_widget.currentIndex()
         if page == 0:
 
             self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
@@ -666,24 +611,22 @@ class MainWindow(QMainWindow):
                 self.faq_auto_search_model.setFilterKeyColumn(-1)
             else:
                 self.faq_auto_search_model.setFilterKeyColumn(idx)
-        except UnboundLocalError as e:
+        except UnboundLocalError:
             pass
 
         # Show/hide columns according to current selection
         if (page == 0 or page == 1) and idx != len(self.faq_df.columns):
             for i in range(0, len(self.faq_df.columns)):
                 if i != idx:
-                    self.analysis_suite.faq_search_box.search_box.hideColumn(
-                        i
-                    ) if page == 0 else self.testing_suite.faq_search_box.search_box.hideColumn(
-                        i
-                    )
+                    if page == 0:
+                        self.analysis_suite.faq_search_box.search_box.hideColumn(i)
+                    else:
+                        self.testing_suite.faq_search_box.search_box.hideColumn(i)
                 else:
-                    self.analysis_suite.faq_search_box.search_box.showColumn(
-                        i
-                    ) if page == 0 else self.testing_suite.faq_search_box.search_box.showColumn(
-                        i
-                    )
+                    if page == 0:
+                        self.analysis_suite.faq_search_box.search_box.showColumn(i)
+                    else:
+                        self.testing_suite.faq_search_box.search_box.showColumn(i)
 
     def populate_search_column_select(self):
         """
@@ -743,13 +686,13 @@ class MainWindow(QMainWindow):
         mods = event.modifiers()
         if event.key() == Qt.Key_G and (mods & Qt.ControlModifier):
             # Switch to Analysis
-            self.stackedWidget.setCurrentIndex(0)
+            self.central_stacked_widget.setCurrentIndex(0)
         if event.key() == Qt.Key_T and (mods & Qt.ControlModifier):
             # Switch to Testing
-            self.stackedWidget.setCurrentIndex(1)
+            self.central_stacked_widget.setCurrentIndex(1)
         if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
             # Switch to Dataframe Viewer
-            self.stackedWidget.setCurrentIndex(3)
+            self.central_stacked_widget.setCurrentIndex(3)
 
     def workingView(self, idx: int):
         """

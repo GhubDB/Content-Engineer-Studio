@@ -1,7 +1,6 @@
-import sys
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QSizePolicy
-from PyQt5.QtCore import QSize, QEvent, Qt
-from PyQt5.QtGui import QPixmap, QFont, QCursor
+from PyQt5.QtCore import QEvent, QSize, Qt
+from PyQt5.QtGui import QCursor, QFont, QPixmap
+from PyQt5.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 
 class DragDrop(QWidget):
@@ -83,7 +82,7 @@ class DragDropLabel(QLabel):
     def eventFilter(self, source, event: QEvent) -> bool:
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
             if source.name == "analysis":
-                self.gui.stackedWidget.setCurrentIndex(0)
+                self.gui.central_stacked_widget.setCurrentIndex(0)
             else:
-                self.gui.stackedWidget.setCurrentIndex(1)
+                self.gui.central_stacked_widget.setCurrentIndex(1)
         return super().eventFilter(source, event)
