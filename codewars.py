@@ -1,5 +1,7 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from ContentEngineerStudio.widgets.chat_widget import TextEdit
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 # d = {
 #     "col1": [1, 2, 3, 4],
@@ -48,7 +50,11 @@ import numpy as np
 # blablabla = bla2(bla)
 
 
-s = pd.DataFrame(
-    np.random.randint(low=0, high=10, size=(5, 5)), columns=["a", "b", "c", "d", "e"]
-)
-print(s)
+# s = pd.DataFrame(
+#     np.random.randint(low=0, high=10, size=(5, 5)), columns=["a", "b", "c", "d", "e"]
+# )
+# print(s)
+container = QtGui.MainWindow()
+edit = TextEdit(objectName="test_textedit", participant="bot", index=0)
+container.addWidget(edit)
+container.show()

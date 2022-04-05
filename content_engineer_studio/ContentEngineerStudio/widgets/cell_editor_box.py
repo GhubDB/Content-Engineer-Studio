@@ -185,7 +185,7 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
         self.container = parent
         self.pgdf = self.container.suite.viewer.pgdf
 
-    def rowCount(self) -> int:
+    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return 0
         return sum(

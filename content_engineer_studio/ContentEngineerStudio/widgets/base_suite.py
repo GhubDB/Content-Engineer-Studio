@@ -195,7 +195,7 @@ class BaseSuite(QWidget):
         # Save and clean up before next row is loaded
         self.saveOnRowChange()
         self.viewer.dataView.resizeRowToContents(self.row)
-        self.chat.clearChat()
+        self.chat.clear_chat()
 
         # Updates the self.row property
         idx = selected.indexes()
@@ -219,7 +219,7 @@ class BaseSuite(QWidget):
         self.cell_editor_box.cell_editor.signals.editing_done.emit()
 
         # Getting and saving chat messages
-        customer, bot = self.chat.getChatText()
+        customer, bot = self.chat.get_chat_text()
         if customer:
             self.select_and_edit_column_data(
                 role=Data.ROLES["CUSTOMER"], value=customer

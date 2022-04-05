@@ -71,8 +71,8 @@
 [33mac57700[m HEAD@{70}: commit: Chat loading and scraping complete
 [33mde6d916[m HEAD@{71}: commit: Analysis saving to excel implemented
 [33md44e315[m HEAD@{72}: commit: Check line 150 next
-[33mc13c233[m HEAD@{73}: commit: getChatText function implemented
-[33m16066a6[m HEAD@{74}: commit: getChatText implemented
+[33mc13c233[m HEAD@{73}: commit: get_chat_text function implemented
+[33m16066a6[m HEAD@{74}: commit: get_chat_text implemented
 [33m2ab2668[m HEAD@{75}: commit: find and replace text by html tag at btn_save
 [33mf46f58d[m HEAD@{76}: commit: getting text from texteditor widgets in btn_save
 [33mee86d28[m HEAD@{77}: commit: message highlighting implemented

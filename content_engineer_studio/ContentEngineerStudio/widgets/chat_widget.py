@@ -21,10 +21,245 @@ from ContentEngineerStudio.utils.stylesheets import Stylesheets
 from ContentEngineerStudio.utils.worker_thread import Worker
 
 
+class ChatWidgetContainer(QWidget):
+    def __init__(
+        self,
+        parent: typing.Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        if parent:
+            self.gui = parent.gui
+            self.suite = parent
+        self.highlighters = {}
+        self.auto_anonymized = []
+        self.dialog_num = 0
+        self.current_browser = 0
+
+        self.is_webscraping = False
+
+        # Chat Widget
+        self.chat = ChatWindow(parent=self if hasattr(self, "gui") else None)
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.addWidget(self.chat)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+
+    def get_chat_log(self, output):
+        """
+        Accesses URL and downloads chat log - used in Analysis
+        """
+        tuples = tuple(
+            x
+            for x in self.suite.viewer.pgdf.df_unfiltered.columns
+            if x[1] == Data.ROLES["LINK"]
+        )
+
+        if len(tuples) < 1:
+            return
+
+        if not self.suite.browser.getURL(
+            url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
+        ):
+            self.suite.browser.setUp(
+                url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
+            )
+        chat_text = self.suite.browser.getCleverbotStatic()
+        output.emit(chat_text)
+
+    def populate_chat_analysis(self, chat: list[list[str]]):
+        """
+        Displays webscraped chat messages in chat TableWidget
+        """
+        self.chat.setColumnCount(1)
+        self.chat.setRowCount(len(chat))
+        for (idx, sender) in enumerate(chat):
+            combo = TextEdit(
+                self, objectName=f"{sender[0]}_{idx}", participant=sender[0], index=idx
+            )
+            self.chat.setCellWidget(idx, 0, combo)
+
+            # Add auto highlighting
+            if sender[0] == "customer":
+                self.highlighters[idx] = Highlighter(
+                    document=combo.document(), name=combo, parent=self
+                )
+
+            combo.setText(sender[1])
+            combo.setContextMenuPolicy(Qt.PreventContextMenu)
+            combo.installEventFilter(self)
+
+            if sender[0] == "bot":
+                combo.setStyleSheet(Stylesheets.bot)
+            else:
+                combo.setStyleSheet(Stylesheets.customer)
+
+            combo.textChanged.connect(
+                lambda idx=idx: self.chat.resizeRowToContents(idx)
+            )
+            combo.cursorPositionChanged.connect(self.highlight_selection)
+        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.anynomyzify()
+
+    def populate_chat_testing(self, chat: list[list[str]]):
+        output = []
+        # Add new messages that are not empty strings to output and reset table
+        [
+            output.append(message)
+            for message in chat
+            if message not in self.suite.sent_messages and "" not in message
+        ]
+        self.chat.setColumnCount(1)
+        length = len(self.suite.sent_messages)
+        self.chat.setRowCount(length + len(output))
+        for (
+            idx,
+            sender,
+        ) in enumerate(output, start=length):
+            if sender[0] == "bot":
+                combo = TextEdit(
+                    self, objectName=f"bot_{idx}", participant="bot", index=idx
+                )
+            else:
+                combo = TextEdit(
+                    self,
+                    objectName=f"customer_{idx}",
+                    participant="customer",
+                    index=idx,
+                )
+            self.chat.setCellWidget(idx, 0, combo)
+            combo.setText(sender[1])
+            combo.setContextMenuPolicy(Qt.PreventContextMenu)
+            combo.installEventFilter(self)
+            # Bot
+            if sender[0] == "bot":
+                combo.setStyleSheet(Stylesheets.bot)
+            # customer
+            else:
+                combo.setStyleSheet(Stylesheets.customer)
+            # Add auto resizing of editor and highlighting
+            combo.textChanged.connect(
+                lambda idx=idx: self.chat.resizeRowToContents(idx)
+            )
+            combo.cursorPositionChanged.connect(self.highlight_selection)
+        [self.suite.sent_messages.append(message) for message in output]
+        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+    def set_up_new_dialog(self):
+        """
+        Sets up (singular) new chat session
+        """
+        self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
+        self.suite.browsers[self.current_browser].clickCleverbotAgree()
+
+        # clear chat
+        self.dialog_num += 1
+        self.chat.clear()
+        self.chat.setRowCount(0)
+        self.suite.sent_messages = []
+        return
+
+    def set_up_new_auto_dialog(self, i: int) -> None:
+        """
+        Prebuffers browser windows and asks auto_queue questions
+        """
+        # self.suite.browsers[i].tearDown()
+        if self.suite.browsers[i].setUp(url=Data.LIVECHAT_URL):
+            self.suite.browsers[i].clickCleverbotAgree()
+            self.suite.browsers[i].prebufferAutoTab(self.suite.questions)
+        return
+
+    def initialize_webscraping(self):
+        """
+        Start new webscraping thread
+        """
+        # Check if there is a running webscraping thread
+        if not self.is_webscraping:
+            self.is_webscraping = True
+            # Pass the function to execute
+            live_webscraper = Worker(self.chat_webscraping_loop, "activate_output")
+            # Catch signal of new chat messages
+            live_webscraper.signals.output.connect(self.populate_chat_testing)
+            # Execute
+            self.gui.threadpool.start(live_webscraper)
+
+    def chat_webscraping_loop(self, output: QtCore.pyqtSignal):
+        """
+        Continuously fetches new messages from the chat page
+        """
+        while self.is_webscraping:
+            try:
+                chats = self.suite.browsers[self.current_browser].getCleverbotLive()
+                if chats:
+                    output.emit(chats)
+                time.sleep(5)
+            except:
+                time.sleep(5)
+                continue
+
+    def highlight_selection(self):
+        """
+        Highlights and unhighlights user selected text
+        """
+        sender = self.sender()
+        cursor = sender.textCursor()
+        current_color = cursor.charFormat().background().color().rgb()
+        fmt = QTextCharFormat()
+        if cursor.hasSelection() and current_color != 4282679021:
+            fmt.setBackground(QColor(68, 126, 237))
+        else:
+            fmt.clearBackground()
+        cursor.setCharFormat(fmt)
+
+    def anynomyzify(self):
+        """
+        Receives starting and ending positions
+        of words to select from the Highlighter subclass and selects them
+        """
+        for name, start, end in self.auto_anonymized:
+            cursor = name.textCursor()
+            cursor.setPosition(start)
+            cursor.setPosition(end, QTextCursor.KeepAnchor)
+            name.setTextCursor(cursor)
+            # cursor.clearSelection()
+        self.auto_anonymized = []
+
+    def get_chat_text(self, export: typing.Optional[bool] = False) -> str:
+        """
+        Pulls and anonymizes user selected messages from the chat tablewidget.
+        """
+        bot = []
+        customer = []
+        # Iterate over editors in self.chat TableWidget
+        for idx in range(0, self.chat.rowCount()):
+            editor = self.chat.cellWidget(idx, 0)
+            if editor.selected:
+                # Convert the text of the message at the grid location to HTML and parse it
+                message_html = BeautifulSoup(str(editor), "html.parser")
+                # Find all span tags and replace the text with ***
+                tags = message_html.find_all("span")
+                for tag in tags:
+                    tag.string = "***"
+                if editor.participant == "bot":
+                    bot.append(message_html.get_text().strip())
+                else:
+                    customer.append(message_html.get_text().strip())
+        if export:
+            return customer
+        return (
+            "\n".join(customer) if customer else False,
+            "\n".join(bot) if bot else False,
+        )
+
+    def clear_chat(self):
+        # self.chat.clear()
+        # TODO: Check if editors have to be properly deleted
+        self.chat.setRowCount(0)
+
+
 class ChatWindow(QTableWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
-        self.gui = parent.gui
+        if parent:
+            self.gui = parent.gui
 
         self.setMinimumSize(QtCore.QSize(250, 0))
         self.setFrameShape(QtWidgets.QFrame.Panel)
@@ -102,7 +337,6 @@ class TextEdit(QTextEdit):
         return hint
 
     def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
-
         # Set Selection
         if e.button() == QtCore.Qt.RightButton:
             self.setSelection()
@@ -192,251 +426,3 @@ class Highlighter(QSyntaxHighlighter):
                 start, end = match.span()
                 self.container.auto_anonymized.append([self.name, start, end])
                 # self.setFormat(start, end-start, fmt) # Original implementation
-
-
-class ChatWidgetContainer(QWidget):
-    def __init__(
-        self,
-        parent: typing.Optional[QWidget] = None,
-    ) -> None:
-        super().__init__(parent)
-        self.gui = parent.gui
-        self.suite = parent
-        self.highlighters = {}
-        self.auto_anonymized = []
-        self.dialog_num = 0
-        self.current_browser = 0
-
-        self.is_webscraping = False
-
-        # Chat Widget
-        self.chat = ChatWindow(parent=self)
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.addWidget(self.chat)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-
-    def getChatlog(self, output):
-        """
-        Accesses URL and downloads chat log - used in Analysis
-        """
-        tuples = tuple(
-            x
-            for x in self.suite.viewer.pgdf.df_unfiltered.columns
-            if x[1] == Data.ROLES["LINK"]
-        )
-
-        if len(tuples) < 1:
-            return
-
-        if not self.suite.browser.getURL(
-            url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
-        ):
-            self.suite.browser.setUp(
-                url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
-            )
-        chat_text = self.suite.browser.getCleverbotStatic()
-        output.emit(chat_text)
-
-    def populate_chat_analysis(self, chat: list[list[str]]):
-        """
-        Displays webscraped chat messages in chat TableWidget
-        """
-        self.chat.setColumnCount(1)
-        self.chat.setRowCount(len(chat))
-        for (
-            idx,
-            sender,
-        ) in enumerate(chat):
-            if sender[0] == "bot":
-                combo = TextEdit(
-                    self, objectName=f"bot_{idx}", participant="bot", index=idx
-                )
-            else:
-                combo = TextEdit(
-                    self,
-                    objectName=f"customer_{idx}",
-                    participant="customer",
-                    index=idx,
-                )
-            self.chat.setCellWidget(idx, 0, combo)
-
-            # Add auto highlighting
-            if sender[0] == "customer":
-                self.highlighters[idx] = Highlighter(
-                    document=combo.document(), name=combo, parent=self
-                )
-
-            combo.setText(sender[1])
-            combo.setContextMenuPolicy(Qt.PreventContextMenu)
-            combo.installEventFilter(self)
-
-            # Bot
-            if sender[0] == "bot":
-                combo.setStyleSheet(Stylesheets.bot)
-                # combo.setAlignment(Qt.AlignRight)
-
-            # customer
-            else:
-                combo.setStyleSheet(Stylesheets.customer)
-
-            combo.textChanged.connect(
-                lambda idx=idx: self.chat.resizeRowToContents(idx)
-            )
-            combo.cursorPositionChanged.connect(self.highlight_selection)
-        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.anynomyzify()
-
-    def populate_chat_testing(self, chat: list[list[str]]):
-        output = []
-        # Add new messages that are not empty strings to output and reset table
-        [
-            output.append(message)
-            for message in chat
-            if message not in self.suite.sent_messages and "" not in message
-        ]
-        self.chat.setColumnCount(1)
-        length = len(self.suite.sent_messages)
-        self.chat.setRowCount(length + len(output))
-        for (
-            idx,
-            sender,
-        ) in enumerate(output, start=length):
-            if sender[0] == "bot":
-                combo = TextEdit(
-                    self, objectName=f"bot_{idx}", participant="bot", index=idx
-                )
-            else:
-                combo = TextEdit(
-                    self,
-                    objectName=f"customer_{idx}",
-                    participant="customer",
-                    index=idx,
-                )
-            self.chat.setCellWidget(idx, 0, combo)
-            combo.setText(sender[1])
-            combo.setContextMenuPolicy(Qt.PreventContextMenu)
-            combo.installEventFilter(self)
-            # Bot
-            if sender[0] == "bot":
-                combo.setStyleSheet(Stylesheets.bot)
-            # customer
-            else:
-                combo.setStyleSheet(Stylesheets.customer)
-            # Add auto resizing of editor and highlighting
-            combo.textChanged.connect(
-                lambda idx=idx: self.chat.resizeRowToContents(idx)
-            )
-            combo.cursorPositionChanged.connect(self.highlight_selection)
-        [self.suite.sent_messages.append(message) for message in output]
-        self.chat.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-    def setUpNewDialog(self):
-        """
-        Sets up (singular) new chat session
-        """
-        self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
-        self.suite.browsers[self.current_browser].clickCleverbotAgree()
-
-        # clear chat
-        self.dialog_num += 1
-        self.chat.clear()
-        self.chat.setRowCount(0)
-        self.suite.sent_messages = []
-        return
-
-    def setUpNewAutoDialog(self, i: int) -> None:
-        """
-        Prebuffers browser windows and asks auto_queue questions
-        """
-        # self.suite.browsers[i].tearDown()
-        if self.suite.browsers[i].setUp(url=Data.LIVECHAT_URL):
-            self.suite.browsers[i].clickCleverbotAgree()
-            self.suite.browsers[i].prebufferAutoTab(self.suite.questions)
-        return
-
-    def initializeWebscraping(self):
-        """
-        Start new webscraping thread
-        """
-        # Check if there is a running webscraping thread
-        if not self.is_webscraping:
-            self.is_webscraping = True
-            # Pass the function to execute
-            live_webscraper = Worker(self.chatWebscrapingLoop, "activate_output")
-            # Catch signal of new chat messages
-            live_webscraper.signals.output.connect(self.populate_chat_testing)
-            # Execute
-            self.gui.threadpool.start(live_webscraper)
-
-    def chatWebscrapingLoop(self, output: QtCore.pyqtSignal):
-        """
-        Continuously fetches new messages from the chat page
-        """
-        while self.is_webscraping:
-            try:
-                chats = self.suite.browsers[self.current_browser].getCleverbotLive()
-                if chats:
-                    output.emit(chats)
-                time.sleep(5)
-            except:
-                time.sleep(5)
-                continue
-
-    def highlight_selection(self):
-        """
-        Highlights and unhighlights user selected text
-        """
-        sender = self.sender()
-        cursor = sender.textCursor()
-        current_color = cursor.charFormat().background().color().rgb()
-        fmt = QTextCharFormat()
-        if fmt.hasSelection() and current_color != 4282679021:
-            fmt.setBackground(QColor(68, 126, 237))
-        else:
-            fmt.clearBackground()
-        cursor.setCharFormat(fmt)
-
-    def anynomyzify(self):
-        """
-        Receives starting and ending positions
-        of words to select from the Highlighter subclass and selects them
-        """
-        for name, start, end in self.auto_anonymized:
-            cursor = name.textCursor()
-            cursor.setPosition(start)
-            cursor.setPosition(end, QTextCursor.KeepAnchor)
-            name.setTextCursor(cursor)
-            # cursor.clearSelection()
-        self.auto_anonymized = []
-
-    def getChatText(self, export: typing.Optional[bool] = False) -> str:
-        """
-        Pulls and anonymizes user selected messages from the chat tablewidget.
-        """
-        bot = []
-        customer = []
-        # Iterate over editors in self.chat TableWidget
-        for idx in range(0, self.chat.rowCount()):
-            editor = self.chat.cellWidget(idx, 0)
-            if editor.selected:
-                # Convert the text of the message at the grid location to HTML and parse it
-                message_html = BeautifulSoup(str(editor), "html.parser")
-                # Find all span tags and replace the text with ***
-                tags = message_html.find_all("span")
-                for tag in tags:
-                    tag.string = "***"
-                if editor.participant == "bot":
-                    bot.append(message_html.get_text().strip())
-                else:
-                    customer.append(message_html.get_text().strip())
-        if export:
-            return customer
-        return (
-            "\n".join(customer) if customer != [] else False,
-            "\n".join(bot) if bot != [] else False,
-        )
-
-    def clearChat(self):
-        # self.chat.clear()
-        # TODO: Check if editors have to be properly deleted
-        self.chat.setRowCount(0)

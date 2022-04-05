@@ -1,3 +1,4 @@
+import typing
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget
 
@@ -7,7 +8,7 @@ from ContentEngineerStudio.widgets.base_suite import BaseSuite
 
 
 class AnalysisSuite(BaseSuite):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: typing.Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
         #####################################################
@@ -78,7 +79,7 @@ class AnalysisSuite(BaseSuite):
         # Loading web page, web scraping and adding results to self.chat
         if self.open_links.checkState():
             # Start a new thread to load the chat log
-            setup = Worker(self.chat.getChatlog, "activate_output")
+            setup = Worker(self.chat.get_chat_log, "activate_output")
             setup.signals.output.connect(self.chat.populate_chat_analysis)
             self.gui.threadpool.start(setup)
 
@@ -94,7 +95,7 @@ class AnalysisSuite(BaseSuite):
         self.gui.populate_search_box()
 
     def export_to_testing(self):
-        customer = self.chat.getChatText(export=True)
+        customer = self.chat.get_chat_text(export=True)
         if customer:
             for message in customer:
                 item = QtGui.QStandardItem(message)

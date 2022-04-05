@@ -50,17 +50,17 @@ class Canned(QtWidgets.QTableView):
 
 
 class CannedSelectionModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent) -> None:
+    def __init__(self, parent, pgdf: PandasGuiDataFrameStore) -> None:
         super().__init__(parent)
         self.gui = parent.gui
         self.suite = parent.suite
         self.container = parent
         self.pgdf = self.container.suite.viewer.pgdf
 
-    def columnCount(self) -> int:
+    def columnCount(self, parent: QtCore.QModelIndex = ...) -> int:
         return len(Data.MULTIPLE_CHOICE)
 
-    def rowCount(self) -> int:
+    def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
             return 0
         return sum(

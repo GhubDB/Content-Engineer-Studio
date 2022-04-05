@@ -1,4 +1,5 @@
 import traceback
+import typing
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QItemSelectionModel
@@ -12,7 +13,7 @@ from ContentEngineerStudio.widgets.base_suite import BaseSuite
 
 
 class TestingSuite(BaseSuite):
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: typing.Optional[QtWidgets.QWidget] = None) -> None:
         super().__init__(parent)
 
         #####################################################
@@ -110,19 +111,19 @@ class TestingSuite(BaseSuite):
                 self.browsers[self.current_browser] = Browser()
             self.browsers[self.current_browser].bringToFront()
             # Start prebuffering previous window
-            setup = Worker(lambda: self.chat.setUpNewAutoDialog(current))
+            setup = Worker(lambda: self.chat.set_up_new_auto_dialog(current))
             if not self.is_webscraping:
-                setup.signals.finished.connect(self.chat.initializeWebscraping)
+                setup.signals.finished.connect(self.chat.initialize_webscraping)
             self.gui.threadpool.start(setup)
             # clear chat
-            self.chat.clearChat()
+            self.chat.clear_chat()
             self.sent_messages = []
         else:
             # Start Thread for webdriver setup
-            setup = Worker(self.chat.setUpNewDialog)
+            setup = Worker(self.chat.set_up_new_dialog)
             # Once setup is complete, start webscraping the chat log
             if not self.is_webscraping:
-                setup.signals.finished.connect(self.chat.initializeWebscraping)
+                setup.signals.finished.connect(self.chat.initialize_webscraping)
             self.gui.threadpool.start(setup)
 
     def auto_btn(self, signal):
@@ -145,9 +146,9 @@ class TestingSuite(BaseSuite):
 
                 # Set up Data.BUFFER new browser windows and ask the questions in the auto_queue
                 for i in range(0, Data.BUFFER):
-                    setup = Worker(lambda: self.chat.setUpNewAutoDialog(i))
+                    setup = Worker(lambda: self.chat.set_up_new_auto_dialog(i))
                     if not self.is_webscraping and i == 0:
-                        setup.signals.finished.connect(self.chat.initializeWebscraping)
+                        setup.signals.finished.connect(self.chat.initialize_webscraping)
                     self.gui.threadpool.start(setup)
 
         if signal == 0:
