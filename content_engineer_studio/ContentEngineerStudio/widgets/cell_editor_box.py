@@ -2,6 +2,7 @@ import typing
 
 import numpy as np
 import pandas as pd
+from pandasgui.store import PandasGuiDataFrameStore
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGridLayout, QHBoxLayout, QTextEdit, QWidget
@@ -180,10 +181,17 @@ class CellEdit(QTextEdit):
 
 
 class AnalysisSelectorModel(QtCore.QAbstractListModel):
-    def __init__(self, parent) -> None:
+    def __init__(
+        self,
+        parent: typing.Optional[QWidget] = None,
+        pgdf: typing.Optional[PandasGuiDataFrameStore] = None,
+    ) -> None:
         super().__init__(parent)
-        self.container = parent
-        self.pgdf = self.container.suite.viewer.pgdf
+        if parent is not None:
+            self.container = parent
+            self.pgdf = self.container.suite.viewer.pgdf
+        if pgdf is not None:
+            self.pgdf = pgdf
 
     def rowCount(self, parent: QtCore.QModelIndex = ...) -> int:
         if not isinstance(self.pgdf.df_unfiltered.columns, pd.MultiIndex):
@@ -208,15 +216,6 @@ class AnalysisSelectorModel(QtCore.QAbstractListModel):
                 if x[1] == Data.ROLES["EDITABLE"]
             )
             return rows[row]
-
-    def flags(self, index):
-        """
-        https://forum.qt.io/topic/22153/baffled-by-qlistview-drag-drop-for-reordering-list/2
-        """
-        if index.isValid():
-            return Qt.ItemIsSelectable | Qt.ItemIsEnabled
-
-        return Qt.ItemIsSelectable | Qt.ItemIsEnabled
 
     def clear_cell_edit(self):
         self.container.cell_editor.setPlainText("")

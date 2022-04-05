@@ -1,3 +1,4 @@
+import os
 import typing
 from time import sleep
 from unittest import mock
@@ -10,11 +11,14 @@ from pandasgui.widgets.dataframe_viewer import HeaderModel
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
+# This sets the working dir for pytest to be the same as the dir the test is in
 @pytest.fixture
-def pgdf():
-    df = pd.DataFrame(
-        np.random.randint(low=0, high=10, size=(5, 5)),
-        columns=["a", "b", "c", "d", "e"],
-    )
-    pgdf = PandasGuiDataFrameStore(df, "Test_dummy")
-    return pgdf
+def change_test_dir(request, monkeypatch):
+    monkeypatch.chdir(request.fspath.dirname)
+
+
+# @pytest.fixture
+# def change_test_dir_old(request):
+#     os.chdir(request.fspath.dirname)
+#     yield
+#     os.chdir(request.config.invocation_dir)

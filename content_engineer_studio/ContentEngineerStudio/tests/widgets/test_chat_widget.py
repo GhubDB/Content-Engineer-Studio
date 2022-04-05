@@ -7,9 +7,6 @@ from pandasgui.store import PandasGuiDataFrameStore
 from pandasgui.widgets.dataframe_viewer import HeaderModel
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from ContentEngineerStudio.main import MainWindow
-from ContentEngineerStudio.utils.stylesheets import Stylesheets
-from ContentEngineerStudio.widgets.analysis_suite import AnalysisSuite
 from ContentEngineerStudio.widgets.chat_widget import (
     AddVariant,
     ChatWidgetContainer,
@@ -61,6 +58,19 @@ def test_anonymizes_email_correctly(container, qtbot):
     container.chat.cellWidget(3, 0).selected = True
     customer, bot = container.get_chat_text()
     assert customer == "My email is ***"
+
+
+def test_can_get_chat_text_export_only(container, qtbot):
+    container.chat.cellWidget(0, 0).selected = True
+    container.chat.cellWidget(1, 0).selected = True
+    container.chat.cellWidget(2, 0).selected = True
+    container.chat.cellWidget(3, 0).selected = True
+    assert isinstance(container.get_chat_text(export=True), list) == True
+    assert container.get_chat_text(export=True) == [
+        "hi",
+        "My phonenumber is ***.",
+        "My email is ***",
+    ]
 
 
 def test_can_clear_chat(container, qtbot):
