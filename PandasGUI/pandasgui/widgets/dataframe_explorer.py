@@ -1,20 +1,19 @@
+import logging
 import sys
 from typing import List, Optional, Union
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
-from pandasgui.widgets.code_history_viewer import CodeHistoryViewer
 
+from pandasgui.store import PandasGuiDataFrameStore
+from pandasgui.widgets.code_history_viewer import CodeHistoryViewer
+from pandasgui.widgets.column_viewer import ColumnViewer
 from pandasgui.widgets.containers import Container
 from pandasgui.widgets.dataframe_viewer import DataFrameViewer
-from pandasgui.widgets.column_viewer import ColumnViewer
+from pandasgui.widgets.dock_widget import DockWidget
+from pandasgui.widgets.filter_viewer import FilterViewer
 from pandasgui.widgets.grapher import Grapher
 from pandasgui.widgets.reshaper import Reshaper
-from pandasgui.widgets.filter_viewer import FilterViewer
 from pandasgui.widgets.stats_viewer import StatisticsViewer
-from pandasgui.widgets.dock_widget import DockWidget
-from pandasgui.store import PandasGuiDataFrameStore
-
-import logging
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +270,8 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
                     axis="columns",
                     inplace=True,
                 )
-                self.dataframe_explorer.pgdf.refresh_ui()
+                self.dataChanged.emit(index, index)
+                self.pgdf.signals.reset_models.emit(["header_model_horizontal"])
             except Exception as e:
                 logger.exception(e)
                 return False

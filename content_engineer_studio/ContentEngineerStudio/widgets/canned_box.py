@@ -125,7 +125,19 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
                 col=(rows[row]),
                 text=Data.MULTIPLE_CHOICE[column],
             )
+
             self.pgdf.signals.reset_models.emit(["canned_model"])
+
+            column = list(self.suite.viewer.pgdf.df_unfiltered.columns).index(
+                (rows[row])
+            )
+            index = self.suite.viewer.pgdf.model["data_table_model"].index(
+                self.suite.row, column
+            )
+            self.suite.viewer.pgdf.model["data_table_model"].dataChanged.emit(
+                index, index
+            )
+
             return True
 
         return False

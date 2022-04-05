@@ -13,7 +13,6 @@ from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
 class CellEditorContainer(QWidget):
     def __init__(self, parent: typing.Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.gui = parent.gui
         self.pgdf = parent.pgdf
         self.suite = parent
 
@@ -82,9 +81,6 @@ class CellEditorContainer(QWidget):
         """
         Set model for combobox that displays Data.ROLES['EDITABLE'] rows
         """
-        # for _ in range(10):
-        #     self.cell_selector.addItem("Banana")
-        # return
         self.suite.viewer.pgdf.model[
             "analysis_selector_proxy_model"
         ] = AnalysisSelectorModel(parent=self)
@@ -124,6 +120,14 @@ class CellEditorContainer(QWidget):
                 text=self.cell_editor.toPlainText(),
             )
 
+        column = list(self.suite.viewer.pgdf.df_unfiltered.columns).index(
+            (self.cell_selector.currentText(), Data.ROLES["EDITABLE"])
+        )
+        index = self.suite.viewer.pgdf.model["data_table_model"].index(
+            self.suite.row, column
+        )
+        self.suite.viewer.pgdf.model["data_table_model"].dataChanged.emit(index, index)
+
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
             self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() - 1)
@@ -135,10 +139,7 @@ class CellEditorContainer(QWidget):
         self.cell_selector.setCurrentIndex(self.cell_selector.currentIndex() + 1)
 
     def btn_colorize(self):
-        self.analysis_excel.colorize(
-            self.row + 2,
-            self.cell_selector.currentIndex() + self.cell_selector_start + 1,
-        )
+        pass
 
 
 class CellEdit(QTextEdit):

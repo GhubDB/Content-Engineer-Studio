@@ -1,14 +1,15 @@
 from __future__ import annotations
-import typing
-import os
-import numpy as np
-from enum import Enum
-import json
-import inspect
-import logging
-import contextlib
-from abc import abstractmethod
 
+import contextlib
+import inspect
+import json
+import logging
+import os
+import typing
+from abc import abstractmethod
+from enum import Enum
+
+import numpy as np
 from ContentEngineerStudio.utils.data_variables import Data
 
 if typing.TYPE_CHECKING:
@@ -18,29 +19,31 @@ if typing.TYPE_CHECKING:
     from pandasgui.widgets.dataframe_explorer import DataFrameExplorer
     from pandasgui.widgets.navigator import Navigator
 
+import traceback
 from dataclasses import dataclass, field
-from typing import Iterable, List, Union, Type
-from typing_extensions import Literal
+from datetime import datetime
+from typing import Iterable, List, Type, Union
+
 import pandas as pd
 from pandas import DataFrame
 from PyQt5 import QtCore, QtWidgets
-import traceback
-from datetime import datetime
-from pandasgui.utility import (
-    unique_name,
-    in_interactive_console,
-    refactor_variable,
-    clean_dataframe,
-    nunique,
-    parse_cell,
-    parse_all_dates,
-    parse_date,
-    get_movements,
-    generate_unique_column_name,
-    generate_index,
-    Signals,
-)
+from typing_extensions import Literal
+
 from pandasgui.constants import LOCAL_DATA_DIR
+from pandasgui.utility import (
+    Signals,
+    clean_dataframe,
+    generate_index,
+    generate_unique_column_name,
+    get_movements,
+    in_interactive_console,
+    nunique,
+    parse_all_dates,
+    parse_cell,
+    parse_date,
+    refactor_variable,
+    unique_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -661,10 +664,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.dataframe_viewer.columnHeader.updateGeometry()
         self.signals.reset_models.emit(
-            [
-                "analysis_selector_proxy_model",
-                "canned_model",
-            ]
+            ["analysis_selector_proxy_model", "canned_model", "header_model_horizontal"]
         )
 
     def add_multiindex(self) -> None:

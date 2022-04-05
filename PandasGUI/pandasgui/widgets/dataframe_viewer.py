@@ -394,14 +394,14 @@ class DataFrameViewer(QtWidgets.QWidget):
             self._refresh_ui()
 
     def _refresh_ui(self):
-        for model in [
-            self.pgdf.model["data_table_model"],
-            self.pgdf.model["header_model_horizontal"],
-            self.pgdf.model["header_roles_model"],
-            self.pgdf.model["column_search_model"],
-        ]:
-            model.beginResetModel()
-            model.endResetModel()
+        # for model in [
+        #     self.pgdf.model["data_table_model"],
+        #     self.pgdf.model["header_model_horizontal"],
+        #     self.pgdf.model["header_roles_model"],
+        #     self.pgdf.model["column_search_model"],
+        # ]:
+        #     model.beginResetModel()
+        #     model.endResetModel()
 
         # Update multi-index spans
         for view in [self.columnHeader, self.indexHeader]:
@@ -607,10 +607,8 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         row = index.row()
         col = index.column()
         value = editor.toPlainText()
-        try:
-            model.pgdf.edit_data(row, col, value, index=index)
-        except Exception as e:
-            logger.exception(e)
+        model.pgdf.edit_data(row, col, value, index=index)
+        model.dataChanged.emit(index, index)
 
     def paint(
         self,
