@@ -4,10 +4,13 @@ import sys
 from dataclasses import dataclass
 from typing import Callable, List, Optional, Union
 
+import numpy as np
 import pandas as pd
+
 # This needs to be pip -e filepath installed for development mode
 import pandasgui
 import pkg_resources
+
 # from utils.model_test import ModelTest
 import qtstylish
 from IPython.core.magic import register_line_magic
@@ -22,7 +25,8 @@ from PyQt5.QtCore import QSortFilterProxyModel, Qt, QThreadPool
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget
 
-from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
+from ContentEngineerStudio.data.data_variables import Data, GuiSignals
+
 # My packages
 from ContentEngineerStudio.utils.excel_helpers import Excel
 from ContentEngineerStudio.utils.stylesheets import Stylesheets
@@ -48,21 +52,22 @@ class MainWindow(QMainWindow):
         #####################################################
 
         # Loading excel sheets for test purposes
-        self.analysis_excel = Excel()
-        self.testing_excel = Excel()
-        self.faq_excel = Excel()
-        self.df = self.analysis_excel.load("csv/transcripts.xlsx", "Sheet1")
-        self.df_2 = self.testing_excel.load("csv/testing.xlsx", "Sheet1")
-        self.faq_df = self.faq_excel.load("csv/recipes.xlsx", "Sheet1")
+        self.df = pd.read_excel(
+            io="data/csv/transcripts.xlsx", sheet_name="Sheet1", header=0
+        )
+        self.df_2 = pd.read_excel(
+            io="data/csv/testing.xlsx", sheet_name="Sheet1", header=0
+        )
+        self.faq_df = pd.read_excel(
+            io="data/csv/recipes.xlsx", sheet_name="Sheet1", header=0
+        )
 
         self.analysis_df_name = False
         self.testing_df_name = False
 
         self.threadpool = QThreadPool()
-
         self.signals = GuiSignals()
 
-        # Stores what view the user has worked in last
         self.current_work_area = 0
 
         #####################################################
@@ -427,69 +432,6 @@ class MainWindow(QMainWindow):
         )
         self.store.add_dataframe(df)
 
-    # https://stackoverflow.com/a/29769228/3620725
-    # def add_to_context_menu(self):
-    #     import winreg
-
-    #     key = winreg.HKEY_CURRENT_USER
-    #     command_value = rf'{sys.executable} -m pandasgui.run_with_args "%V"'
-    #     icon_value = rf"{os.path.dirname(pandasgui.__file__)}\resources\images\icon.ico"
-
-    #     handle = winreg.CreateKeyEx(
-    #         key,
-    #         "Software\Classes\*\shell\Open with PandasGUI\command",
-    #         0,
-    #         winreg.KEY_SET_VALUE,
-    #     )
-    #     winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
-    #     handle = winreg.CreateKeyEx(
-    #         key, "Software\Classes\*\shell\Open with PandasGUI", 0, winreg.KEY_SET_VALUE
-    #     )
-    #     winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
-
-    # def remove_from_context_menu(self):
-    #     import winreg
-
-    #     key = winreg.HKEY_CURRENT_USER
-    #     winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI\command")
-    #     winreg.DeleteKey(key, "Software\Classes\*\shell\Open with PandasGUI")
-
-    # def add_jupyter_to_context_menu(self):
-    #     import winreg
-
-    #     key = winreg.HKEY_CURRENT_USER
-    #     command_value = rf'cmd.exe /k jupyter lab --notebook-dir="%V"'
-    #     icon_value = (
-    #         rf"{os.path.dirname(pandasgui.__file__)}\resources\images\jupyter_icon.ico"
-    #     )
-
-    #     handle = winreg.CreateKeyEx(
-    #         key,
-    #         "Software\Classes\directory\Background\shell\Open with JupyterLab\command",
-    #         0,
-    #         winreg.KEY_SET_VALUE,
-    #     )
-    #     winreg.SetValueEx(handle, "", 0, winreg.REG_SZ, command_value)
-    #     handle = winreg.CreateKeyEx(
-    #         key,
-    #         "Software\Classes\directory\Background\shell\Open with JupyterLab",
-    #         0,
-    #         winreg.KEY_SET_VALUE,
-    #     )
-    #     winreg.SetValueEx(handle, "icon", 0, winreg.REG_SZ, icon_value)
-
-    # def remove_jupyter_from_context_menu(self):
-    #     import winreg
-
-    #     key = winreg.HKEY_CURRENT_USER
-    #     winreg.DeleteKey(
-    #         key,
-    #         "Software\Classes\directory\Background\shell\Open with JupyterLab\command",
-    #     )
-    #     winreg.DeleteKey(
-    #         key, "Software\Classes\directory\Background\shell\Open with JupyterLab"
-    #     )
-
     def edit_settings(self):
 
         dialog = QtWidgets.QDialog(self)
@@ -553,10 +495,10 @@ class MainWindow(QMainWindow):
     def populate_search_box(self):
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
-        for idx, _ in self.faq_df.iterrows():
-            for i, _ in enumerate(self.faq_df.columns):
-                item = QStandardItem(self.faq_df.iloc[idx, i])
-                model.setItem(idx, i, item)  # check this
+        for i, row in self.faq_df.iterrows():
+            for j, string in enumerate(row):
+                item = QStandardItem(str(string) if string else "")
+                model.setItem(i, j, item)  # check this
         self.faq_auto_search_model = QSortFilterProxyModel()
         self.faq_auto_search_model.setSourceModel(model)
         self.faq_auto_search_model.setFilterCaseSensitivity(Qt.CaseInsensitive)
@@ -592,17 +534,19 @@ class MainWindow(QMainWindow):
         """
         # Synchronize selectors
         page = self.central_stacked_widget.currentIndex()
-        if page == 0:
 
-            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
-            self.faq_search_tab.search_column_select.setCurrentIndex(idx)
-        elif page == 1:
-
+        if page != 0:
+            self.analysis_suite.faq_search_box.search_column_select.blockSignals(True)
             self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
-            self.faq_search_tab.search_column_select.setCurrentIndex(idx)
-        elif page == 2:
-            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
+            self.analysis_suite.faq_search_box.search_column_select.blockSignals(False)
+        if page != 1:
+            self.testing_suite.faq_search_box.search_column_select.blockSignals(True)
             self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
+            self.testing_suite.faq_search_box.search_column_select.blockSignals(False)
+        elif page != 2:
+            self.faq_search_tab.search_column_select.blockSignals(True)
+            self.faq_search_tab.search_column_select.setCurrentIndex(idx)
+            self.faq_search_tab.search_column_select.blockSignals(False)
 
         # Set table column to filter by
         try:
@@ -638,7 +582,6 @@ class MainWindow(QMainWindow):
             item = QStandardItem(item)
             model.setItem(idx, 0, item)
 
-        # For searching all columns
         item = QStandardItem("Search in all columns")
         model.setItem(len(self.faq_df.columns), 0, item)
 
@@ -682,17 +625,21 @@ class MainWindow(QMainWindow):
         """
         Hotkeys
         """
-        QtWidgets.QWidget.keyPressEvent(self, event)
         mods = event.modifiers()
+
+        # Switch to Analysis
         if event.key() == Qt.Key_G and (mods & Qt.ControlModifier):
-            # Switch to Analysis
             self.central_stacked_widget.setCurrentIndex(0)
+
+        # Switch to Testing
         if event.key() == Qt.Key_T and (mods & Qt.ControlModifier):
-            # Switch to Testing
             self.central_stacked_widget.setCurrentIndex(1)
+
+        # Switch to Dataframe Viewer
         if event.key() == Qt.Key_D and (mods & Qt.ControlModifier):
-            # Switch to Dataframe Viewer
             self.central_stacked_widget.setCurrentIndex(3)
+
+        QtWidgets.QWidget.keyPressEvent(self, event)
 
     def workingView(self, idx: int):
         """
@@ -722,6 +669,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet(qtstylish.dark())
     win = MainWindow()
-    win.resize(1920, 180)
+    win.resize(1920, 1080)
     win.show()
     sys.exit(app.exec_())

@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QItemSelectionModel
 from PyQt5.QtWidgets import QWidget
 
-from ContentEngineerStudio.utils.data_variables import Data
+from ContentEngineerStudio.data.data_variables import Data
 from ContentEngineerStudio.utils.selenium_helpers import Browser
 from ContentEngineerStudio.utils.worker_thread import Worker
 from ContentEngineerStudio.widgets.auto_history import AutoqueueAndHistoryContainer

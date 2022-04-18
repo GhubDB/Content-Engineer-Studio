@@ -10,7 +10,7 @@ from abc import abstractmethod
 from enum import Enum
 
 import numpy as np
-from ContentEngineerStudio.utils.data_variables import Data
+from ContentEngineerStudio.data.data_variables import Data
 
 if typing.TYPE_CHECKING:
     from pandasgui.gui import PandasGui
@@ -22,7 +22,7 @@ if typing.TYPE_CHECKING:
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Iterable, List, Type, Union
+from typing import Iterable, List, Optional, Type, Union
 
 import pandas as pd
 from pandas import DataFrame
@@ -485,6 +485,11 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.apply_filters(index=index)
 
         # self.add_history_item("edit_data", f"df.iat[{row}, {col}] = {repr(value)}")
+
+    def emit_data_changed(self, column: tuple, row: int) -> None:
+        column_idx = list(self.df_unfiltered.columns).index(column)
+        index = self.model["data_table_model"].index(row, column_idx)
+        self.model["data_table_model"].dataChanged.emit(index, index)
 
     @status_message_decorator("Pasting data...")
     def paste_data(self, top_row, left_col, df_to_paste):

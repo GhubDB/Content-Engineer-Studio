@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QHeaderView, QWidget
 
-from ContentEngineerStudio.utils.data_variables import Data
+from ContentEngineerStudio.data.data_variables import Data
 
 
 class Canned(QtWidgets.QTableView):
@@ -83,10 +83,12 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
                 for x in self.pgdf.df_unfiltered.columns
                 if x[1] == Data.ROLES["MULTI_CHOICE"]
             )
+
             if column == 0:
                 return rows[row]
             else:
                 return Data.MULTIPLE_CHOICE[column]
+
         elif role == Qt.CheckStateRole and column in [1, 2, 3]:
             # This allows users to select checkboxes
             row = index.row()
@@ -95,6 +97,7 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
                 for x in self.pgdf.df_unfiltered.columns
                 if x[1] == Data.ROLES["MULTI_CHOICE"]
             )
+
             # Check if value in Dataframe is equal to the checkbox that is checked
             if (
                 self.pgdf.df_unfiltered.loc[
@@ -128,14 +131,9 @@ class CannedSelectionModel(QtCore.QAbstractTableModel):
 
             self.pgdf.signals.reset_models.emit(["canned_model"])
 
-            column = list(self.suite.viewer.pgdf.df_unfiltered.columns).index(
-                (rows[row])
-            )
-            index = self.suite.viewer.pgdf.model["data_table_model"].index(
-                self.suite.row, column
-            )
-            self.suite.viewer.pgdf.model["data_table_model"].dataChanged.emit(
-                index, index
+            self.suite.viewer.pgdf.emit_data_changed(
+                column=(rows[row]),
+                row=self.suite.row,
             )
 
             return True

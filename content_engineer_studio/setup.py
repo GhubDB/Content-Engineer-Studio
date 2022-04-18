@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="ContentEngineerStudio",
@@ -15,6 +15,7 @@ setup(
         "xlwings",
         "bs4",
         "PyQt5",
+        "mmh3",
         "setuptools",
         "appdirs",
         "pynput",

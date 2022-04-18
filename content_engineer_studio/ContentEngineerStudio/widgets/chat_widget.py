@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ContentEngineerStudio.utils.data_variables import Data
+from ContentEngineerStudio.data.data_variables import Data
 from ContentEngineerStudio.utils.stylesheets import Stylesheets
 from ContentEngineerStudio.utils.worker_thread import Worker
 

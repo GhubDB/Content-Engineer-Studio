@@ -7,7 +7,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QGridLayout, QHBoxLayout, QTextEdit, QWidget
 
-from ContentEngineerStudio.utils.data_variables import Data, GuiSignals
+from ContentEngineerStudio.data.data_variables import Data, GuiSignals
 
 
 class CellEditorContainer(QWidget):
@@ -120,13 +120,10 @@ class CellEditorContainer(QWidget):
                 text=self.cell_editor.toPlainText(),
             )
 
-        column = list(self.suite.viewer.pgdf.df_unfiltered.columns).index(
-            (self.cell_selector.currentText(), Data.ROLES["EDITABLE"])
+        self.suite.viewer.pgdf.emit_data_changed(
+            column=(self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+            row=self.suite.row,
         )
-        index = self.suite.viewer.pgdf.model["data_table_model"].index(
-            self.suite.row, column
-        )
-        self.suite.viewer.pgdf.model["data_table_model"].dataChanged.emit(index, index)
 
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:

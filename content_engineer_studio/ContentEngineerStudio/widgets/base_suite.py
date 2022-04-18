@@ -1,53 +1,51 @@
+# Pandasgui imports
+from pandasgui.widgets.dataframe_explorer import HeaderRolesViewContainer
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import (
     QEvent,
     QItemSelectionModel,
-    Qt,
     QObject,
+    QSortFilterProxyModel,
+    Qt,
+    QThreadPool,
+    QTimer,
     pyqtSignal,
     pyqtSlot,
-    QThreadPool,
-    QSortFilterProxyModel,
-    QTimer,
-)
-from PyQt5.QtWidgets import (
-    QDialog,
-    QDialogButtonBox,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QPushButton,
-    QWidget,
-    QGridLayout,
-    QMainWindow,
-    QHeaderView,
-    QTableWidgetItem,
-    QButtonGroup,
-    QRadioButton,
-    QApplication,
 )
 from PyQt5.QtGui import (
-    QStandardItemModel,
-    QStandardItem,
+    QColor,
     QFont,
     QFontDatabase,
-    QColor,
+    QStandardItem,
+    QStandardItemModel,
     QSyntaxHighlighter,
     QTextCharFormat,
     QTextCursor,
 )
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-# Pandasgui imports
-from pandasgui.widgets.dataframe_explorer import HeaderRolesViewContainer
-from ContentEngineerStudio.widgets.canned_box import Canned
-from ContentEngineerStudio.widgets.cell_editor_box import CellEditorContainer
-from ContentEngineerStudio.widgets.faq_search_box import FaqSearchBoxContainer
+from PyQt5.QtWidgets import (
+    QApplication,
+    QButtonGroup,
+    QDialog,
+    QDialogButtonBox,
+    QGridLayout,
+    QHeaderView,
+    QLabel,
+    QMainWindow,
+    QPushButton,
+    QRadioButton,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Content Engineer Studio imports
-from ContentEngineerStudio.utils.data_variables import Data
-from ContentEngineerStudio.widgets.sidebar import Sidebar
+from ContentEngineerStudio.data.data_variables import Data
+from ContentEngineerStudio.widgets.canned_box import Canned
+from ContentEngineerStudio.widgets.cell_editor_box import CellEditorContainer
 from ContentEngineerStudio.widgets.chat_widget import ChatWidgetContainer
+from ContentEngineerStudio.widgets.faq_search_box import FaqSearchBoxContainer
+from ContentEngineerStudio.widgets.sidebar import Sidebar
 
 
 class BaseSuite(QWidget):

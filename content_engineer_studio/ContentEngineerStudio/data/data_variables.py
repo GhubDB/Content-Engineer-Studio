@@ -38,6 +38,8 @@ class Data:
         "Example FAQ",
     ]
 
+    DEV = {"host": "localhost", "user": "developer", "password": "root"}
+
 
 class GuiSignals(QtWidgets.QWidget):
     editing_done = QtCore.pyqtSignal()

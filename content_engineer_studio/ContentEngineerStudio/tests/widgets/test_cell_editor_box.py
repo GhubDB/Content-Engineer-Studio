@@ -9,10 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from ContentEngineerStudio.widgets.analysis_suite import AnalysisSuite
 from ContentEngineerStudio.widgets.cell_editor_box import (
-    AnalysisSelectorModel,
-    CellEdit,
-    CellEditorContainer,
-)
+    AnalysisSelectorModel, CellEdit, CellEditorContainer)
 
 
 # Sanity check
@@ -46,7 +43,6 @@ def test_pgdf_can_add_viewer(make_pgdf):
 
 
 def test_header_model(qtmodeltester, make_pgdf):
-    assert isinstance(make_pgdf, Suite)
     model = AnalysisSelectorModel(pgdf=make_pgdf.pgdf)
     qtmodeltester.check(model)
 
@@ -54,7 +50,7 @@ def test_header_model(qtmodeltester, make_pgdf):
 def test_can_populate_cell_selector(container):
     assert container.cell_selector.model().rowCount() == 0
     container.populate_cell_selector()
-    assert container.cell_selector.model().rowCount() == 1
+    assert container.cell_selector.model().rowCount() == 2
 
 
 def test_populates_analysis_correctly(container):

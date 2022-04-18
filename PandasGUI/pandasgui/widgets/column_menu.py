@@ -5,7 +5,7 @@ Menu that appears on right clicking a column header. Contains options for modify
 import sys
 
 import pandas as pd
-from ContentEngineerStudio.utils.data_variables import Data
+from ContentEngineerStudio.data.data_variables import Data
 from pandasgui.store import PandasGuiDataFrameStore
 from PyQt5 import QtWidgets
 

@@ -275,7 +275,9 @@ class HeaderRolesModel(QtCore.QAbstractListModel):
             except Exception as e:
                 logger.exception(e)
                 return False
+
             return True
+
         return False
 
     def flags(self, index):
