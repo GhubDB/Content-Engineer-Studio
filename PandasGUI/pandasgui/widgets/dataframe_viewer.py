@@ -608,7 +608,7 @@ class SegmentsTableViewDelegate(QtWidgets.QStyledItemDelegate):
         col = index.column()
         value = editor.toPlainText()
         model.pgdf.edit_data(row, col, value, index=index)
-        model.dataChanged.emit(index, index)
+        # model.dataChanged.emit(index, index)
 
     def paint(
         self,
@@ -959,7 +959,6 @@ class HeaderView(QtWidgets.QTableView):
             ):  # key 43 = Numpad +
                 n = self.pgdf.dataframe_explorer.roles_view.add_column_count.value()
                 selected_columns = self.selectionModel().selectedColumns()
-                print(selected_columns)
                 first = selected_columns[0].column()
                 self.pgdf.add_column(first=first, last=first + n)
 

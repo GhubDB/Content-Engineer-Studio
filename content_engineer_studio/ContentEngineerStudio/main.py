@@ -6,11 +6,9 @@ from typing import Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-
 # This needs to be pip -e filepath installed for development mode
 import pandasgui
 import pkg_resources
-
 # from utils.model_test import ModelTest
 import qtstylish
 from IPython.core.magic import register_line_magic
@@ -26,7 +24,6 @@ from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget
 
 from ContentEngineerStudio.data.data_variables import Data, GuiSignals
-
 # My packages
 from ContentEngineerStudio.utils.excel_helpers import Excel
 from ContentEngineerStudio.utils.stylesheets import Stylesheets

@@ -527,16 +527,30 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         if not hasattr(columns, "__iter__"):
             columns = [columns]
 
+        parent = QtCore.QModelIndex()
         for idx, i in enumerate(sorted(columns)):
+            print(i - idx)
+            for model in ["data_table_model", "header_model_horizontal"]:
+                self.model[model].beginRemoveColumns(parent, i - idx, i - idx)
+            self.model["header_roles_model"].beginRemoveRows(parent, i - idx, i - idx)
+
             col_name = self.df_unfiltered.columns[i - idx]
             self.df_unfiltered = self.df_unfiltered.drop(col_name, axis=1)
 
             # Need to inform the PyQt model too so column widths properly shift
-            self.dataframe_viewer._remove_column(i - idx)
+            # self.dataframe_viewer._remove_column(i - idx)
+
+            for model in ["data_table_model", "header_model_horizontal"]:
+                self.model[model].endRemoveColumns()
+            self.model["header_roles_model"].endRemoveRows()
 
             self.add_history_item(
                 "delete_column", f"df = df.drop('{col_name}', axis=1)"
             )
+
+        self.signals.reset_models.emit(
+            ["analysis_selector_proxy_model", "canned_model", "header_roles_model"]
+        )
 
         self.apply_filters()
 
@@ -572,6 +586,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         for i in range(0, last - first):
             for model in ["data_table_model", "header_model_horizontal"]:
                 self.model[model].beginInsertColumns(parent, first + i, first + i)
+            self.model["header_roles_model"].beginInsertRows(
+                parent, first + i, first + i
+            )
 
             col_name = generate_unique_column_name(
                 columns=self.df_unfiltered.columns.values
@@ -580,6 +597,7 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
             for model in ["data_table_model", "header_model_horizontal"]:
                 self.model[model].endInsertColumns()
+            self.model["header_roles_model"].endInsertRows()
 
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)
@@ -909,7 +927,6 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         self.refresh_ui()
 
-        # Disabled for now. TODO: Make this model based
         self.refresh_statistics()
 
         # Remake Grapher plot
