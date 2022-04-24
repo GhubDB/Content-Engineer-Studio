@@ -120,10 +120,10 @@ class CellEditorContainer(QWidget):
                 text=self.cell_editor.toPlainText(),
             )
 
-        self.suite.viewer.pgdf.emit_data_changed(
-            column=(self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
-            row=self.suite.row,
-        )
+            self.suite.viewer.pgdf.emit_data_changed(
+                column=(self.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+                row=self.suite.row,
+            )
 
     def btn_left(self):
         if self.cell_selector.currentIndex() > 0:
@@ -176,6 +176,19 @@ class CellEdit(QTextEdit):
     def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
         self.signals.editing_done.emit()
         return super().focusOutEvent(e)
+
+    def focusInEvent(self, e: QtGui.QFocusEvent) -> None:
+        current_value = self.container.get_string_from_dataframe(
+            self.suite.viewer.pgdf.df_unfiltered.loc[
+                self.suite.row,
+                (self.container.cell_selector.currentText(), Data.ROLES["EDITABLE"]),
+            ]
+        )
+
+        if self.toPlainText() != current_value:
+            self.container.populate_analysis()
+
+        return super().focusInEvent(e)
 
 
 class AnalysisSelectorModel(QtCore.QAbstractListModel):

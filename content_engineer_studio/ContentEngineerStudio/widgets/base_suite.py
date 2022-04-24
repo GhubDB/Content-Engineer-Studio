@@ -52,18 +52,10 @@ class BaseSuite(QWidget):
     def __init__(self, parent=None) -> None:
         super().__init__(parent)
 
-        #####################################################
-        """Initializing variables"""
-        #####################################################
-
         self.gui = parent
         self.pgdf = None
 
         self.row = 0
-
-        #####################################################
-        """Seting up components"""
-        #####################################################
 
         # Setup UI
         sizePolicy = QtWidgets.QSizePolicy(
@@ -162,10 +154,7 @@ class BaseSuite(QWidget):
         sizes = [99999, 1, 1]
         self.main_splitter.setSizes(sizes)
 
-        #####################################################
         """Connecting functions"""
-        #####################################################
-
         self.down.clicked.connect(self.btn_down)
         self.up.clicked.connect(self.btn_up)
         self.save.clicked.connect(self.btn_save)
@@ -174,10 +163,6 @@ class BaseSuite(QWidget):
                 self.gui.pandasgui_container
             )
         )
-
-        #####################################################
-        """Methods"""
-        #####################################################
 
     def switch_in_dataframe_viewer(self):
         if self.dataframe_chat_splitter.findChild(QPushButton, "add_dataframe"):
@@ -191,8 +176,7 @@ class BaseSuite(QWidget):
         Master Controller. Keeps the current row number updated
         """
         # Save and clean up before next row is loaded
-        self.saveOnRowChange()
-        self.viewer.dataView.resizeRowToContents(self.row)
+        self.save_on_row_change()
         self.chat.clear_chat()
 
         # Updates the self.row property
@@ -209,9 +193,9 @@ class BaseSuite(QWidget):
         # Autoscrolling to the selection on the sidebar
         self.sidebar.scrollTo(self.sidebar.model().index(self.row, 0))
 
-    def saveOnRowChange(self):
+    def save_on_row_change(self):
         """
-        Saves current states to Excel
+        Saves current states to Dataframe
         """
         # Saving analysis
         self.cell_editor_box.cell_editor.signals.editing_done.emit()
@@ -219,27 +203,31 @@ class BaseSuite(QWidget):
         # Getting and saving chat messages
         customer, bot = self.chat.get_chat_text()
         if customer:
-            self.select_and_edit_column_data(
-                role=Data.ROLES["CUSTOMER"], value=customer
-            )
+            self.save_to_dataframe(role=Data.ROLES["CUSTOMER"], value=customer)
         if bot:
-            self.select_and_edit_column_data(role=Data.ROLES["BOT"], value=bot)
+            self.save_to_dataframe(role=Data.ROLES["BOT"], value=bot)
 
         # Saving correct FAQ
         index = self.faq_search_box.search_box.selectionModel().currentIndex()
         if index.isValid():
             value = index.sibling(index.row(), index.column()).data()
             if value:
-                self.select_and_edit_column_data(
-                    role=Data.ROLES["CORRECT_FAQ"], value=value
-                )
+                self.save_to_dataframe(role=Data.ROLES["CORRECT_FAQ"], value=value)
 
-    def select_and_edit_column_data(self, role: str, value: str):
+        self.viewer.dataView.resizeRowToContents(self.row)
+
+    def save_to_dataframe(self, role: str, value: str):
         tuples = tuple(
             x for x in self.viewer.pgdf.df_unfiltered.columns if x[1] == role
         )
+
         for column in tuples:
             self.viewer.pgdf.edit_data(self.row, column, value)
+
+            self.viewer.pgdf.emit_data_changed(
+                column=column,
+                row=self.row,
+            )
 
     def btn_up(self):
         self.move_row_up_down(movement=-1)
@@ -260,4 +248,4 @@ class BaseSuite(QWidget):
     def btn_save(self):
         if self.viewer is None:
             return
-        self.saveOnRowChange()
+        self.save_on_row_change()

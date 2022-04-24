@@ -529,16 +529,12 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
 
         parent = QtCore.QModelIndex()
         for idx, i in enumerate(sorted(columns)):
-            print(i - idx)
             for model in ["data_table_model", "header_model_horizontal"]:
                 self.model[model].beginRemoveColumns(parent, i - idx, i - idx)
             self.model["header_roles_model"].beginRemoveRows(parent, i - idx, i - idx)
 
             col_name = self.df_unfiltered.columns[i - idx]
             self.df_unfiltered = self.df_unfiltered.drop(col_name, axis=1)
-
-            # Need to inform the PyQt model too so column widths properly shift
-            # self.dataframe_viewer._remove_column(i - idx)
 
             for model in ["data_table_model", "header_model_horizontal"]:
                 self.model[model].endRemoveColumns()
@@ -549,7 +545,16 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
             )
 
         self.signals.reset_models.emit(
-            ["analysis_selector_proxy_model", "canned_model", "header_roles_model"]
+            [
+                "analysis_selector_proxy_model",
+                "canned_model",
+            ]
+            # self.signals.reset_models.emit(
+            #     [
+            #         "header_roles_model",
+            #         "analysis_selector_proxy_model",
+            #         "canned_model",
+            #     ]
         )
 
         self.apply_filters()
@@ -620,9 +625,9 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         self.df_unfiltered = pd.concat([self.df_unfiltered, inserted_df]).sort_index()
         self.df_unfiltered.reset_index(drop=True, inplace=True)
 
-        for _ in range(first, last):
-            for model in ["header_model_vertical", "data_table_model"]:
-                self.model[model].endInsertRows()
+        # for _ in range(first, last):
+        for model in ["header_model_vertical", "data_table_model"]:
+            self.model[model].endInsertRows()
 
         self.apply_filters()
         self.dataframe_viewer.setUpdatesEnabled(True)

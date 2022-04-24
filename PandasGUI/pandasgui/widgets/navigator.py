@@ -1,16 +1,14 @@
-import pandas as pd
-from PyQt5 import QtCore, QtGui, QtWidgets, sip
-from PyQt5.QtCore import Qt
-
-from pandasgui.store import PandasGuiDataFrameStore, PandasGuiStore
-from pandasgui.widgets import base_widgets
-
-import tempfile
 import os
+import tempfile
 
+import pandas as pd
+from pandasgui.store import PandasGuiDataFrameStore, PandasGuiStore
 from pandasgui.utility import traverse_tree_widget
+from pandasgui.widgets import base_widgets
 from pandasgui.widgets.column_viewer import FlatDraggableTree
 from pandasgui.widgets.json_viewer import JsonViewer
+from PyQt5 import QtCore, QtGui, QtWidgets, sip
+from PyQt5.QtCore import Qt
 
 # Use win32api on Windows because the pynput and mouse packages cause lag with PyQt drag-n-drop
 # https://github.com/moses-palmer/pynput/issues/390
@@ -160,8 +158,10 @@ class Navigator(FlatDraggableTree):
             def write_to_file(path=path, item=item, widget=self, file_name=file_name):
                 with widget.store.status_message_context(f"Exporting {file_name}..."):
                     if isinstance(item, PandasGuiDataFrameStore):
+                        print(item.df.columns.nlevels)
                         if isinstance(item.df.columns, pd.MultiIndex):
-                            item.df.to_excel(path, sheet_name=item.name)
+                            df = item.df.droplevel(level=1, axis=1)
+                            df.to_excel(path, index=False, sheet_name=item.name)
                         else:
                             item.df.to_excel(path, index=False, sheet_name=item.name)
                         # item.df.to_csv(path, index=False) # Original implementation

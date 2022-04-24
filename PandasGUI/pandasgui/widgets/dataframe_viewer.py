@@ -374,12 +374,6 @@ class DataFrameViewer(QtWidgets.QWidget):
         menu = ColumnMenu(self.pgdf, column_ix=column_ix, row=row, parent=self)
         menu.show_menu(self.columnHeader.mapToGlobal(point))
 
-    def _remove_column(self, ix):
-        for model in [self.dataView.model(), self.columnHeader.model()]:
-            parent = QtCore.QModelIndex()
-            model.beginRemoveColumns(parent, ix, ix)
-            model.endRemoveColumns()
-
     def _move_column(self, ix, new_ix, refresh=True):
         for view in [self.dataView, self.columnHeader]:
             model = view.model()
@@ -404,8 +398,8 @@ class DataFrameViewer(QtWidgets.QWidget):
         #     model.endResetModel()
 
         # Update multi-index spans
-        for view in [self.columnHeader, self.indexHeader]:
-            view.set_spans()
+        # for view in [self.columnHeader, self.indexHeader]:
+        #     view.set_spans()
 
         # Update sizing
         for view in [self.columnHeader, self.indexHeader, self.dataView]:
@@ -421,10 +415,6 @@ class DataTableModel(QtCore.QAbstractTableModel):
         super().__init__(parent)
         self.dataframe_viewer: DataFrameViewer = parent
         self.pgdf: PandasGuiDataFrameStore = parent.pgdf
-
-    # def headerData(self, section, orientation, role=None):
-    #     # Headers for DataTableView are hidden. Header data is shown in HeaderView
-    #     pass
 
     def columnCount(self, parent=None):
         return self.pgdf.df.columns.shape[0]
