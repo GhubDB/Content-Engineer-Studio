@@ -161,7 +161,6 @@ class ChatWidgetContainer(QWidget):
         """
         Prebuffers browser windows and asks auto_queue questions
         """
-        # self.suite.browsers[i].tearDown()
         if self.suite.browsers[i].setUp(url=Data.LIVECHAT_URL):
             self.suite.browsers[i].clickCleverbotAgree()
             self.suite.browsers[i].prebufferAutoTab(self.suite.questions)

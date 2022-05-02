@@ -158,7 +158,6 @@ class Navigator(FlatDraggableTree):
             def write_to_file(path=path, item=item, widget=self, file_name=file_name):
                 with widget.store.status_message_context(f"Exporting {file_name}..."):
                     if isinstance(item, PandasGuiDataFrameStore):
-                        print(item.df.columns.nlevels)
                         if isinstance(item.df.columns, pd.MultiIndex):
                             df = item.df.droplevel(level=1, axis=1)
                             df.to_excel(path, index=False, sheet_name=item.name)

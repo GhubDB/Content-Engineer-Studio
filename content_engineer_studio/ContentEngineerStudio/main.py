@@ -661,6 +661,11 @@ class MainWindow(QMainWindow):
                     mode="testing"
                 )
 
+    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
+        self.testing_suite.shutdown_browsers()
+        self.analysis_suite.shutdown_browser()
+        return super().closeEvent(a0)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

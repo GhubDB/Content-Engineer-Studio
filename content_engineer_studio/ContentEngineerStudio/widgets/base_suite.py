@@ -215,6 +215,7 @@ class BaseSuite(QWidget):
                 self.save_to_dataframe(role=Data.ROLES["CORRECT_FAQ"], value=value)
 
         self.viewer.dataView.resizeRowToContents(self.row)
+        self.viewer.dataView.resize_header_to_contents(self.row)
 
     def save_to_dataframe(self, role: str, value: str):
         tuples = tuple(

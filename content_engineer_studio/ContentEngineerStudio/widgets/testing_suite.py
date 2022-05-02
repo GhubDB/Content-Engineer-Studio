@@ -134,7 +134,7 @@ class TestingSuite(BaseSuite):
         if signal == 2:
             self.questions = []
 
-            if isinstance(self.auto_history.auto_queue_model):
+            if self.auto_history.auto_queue_model.rowCount() > 0:
                 # Get current questions in auto_queue
                 for i in range(0, self.auto_history.auto_queue_model.rowCount()):
                     index = self.auto_history.auto_queue_model.index(i, 0)
@@ -184,3 +184,8 @@ class TestingSuite(BaseSuite):
         self.is_webscraping = False
         self.gui.central_stacked_widget.setCurrentWidget(self.gui.analysis_suite)
         self.gui.populate_search_box()
+
+    def shutdown_browsers(self):
+        self.is_webscraping = False
+        for browser in self.browsers:
+            browser.tearDown()

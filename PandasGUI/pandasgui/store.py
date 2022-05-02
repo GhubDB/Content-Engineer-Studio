@@ -491,6 +491,19 @@ class PandasGuiDataFrameStore(PandasGuiStoreItem):
         index = self.model["data_table_model"].index(row, column_idx)
         self.model["data_table_model"].dataChanged.emit(index, index)
 
+    def delete_data(self, selected):
+        rows = set()
+        for index in selected:
+            self.df_unfiltered.iat[index.row(), index.column()] = np.nan
+            rows.add(index.row())
+
+        self.apply_filters()
+        self.signals.reset_models.emit(["data_table_model"])
+
+        for row in rows:
+            self.dataframe_viewer.dataView.resizeRowToContents(row)
+            self.dataframe_viewer.dataView.resize_header_to_contents(row)
+
     @status_message_decorator("Pasting data...")
     def paste_data(self, top_row, left_col, df_to_paste):
         new_df = self.df_unfiltered.copy()

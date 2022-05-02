@@ -706,6 +706,13 @@ class DataTableView(QtWidgets.QTableView):
             gridline-color: rgb(60, 60, 60);"""
         )
 
+    def keyPressEvent(self, e: QtGui.QKeyEvent) -> None:
+        if e.key() == Qt.Key_Delete:
+            selected = self.selectedIndexes()
+            self.pgdf.delete_data(selected)
+
+        return super().keyPressEvent(e)
+
     def showEvent(self, event: QShowEvent) -> None:
         """
         Handles resizing of all rows on show event
@@ -737,13 +744,9 @@ class DataTableView(QtWidgets.QTableView):
 
         self.already_resized = True
 
-    def resize_header_to_contents(self, index):
-        # row = index.row()
+    def resize_header_to_contents(self, index: int):
         height = self.rowHeight(index)
         self.dataframe_viewer.indexHeader.setRowHeight(index, height)
-
-    def resizeRowToContents(self, row: int) -> None:
-        return super().resizeRowToContents(row)
 
     def on_selectionChanged(self):
         """

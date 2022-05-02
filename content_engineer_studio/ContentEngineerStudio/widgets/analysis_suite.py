@@ -1,4 +1,5 @@
 import typing
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget
 
@@ -102,3 +103,6 @@ class AnalysisSuite(BaseSuite):
                 self.gui.testing_suite.auto_history.auto_queue_model.appendRow(item)
         self.gui.central_stacked_widget.setCurrentWidget(self.gui.testing_suite)
         self.gui.populate_search_box()
+
+    def shutdown_browser(self):
+        self.browser.tearDown()

@@ -135,14 +135,11 @@ class Browser:
             content = content.find_elements(By.TAG_NAME, "span")
 
             for message in content:
-                # print(message.get_attribute('class'))
                 if message.get_attribute("class") == "bot":
                     output.append(["bot", message.text])
-                    # print('bot: ' + message.text)
+
                 elif message.get_attribute("class") == "user":
                     output.append(["customer", message.text])
-                    # print('user: ' + message.text)
-            # print(output)
         except:
             traceback.print_exc()
         else:
