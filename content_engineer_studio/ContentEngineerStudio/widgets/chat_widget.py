@@ -5,7 +5,7 @@ import typing
 from bs4 import BeautifulSoup
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QTimer
-from PyQt5.QtGui import QColor, QSyntaxHighlighter, QTextCharFormat, QTextCursor
+from PyQt5.QtGui import QColor, QTextCharFormat, QTextCursor
 from PyQt5.QtWidgets import (
     QGridLayout,
     QHeaderView,
@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
 )
 
 from ContentEngineerStudio.data.data_variables import Data
+from ContentEngineerStudio.utils.highlighter import Highlighter
 from ContentEngineerStudio.utils.stylesheets import Stylesheets
 from ContentEngineerStudio.utils.worker_thread import Worker
 
@@ -150,11 +151,7 @@ class ChatWidgetContainer(QWidget):
         self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
         self.suite.browsers[self.current_browser].clickCleverbotAgree()
 
-        # clear chat
-        self.dialog_num += 1
-        self.chat.clear()
-        self.chat.setRowCount(0)
-        self.suite.sent_messages = []
+        self.clear_chat()
         return
 
     def set_up_new_auto_dialog(self, i: int) -> None:
@@ -249,9 +246,10 @@ class ChatWidgetContainer(QWidget):
         )
 
     def clear_chat(self):
-        # self.chat.clear()
-        # TODO: Check if editors have to be properly deleted
+        self.dialog_num += 1
+        self.chat.clear()
         self.chat.setRowCount(0)
+        self.suite.sent_messages = []
 
 
 class ChatWindow(QTableWidget):
@@ -384,44 +382,3 @@ class AddVariant(QWidget):
         self.layout.addWidget(self.cancel_variant, 1, 1, 1, 1)
         self.setLayout(self.layout)
         self.show()
-
-
-class Highlighter(QSyntaxHighlighter):
-    """
-    Highlights predefined regular expressions in the chat log
-    """
-
-    def __init__(self, document, name, parent=None):
-        super().__init__(parent)
-        self._mapping = {}
-        self.name = name
-        self.container = parent
-
-        # Email addresses
-        class_format = QTextCharFormat()
-        class_format.setBackground(QColor(68, 126, 237))
-        pattern = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"  # Working changes
-        # pattern = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)" # Original
-        self.add_mapping(pattern, class_format)
-
-        # Phone numbers
-        class_format = QTextCharFormat()
-        class_format.setBackground(QColor(68, 126, 237))
-        pattern = r"(\b(0041|0)|\B\+41)(\s?\(0\))?([\s\-./,'])?[1-9]{2}([\s\-./,'])?[0-9]{3}([\s\-./,'])?[0-9]{2}([\s\-./,'])?[0-9]{2}\b"
-        # class_format.setTextColor(QColor(120, 135, 171))
-        self.add_mapping(pattern, class_format)
-
-        self.setDocument(document)
-
-    def add_mapping(self, pattern, pattern_format):
-        self._mapping[pattern] = pattern_format
-
-    def highlightBlock(self, text_block):
-        """
-        Reimplemented highlighting function
-        """
-        for pattern, fmt in self._mapping.items():
-            for match in re.finditer(pattern, text_block):
-                start, end = match.span()
-                self.container.auto_anonymized.append([self.name, start, end])
-                # self.setFormat(start, end-start, fmt) # Original implementation
