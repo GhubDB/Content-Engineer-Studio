@@ -1,5 +1,6 @@
 priorities:
 add more tests
+apply filters only when button is clicked
 make edit_data more efficient by emiting dataChanged instead of reseting everything
 add a decorator to dataframe edits to tell models that the data has changed
 fix but where column data does not properly shift when removing columns
