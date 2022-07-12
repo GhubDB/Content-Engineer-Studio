@@ -1,0 +1,87 @@
+[33mae7861d[m[33m ([m[1;36mHEAD -> [m[1;32mPandasGUI-development[m[33m)[m HEAD@{0}: reset: moving to ae7861d75b422d2cfda38713eacd7526ba8b37be
+[33mdeb6fdf[m HEAD@{1}: reset: moving to deb6fdfbd14221242fd4958873241d13b4f31e54
+[33mdeb6fdf[m HEAD@{2}: commit: renamed main folder
+[33mc0d2ba6[m HEAD@{3}: commit: KeyError<PyQt5.QtCore.QPersistentModelIndex fixed
+[33mae7861d[m[33m ([m[1;36mHEAD -> [m[1;32mPandasGUI-development[m[33m)[m HEAD@{4}: commit: Applied black styling
+[33m89995cc[m[33m ([m[1;31morigin/PandasGUI-development[m[33m)[m HEAD@{5}: commit: Editor height and editor auto collapse fixed
+[33m521dac6[m HEAD@{6}: commit: newlines are no longer being deleted in editor
+[33m41ad277[m HEAD@{7}: checkout: moving from master to PandasGUI-development
+[33m4982e05[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{8}: commit: added refs to class
+[33m5134f55[m HEAD@{9}: checkout: moving from PandasGUI-development to master
+[33m41ad277[m HEAD@{10}: commit: Switching to master
+[33mdd755a7[m HEAD@{11}: commit: Some style changes
+[33m39b58a1[m HEAD@{12}: commit: moved chat selection to subclass
+[33m8f0ac73[m HEAD@{13}: commit: dataframe editing working
+[33m096057f[m HEAD@{14}: commit: Merged "Remove dotted border on cell focus"
+[33m7f89446[m HEAD@{15}: commit: pandasgui show event resizeRowsToContents impl
+[33m4e77f75[m HEAD@{16}: commit: git ignores folder
+[33m28c7b11[m HEAD@{17}: commit: AttributeError: 'DataTableView' object has no attr
+[33me596520[m HEAD@{18}: commit: Preparing to make multiline QTableView editors
+[33m5134f55[m HEAD@{19}: checkout: moving from PandasGUI-development to PandasGUI-development
+[33m5134f55[m HEAD@{20}: checkout: moving from master to PandasGUI-development
+[33m5134f55[m HEAD@{21}: commit: idkk
+[33m7bed0d8[m HEAD@{22}: commit: idk
+[33m3d7a6d4[m HEAD@{23}: commit: idk
+[33m9f09314[m HEAD@{24}: commit: Deleted .git folder from pandasgui directory
+[33m319c51f[m HEAD@{25}: commit: changed directories again
+[33m1e1382f[m HEAD@{26}: commit: changed directories
+[33m78a23f0[m HEAD@{27}: commit: forked pandasgui
+[33m2f1fd3d[m HEAD@{28}: commit: rearranging splitters again
+[33ma29618f[m HEAD@{29}: commit: rearranging splitters
+[33mc0c3938[m HEAD@{30}: commit: Dataframe Viewer implemented
+[33mbd6121b[m HEAD@{31}: commit: search_column_select model implemented
+[33me81d8e0[m HEAD@{32}: commit: Preparing to add pandas viewer
+[33m557407f[m HEAD@{33}: commit: variants window added.
+[33m2a555ac[m HEAD@{34}: commit: faq view and view switching implemented
+[33m3be40b5[m HEAD@{35}: commit: Adding FaqAutoSearch to central_stacked_widget
+[33mec4bf95[m HEAD@{36}: commit: Auto anyonymize working
+[33m163b300[m HEAD@{37}: commit: auto highlighting is freezing text edit
+[33m83c7c44[m HEAD@{38}: commit: Auto highlighting working. auto anonymizing is not
+[33m3972f7e[m HEAD@{39}: commit: refactoring highlighter
+[33ma7960c9[m HEAD@{40}: commit: FaqAutoSearch implemented with standardized model
+[33me7ad157[m HEAD@{41}: commit: Changing search_box model to show specific columns
+[33m6f42a05[m HEAD@{42}: commit: multi threaded webscraping working
+[33m43bca01[m HEAD@{43}: commit: analysis multi threading implemented
+[33m92ba03a[m HEAD@{44}: commit: auto prebuffering working
+[33mb0ea8a8[m HEAD@{45}: commit: auto threading still not working
+[33macc7e59[m HEAD@{46}: commit: new dialog multi threading implemented
+[33mfdd1a28[m HEAD@{47}: commit: multi threading webscraping working
+[33me447fb9[m HEAD@{48}: commit: Attempting threading
+[33m5a71801[m HEAD@{49}: commit: auto email + phone number highlighting implemented
+[33m4a97ffc[m HEAD@{50}: commit: Attempting to implement auto highlighting
+[33md85d265[m HEAD@{51}: commit: colorize and open_links implemented
+[33mfa221a0[m HEAD@{52}: commit: Saving testing suite mostly implemented.
+[33m7a8cd2a[m HEAD@{53}: commit: btn_right_2 working correctly again.
+[33m23a639f[m HEAD@{54}: commit: starting on page 2 save
+[33m731a618[m HEAD@{55}: commit: attempting to subclass auto_queue
+[33mcb14618[m HEAD@{56}: commit: analysis tabbing implemented
+[33m7fab80b[m HEAD@{57}: commit: history has colors
+[33mc4df5fb[m HEAD@{58}: commit: tab switching and exporting implemented.
+[33m5b14f9e[m HEAD@{59}: commit: search box resizing implemented
+[33m6b83f71[m HEAD@{60}: commit: Queue implemented
+[33m29ede10[m HEAD@{61}: commit: cleverbot live conversation implemented
+[33mc657591[m HEAD@{62}: commit: History model works
+[33mf1dfb25[m HEAD@{63}: commit: rudimentary cleverbot conversations working.
+[33m4570901[m HEAD@{64}: commit: some bugfixes for the testing suite
+[33m6d00194[m HEAD@{65}: commit: tab switching implemented
+[33m1e15a56[m HEAD@{66}: commit: preparing to create stacked layout
+[33m8832c8f[m HEAD@{67}: commit: seach box implemented
+[33m1c117c0[m HEAD@{68}: commit: trying a different filter model for the search_box
+[33med6519b[m HEAD@{69}: commit: changing qtablewidgets to qtableviews
+[33mac57700[m HEAD@{70}: commit: Chat loading and scraping complete
+[33mde6d916[m HEAD@{71}: commit: Analysis saving to excel implemented
+[33md44e315[m HEAD@{72}: commit: Check line 150 next
+[33mc13c233[m HEAD@{73}: commit: get_chat_text function implemented
+[33m16066a6[m HEAD@{74}: commit: get_chat_text implemented
+[33m2ab2668[m HEAD@{75}: commit: find and replace text by html tag at btn_save
+[33mf46f58d[m HEAD@{76}: commit: getting text from texteditor widgets in btn_save
+[33mee86d28[m HEAD@{77}: commit: message highlighting implemented
+[33m28033ef[m HEAD@{78}: commit: Auto Scrolling sidebar
+[33m47155b2[m HEAD@{79}: commit: up/down implemented
+[33mada5bc9[m HEAD@{80}: commit: radio buttons implementation 1
+[33m168ab39[m HEAD@{81}: commit: text background color selection implemented
+[33m3ec2f4e[m HEAD@{82}: commit: chat styled
+[33m154253a[m HEAD@{83}: commit: Before text in table
+[33m0c80efa[m HEAD@{84}: commit: Populate status bar
+[33mace449b[m HEAD@{85}: commit: gui styled
+[33m9ecedff[m HEAD@{86}: commit (initial): dragable title less window
