@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'c:\Users\Me\Dropbox\Python\content_engineer_studio\drag_drop.ui'
+# Form implementation generated from reading ui file 'c:\Users\Me\Dropbox\Python\.git-rewrite\t\content_engineer_studio\drag_drop.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
