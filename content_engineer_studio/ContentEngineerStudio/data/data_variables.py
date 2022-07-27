@@ -15,8 +15,6 @@ class Data:
 
     LIVECHAT_URL = "https://www.cleverbot.com/"
 
-    # DUMMY_DF = pd.DataFrame([0, 0])
-
     ROLES = {
         "NONE": "None",
         "CUSTOMER": "Customer",

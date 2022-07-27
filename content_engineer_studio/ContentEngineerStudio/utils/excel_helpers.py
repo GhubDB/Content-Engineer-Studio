@@ -1,7 +1,7 @@
+from pathlib import Path
+
 import pandas as pd
 import xlwings as xw
-
-from pathlib import Path
 
 
 class Excel:
@@ -18,8 +18,6 @@ class Excel:
         Loads Excel files
         """
         filename = Path(filename)
-        # with xw.App() as app:
-        #     wb = app.books[filename]
         self.wb = xw.Book(filename)
         self.sheet = self.wb.sheets[sheet]
         df = self.sheet.range("A1").options(pd.DataFrame, expand="table").value
@@ -51,7 +49,6 @@ class Excel:
         Returns bool array with None values as false
         """
         missing = df.iloc[:, start : end + 1]
-        # df.loc[(df['Transcript Link'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()) | (df['Kundenanliegen'].isnull()), "bool_check"]=True
         return missing.isna()
 
     def colorize(self, column, row):
@@ -77,38 +74,3 @@ class Excel:
     def getOpenBooks(self):
         xw.books.active.name
 
-
-# df.loc[(df['Price'].isnull()) | (df['Location'].isnull()),"bool_check"]=True
-
-# print(df)
-
-
-"""pandas tests
-df = sheet.range('A2').options(pd.DataFrame, expand='table').value
-
-#################
-Pandas Examples
-#################
-
-/Assign 1 to the new header "bool_check" where Updated isnull and/or Mechanimus isnull
-df.loc[(df['Updated'].isnull()) & (df['Mecanimus'].isnull()),"bool_check"]=1
-
-/Use this to find rows that contain specific values ~ means not use 'fire|grass' for either/or
-df.loc[df['Header'].str.contains('searchterm')]
-
-/Assign Value1 and Value2 respectively to Header2 and Header3 where Header is over 500
-df.loc[df['Header']] > 500, ['Header2', 'Header3']] = ['Value1', 'Value2']
-
-/Use this to isolate rows where the header matches the value
-print(df.loc[df['Location'] =="East"])
-
-/Sort df
-df.sort_values('Header', ascending=False)
-
-/Get overview with this
-df.describe()
-
-/ Use empty to specify value to assign to empty cells
-# df = sheet.range('A2').options(pd.DataFrame, expand='table', empty='NA').value
-
-"""

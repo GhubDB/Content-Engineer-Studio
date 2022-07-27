@@ -57,13 +57,13 @@ class ChatWidgetContainer(QWidget):
         if len(tuples) < 1:
             return
 
-        if not self.suite.browser.getURL(
+        if not self.suite.browser.get_url(
             url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
         ):
             self.suite.browser.setUp(
                 url=self.suite.viewer.pgdf.df_unfiltered.loc[self.suite.row, tuples[0]]
             )
-        chat_text = self.suite.browser.getCleverbotStatic()
+        chat_text = self.suite.browser.get_cleverbot_static()
         output.emit(chat_text)
 
     def populate_chat_analysis(self, chat: list[list[str]]):
@@ -149,7 +149,7 @@ class ChatWidgetContainer(QWidget):
         Sets up (singular) new chat session
         """
         self.suite.browsers[self.current_browser].setUp(url=Data.LIVECHAT_URL)
-        self.suite.browsers[self.current_browser].clickCleverbotAgree()
+        self.suite.browsers[self.current_browser].click_cleverbot_agree()
 
         self.clear_chat()
         return
@@ -159,8 +159,8 @@ class ChatWidgetContainer(QWidget):
         Prebuffers browser windows and asks auto_queue questions
         """
         if self.suite.browsers[i].setUp(url=Data.LIVECHAT_URL):
-            self.suite.browsers[i].clickCleverbotAgree()
-            self.suite.browsers[i].prebufferAutoTab(self.suite.questions)
+            self.suite.browsers[i].click_cleverbot_agree()
+            self.suite.browsers[i].prebuffer_auto_tab(self.suite.questions)
         return
 
     def initialize_webscraping(self):
@@ -183,7 +183,7 @@ class ChatWidgetContainer(QWidget):
         """
         while self.is_webscraping:
             try:
-                chats = self.suite.browsers[self.current_browser].getCleverbotLive()
+                chats = self.suite.browsers[self.current_browser].get_cleverbot_live()
                 if chats:
                     output.emit(chats)
                 time.sleep(5)

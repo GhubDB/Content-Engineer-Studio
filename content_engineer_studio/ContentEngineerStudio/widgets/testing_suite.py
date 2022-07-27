@@ -93,7 +93,7 @@ class TestingSuite(BaseSuite):
         """
         input_string = self.chat_input.text()
         if input_string:
-            self.browsers[self.current_browser].setCleverbotLive(input_string)
+            self.browsers[self.current_browser].set_cleverbot_live(input_string)
             self.auto_history.populate_history(input_string)
             self.chat_input.clear()
 
@@ -109,7 +109,7 @@ class TestingSuite(BaseSuite):
                 self.current_browser = self.current_browser + 1
             if self.browsers[self.current_browser] is None:
                 self.browsers[self.current_browser] = Browser()
-            self.browsers[self.current_browser].bringToFront()
+            self.browsers[self.current_browser].bring_to_front()
             # Start prebuffering previous window
             setup = Worker(lambda: self.chat.set_up_new_auto_dialog(current))
             if not self.is_webscraping:
@@ -155,7 +155,7 @@ class TestingSuite(BaseSuite):
             # If auto is disabled, close browser windows
             self.is_webscraping = False
             for i in range(0, Data.BUFFER):
-                setup = Worker(self.browsers[i].tearDown)
+                setup = Worker(self.browsers[i].tear_down)
                 self.gui.threadpool.start(setup)
 
     def next_btn(self):
@@ -188,4 +188,4 @@ class TestingSuite(BaseSuite):
     def shutdown_browsers(self):
         self.is_webscraping = False
         for browser in self.browsers:
-            browser.tearDown()
+            browser.tear_down()

@@ -84,13 +84,6 @@ class AnalysisSuite(BaseSuite):
             setup.signals.output.connect(self.chat.populate_chat_analysis)
             self.gui.threadpool.start(setup)
 
-    # def populate_status_bar(self, row: int, start: int, end: int):
-    #     self.status_bar.setText(
-    #         self.df.iloc[row : row + 1, start : end + 1].to_string(
-    #             header=False, index=False
-    #         )
-    #     )
-
     def switchToTesting(self):
         self.gui.central_stacked_widget.setCurrentWidget(self.gui.testing_suite)
         self.gui.populate_search_box()
@@ -105,4 +98,4 @@ class AnalysisSuite(BaseSuite):
         self.gui.populate_search_box()
 
     def shutdown_browser(self):
-        self.browser.tearDown()
+        self.browser.tear_down()

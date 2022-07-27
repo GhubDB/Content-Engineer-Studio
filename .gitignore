@@ -1,2 +1,11 @@
-Mastering_GUI_Programming_with_Python/Mastering-GUI-Programming-with-Python
-Mastering_GUI_Programming_with_Python/Mastering-GUI-Programming-with-Python
+.qt_for_python
+.pytest_cache
+.vscode
+.git-rewrite
+PandasGUI/.eggs
+PandasGUI/.github
+PandasGUI/pandasgui.egg-info
+content_engineer_studio/.eggs
+content_engineer_studio/ContentEngineerStudio.egg-info
+content_engineer_studio/.editorconfig
+content_engineer_studio/ContentEngineerStudio/utils/chromedriver.exe

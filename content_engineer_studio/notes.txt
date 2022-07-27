@@ -2,10 +2,7 @@ priorities:
 add more tests
 apply filters only when button is clicked
 make edit_data more efficient by emiting dataChanged instead of reseting everything
-add a decorator to dataframe edits to tell models that the data has changed
-fix but where column data does not properly shift when removing columns
 use proxy model instead of filtered df
-use enums for roles in data variables
 add copy/paste for faq's
 add a dataframe of identical size to each dataframe and store cell background colors
 add a way to hide columns
@@ -29,30 +26,11 @@ add logging
 Performance optimization for large amounts of data¶
 https://doc.qt.io/qtforpython/overviews/model-view-programming.html?highlight=model
 The canFetchMore() function checks if the parent has more data available and returns true or false accordingly. The fetchMore() function fetches data based on the parent specified. Both these functions can be combined, for example, in a database query involving incremental data to populate a QAbstractItemModel . We reimplement canFetchMore() to indicate if there is more data to be fetched and fetchMore() to populate the model as required.
-
 Another example would be dynamically populated tree models, where we reimplement fetchMore() when a branch in the tree model is expanded.
-
 If your reimplementation of fetchMore() adds rows to the model, you need to call beginInsertRows() and endInsertRows() . Also, both canFetchMore() and fetchMore() must be reimplemented as their default implementation returns false and does nothing.
 
 #################################################################
 Bugs:
-
-pandasgui multiline issues
-cells with double new lines do not get adjusted to contents
-KeyError: <PyQt5.QtCore.QPersistentModelIndex object at 0x0000021DCE40ABA0> on destruction of editor
-no cell padding
-toPlainText needed in order to preserve newlines
-the whole program sometimes crashes without providing a traceback when randomly opening and closing editors
-font-size inconsistencies
-
-    '''Bugfix for number only entries on the excel sheet needed.
-        File "c:\Users\Me\Dropbox\Python\Content Engineer Studio\main_window.py", line 348, in populate_analysis
-    self.analysis.setText(self.df.loc[self.row][self.cell_selector.currentIndex() + self.cell_selector_start])
-    TypeError: setText(self, str): argument 1 has unexpected type 'numpy.float64'''
-----
-    program crashes if a row without values is selected
-----
-    program crashes if excel file is closed during runtime
 
 
 #################################################################
@@ -74,12 +52,11 @@ add the option to set multiple questions and answering flows/FAQ's for each conv
 Database for already analyzed cases by session ID
 excel like table for drag and drop copying of values
 
-add complete flow data!
+add complete flow data
 
 anonymize names, addresses, email addresses and phone numbers
 
 refer to https://www.reddit.com/r/learnpython/comments/dzmakx/connecting_to_excel_workbooks_located_on/ for sharepoint details
-
 sharepoint API: https://stackoverflow.com/questions/48424045/how-to-read-sharepoint-online-office365-excel-files-in-python-with-work-or-sch
 #################################################################
 Analysis suite
@@ -162,13 +139,6 @@ requires further access/data
 - open and auto fill tickets
 - allow categorizing of cases and adding the details to existing open issues in order to collect them in one location.
 
-
-#################################################################
-libraries:
-- pandas
-- PyQt5
-- beautifulsoup4
-- selenium
 
 #################################################################
 Notes:
