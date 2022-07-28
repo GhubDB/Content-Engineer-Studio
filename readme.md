@@ -13,6 +13,8 @@ Content Engineer Studio is is a chat-log analyzation and workflow optimization t
 
 [![Content Engineer Studio Demo](https://i.imgur.com/p9Ap0UD.jpg)](https://www.youtube.com/watch?v=DKgMpt6OwGM "Content Engineer Studio Demo")
 
+[![Content Engineer Studio Demo]](https://www.youtube.com/watch?v=DKgMpt6OwGM "Content Engineer Studio Demo")
+
 ## Installation
 
 Clone this repo and install the Content Engineer Studio Package:
