@@ -15,7 +15,7 @@ Content Engineer Studio is is a chat-log analyzation and workflow optimization t
 
 ## Installation
 
-Install the Content Engineer Studio Package:
+Clone this repo and install the Content Engineer Studio Package:
 
 ```shell
 pip install content_engineer_studio
@@ -26,9 +26,11 @@ https://chromedriver.chromium.org/downloads
 
 ## Usage
 
-- Import a CSV or XLSX file for testing/analysis
-- Drag the imported DataFrame onto the testing or the analysis area
-- Start a new live chat session
+- Import a CSV or XLSX file for testing/analysis.
+- Drag the imported DataFrame onto the testing or the analysis area.
+- Start a new live chat session.
+- Save messages to the DataFrame and add annotations.
+- Export the file.
 
 ## Features
 
