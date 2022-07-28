@@ -10,6 +10,7 @@ setup(
     setup_requires=["setuptools-git"],
     install_requires=[
         "pandas",
+        'pandasgui',
         "numpy",
         "selenium",
         "xlwings",

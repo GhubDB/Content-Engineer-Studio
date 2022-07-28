@@ -11,7 +11,7 @@ Content Engineer Studio is is a chat-log analyzation and workflow optimization t
 
 ## Demo
 
-[![PandasGUI Demo](https://i.imgur.com/u3BzdoS.png)](https://www.youtube.com/watch?v=NKXdolMxW2Y "PandasGUI Demo")
+[![Content Engineer Studio Demo](https://imgur.com/a/t93fITR)](https://www.youtube.com/watch?v=DKgMpt6OwGM "Content Engineer Studio Demo")
 
 ## Installation
 
@@ -53,4 +53,6 @@ This project is still in version 0.x.y and subject to breaking changes. The late
 
 - Working with an existing codbase and adding to it.
 - Gained more in depth knowledge about the model view pattern
--
+- Learned more about separating applications into components and reducing coupling
+- Gained experience working with the Qt framework
+- Learned more about UI and UX design

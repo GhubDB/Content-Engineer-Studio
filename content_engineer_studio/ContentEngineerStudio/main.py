@@ -9,7 +9,6 @@ import pandas as pd
 # This needs to be pip -e filepath installed for development mode
 import pandasgui
 import pkg_resources
-# from utils.model_test import ModelTest
 import qtstylish
 from IPython.core.magic import register_line_magic
 from pandasgui.store import PandasGuiStore
@@ -33,9 +32,6 @@ from ContentEngineerStudio.widgets.faq_search_tab import FaqSearchTabContainer
 from ContentEngineerStudio.widgets.testing_suite import TestingSuite
 
 
-############################################################################
-# Main
-############################################################################
 class MainWindow(QMainWindow):
     """
     Main application
@@ -43,10 +39,6 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-
-        #####################################################
-        """Initializing variables"""
-        #####################################################
 
         # Loading excel sheets for test purposes
         self.df = pd.read_excel(
@@ -67,10 +59,7 @@ class MainWindow(QMainWindow):
 
         self.current_work_area = 0
 
-        #####################################################
         """Seting up components"""
-        #####################################################
-
         # Setup UI
         self.setObjectName("MainWindow")
         # self.setDocumentMode(False)
@@ -293,26 +282,6 @@ class MainWindow(QMainWindow):
             ],
             "Settings": [
                 MenuItem(name="Preferences...", func=self.edit_settings),
-                # {
-                # "Context Menus": [
-                #     MenuItem(
-                #         name="Add PandasGUI To Context Menu",
-                #         func=self.add_to_context_menu,
-                #     ),
-                #     MenuItem(
-                #         name="Remove PandasGUI From Context Menu",
-                #         func=self.remove_from_context_menu,
-                #     ),
-                #     MenuItem(
-                #         name="Add JupyterLab To Context Menu",
-                #         func=self.add_jupyter_to_context_menu,
-                #     ),
-                #     MenuItem(
-                #         name="Remove JupyterLab From Context Menu",
-                #         func=self.remove_jupyter_from_context_menu,
-                #     ),
-                # ]
-                # },
             ],
             "Debug": [
                 MenuItem(name="About", func=self.about),
@@ -356,25 +325,6 @@ class MainWindow(QMainWindow):
         elif theme == "light":
             self.setStyleSheet(qtstylish.light())
             self.store.settings.theme.value = "light"
-
-    # def copy(self):
-    #     print("other copy")
-    #     if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
-    #         self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.copy()
-    #     elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
-    #         self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy()
-
-    # def copy_with_headers(self):
-    #     if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
-    #         self.store.selected_pgdf.dataframe_viewer.copy(header=True)
-    #     elif self.store.selected_pgdf.dataframe_explorer.active_tab == "Statistics":
-    #         self.store.selected_pgdf.dataframe_explorer.statistics_viewer.dataframe_viewer.copy(
-    #             header=True
-    #         )
-
-    # def paste(self):
-    #     if self.store.selected_pgdf.dataframe_explorer.active_tab == "DataFrame":
-    #         self.store.selected_pgdf.dataframe_explorer.dataframe_viewer.paste()
 
     def show_code_export(self):
         self.store.selected_pgdf.dataframe_explorer.code_history_viewer.show()
@@ -483,12 +433,7 @@ class MainWindow(QMainWindow):
         else:
             print(f"Refreshed {', '.join(refreshed_names)}")
 
-    ################################################################################################
-    """
-    Main Methods
-    """
-    ################################################################################################
-
+    """Main Methods"""
     def populate_search_box(self):
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
