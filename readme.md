@@ -28,9 +28,10 @@ https://chromedriver.chromium.org/downloads
 
 ## Usage
 
-- Import a CSV or XLSX file for testing/analysis.
-- Drag the imported DataFrame onto the testing or the analysis area.
-- Start a new live chat session.
+- Import a CSV or XLSX file via the menu or via drag & drop.
+- Drag the imported file onto the testing or analysis area.
+- Set roles ( link / bot messages / user messages / comments / multiple choice )for each column.
+- Start a new live chat session in testing mode or import a chat-log in analysis mode.
 - Save messages to the DataFrame and add annotations.
 - Export the file.
 
