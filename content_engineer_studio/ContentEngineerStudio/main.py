@@ -6,7 +6,7 @@ from typing import Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
-# This needs to be pip -e filepath installed for development mode
+# Pandasgui needs to be pip -e <filepath> installed for development mode
 import pandasgui
 import pkg_resources
 import qtstylish
@@ -23,7 +23,6 @@ from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtWidgets import QApplication, QGridLayout, QMainWindow, QWidget
 
 from ContentEngineerStudio.data.data_variables import Data, GuiSignals
-# My packages
 from ContentEngineerStudio.utils.excel_helpers import Excel
 from ContentEngineerStudio.utils.stylesheets import Stylesheets
 from ContentEngineerStudio.widgets.analysis_suite import AnalysisSuite
@@ -33,74 +32,25 @@ from ContentEngineerStudio.widgets.testing_suite import TestingSuite
 
 
 class MainWindow(QMainWindow):
-    """
-    Main application
-    """
-
     def __init__(self):
         super().__init__()
 
-        # Loading excel sheets for test purposes
-        self.df = pd.read_excel(
-            io="data/csv/transcripts.xlsx", sheet_name="Sheet1", header=0
-        )
-        self.df_2 = pd.read_excel(
-            io="data/csv/testing.xlsx", sheet_name="Sheet1", header=0
-        )
-        self.faq_df = pd.read_excel(
-            io="data/csv/recipes.xlsx", sheet_name="Sheet1", header=0
-        )
+        self.analysis_df_name = None
+        self.testing_df_name = None
+        self.current_work_area = 0
 
-        self.analysis_df_name = False
-        self.testing_df_name = False
+        self.load_excel_sheets()
 
         self.threadpool = QThreadPool()
         self.signals = GuiSignals()
 
-        self.current_work_area = 0
-
-        """Seting up components"""
-        # Setup UI
-        self.setObjectName("MainWindow")
-        # self.setDocumentMode(False)
-        self.centralwidget = QtWidgets.QWidget(self)
-        self.centralwidget.setObjectName("centralwidget")
-        self.setCentralWidget(self.centralwidget)
-        self.central_grid = QtWidgets.QGridLayout(self.centralwidget)
-        self.central_grid.setObjectName("central_grid")
-        self.central_stacked_widget = QtWidgets.QStackedWidget(self.centralwidget)
-        self.central_stacked_widget.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.central_stacked_widget.setLineWidth(0)
-        self.central_stacked_widget.setObjectName("central_stacked_widget")
-        self.central_grid.addWidget(self.central_stacked_widget, 0, 0, 1, 1)
-        self.faq_search_tab = FaqSearchTabContainer(parent=self)
-        self.central_stacked_widget.insertWidget(2, self.faq_search_tab)
-
-        # Setup main components
-        self.analysis_suite = AnalysisSuite(parent=self)
-        self.central_stacked_widget.insertWidget(0, self.analysis_suite)
-
-        self.testing_suite = TestingSuite(parent=self)
-        self.central_stacked_widget.insertWidget(1, self.testing_suite)
-
-        # Populate search box in analysis, testing and faq_search_tab
-        self.populate_search_box()
-
-        # Apply custom stylesheets
+        self.setup_ui()
+        self.setup_main_components()
+        self.setup_menubar()
         self.setStyleSheet(Stylesheets.custom_dark)
 
-        # Setup menubar
-        self.menubar = QtWidgets.QMenuBar(self)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1449, 26))
-        self.menubar.setObjectName("menubar")
-        self.setMenuBar(self.menubar)
-
-        # Connecting functions
         self.central_stacked_widget.currentChanged.connect(self.workingView)
 
-        #####################################################
-        """Adding Pandasgui"""
-        #####################################################
         """
         Start PandasGUI init
         Provides a viewer and editor for dataframes
@@ -114,64 +64,48 @@ class MainWindow(QMainWindow):
         # Set the exception hook to our wrapping function
         sys.excepthook = except_hook
 
-        # Enables PyQt event loop in IPython
-        fix_ipython()
-
         # Keep a list of widgets so they don't get garbage collected
         self.refs = []
 
-        """Start show"""
-        settings = {}
-
-        # Register IPython magic
-        try:
-
-            @register_line_magic
-            def pg(line):
-                self.store.eval_magic(line)
-                return line
-
-        except Exception as e:
-            # Let this silently fail if no IPython console exists
-            if (
-                e.args[0]
-                == "Decorator can only run in context where `get_ipython` exists"
-            ):
-                pass
-            else:
-                raise e
-
-        """Start viewer init"""
         self.navigator = None
         self.splitter = None
         self.find_bar = None
+        self.code_history_viewer = None
 
         self.refs.append(self)
 
         self.store = PandasGuiStore()
         self.store.gui = self
 
-        # Add user provided settings to data store
+        self.add_user_provided_settings_to_data_store()
+        self.create_all_widgets()
+        self.add_pandasgui_to_main_window()
+        self.add_find_toolbar()
+        self.add_dataframes()
+        self.add_menu_bar()
+        self.apply_settings()
+
+        # Signals
+        self.store.settings.settingsChanged.connect(self.apply_settings)
+
+        # Default to first item
+        self.navigator.setCurrentItem(self.navigator.topLevelItem(0))
+
+
+    def add_user_provided_settings_to_data_store(self):
+        settings = {}
         for key, value in settings.items():
             setting = self.store.settings[key]
             setting.value = value
 
-        self.code_history_viewer = None
-
-        """Create all widgets"""
-        # Hide the question mark on dialogs
-        # self.app.setAttribute(Qt.AA_DisableWindowContextHelpButton)
-
+    def create_all_widgets(self):
         # This adds the drag_drop area for testing/analysis dataframes
         self.drag_drop = DragDrop(self)
 
         # This holds the DataFrameExplorer for each DataFrame
         self.stacked_widget = QtWidgets.QStackedWidget()
 
-        # Make the analys/testing df selection splitter
         self.drag_drop_splitter = QtWidgets.QSplitter(Qt.Vertical)
-
-        # Make the navigation bar
         self.navigator = Navigator(self.store)
 
         # Make splitter to hold nav and DataFrameExplorers
@@ -180,13 +114,9 @@ class MainWindow(QMainWindow):
         self.drag_drop_splitter.addWidget(self.drag_drop)
         self.drag_drop_splitter.addWidget(self.navigator)
         self.pandasgui_splitter.addWidget(self.stacked_widget)
-
-        # self.pandasgui_splitter.setCollapsible(0, False)
-        # self.pandasgui_splitter.setCollapsible(1, False)
-        # self.pandasgui_splitter.setStretchFactor(0, 0)
         self.pandasgui_splitter.setStretchFactor(0, 1)
 
-        """Addin to main_window"""
+    def add_pandasgui_to_main_window(self):
         self.pandasgui_container = QWidget()
         self.pandasgui_grid = QGridLayout(self.pandasgui_container)
         self.pandasgui_grid.setContentsMargins(0, 0, 0, 0)
@@ -194,30 +124,16 @@ class MainWindow(QMainWindow):
         self.central_stacked_widget.addWidget(self.pandasgui_container)
         self.central_stacked_widget.setCurrentIndex(Data.START_INDEX)
 
-        # makes the find toolbar
+    def add_find_toolbar(self):
         self.find_bar = FindToolbar(self)
         self.addToolBar(self.find_bar)
 
-        # Create a copy of the settings in case the SettingsStore reference has
-        # been discarded by Qt prematurely
-        # https://stackoverflow.com/a/17935694/10342097
-        # self.store.settings = self.store.settings.copy()
-
-        # Signals
-        self.store.settings.settingsChanged.connect(self.apply_settings)
-
-        self.apply_settings()
-
-        """Continue init"""
+    def add_dataframes(self):
         dataframe_kwargs = {"Analysis": self.df, "Testing": self.df_2}
         for df_name, df in dataframe_kwargs.items():
             self.store.add_dataframe(df, df_name)
 
-        # Default to first item
-        self.navigator.setCurrentItem(self.navigator.topLevelItem(0))
-
-        """Add  to menubar"""
-
+    def add_menu_bar(self):
         @dataclass
         class MenuItem:
             name: str
@@ -255,13 +171,6 @@ class MainWindow(QMainWindow):
                 MenuItem(
                     name="Find", func=self.find_bar.show_find_bar, shortcut="Ctrl+F"
                 ),
-                # MenuItem(name="Copy", func=self.copy, shortcut="Ctrl+C"),
-                # MenuItem(
-                #     name="Copy With Headers",
-                #     func=self.copy_with_headers,
-                #     shortcut="Ctrl+Shift+C",
-                # ),
-                # MenuItem(name="Paste", func=self.paste, shortcut="Ctrl+V"),
                 MenuItem(name="Import", func=self.import_dialog),
                 MenuItem(name="Import From Clipboard", func=self.import_from_clipboard),
                 MenuItem(name="Export", func=self.export_dialog),
@@ -291,28 +200,20 @@ class MainWindow(QMainWindow):
             ],
         }
 
-        def add_menus(dic, root):
-            # Add menu items and actions to UI using the schema defined above
-            for menu_name in dic.keys():
-                menu = root.addMenu(menu_name)
-                for x in dic[menu_name]:
-                    if type(x) == dict:
-                        add_menus(x, menu)
-                    else:
-                        action = QtWidgets.QAction(x.name, self)
-                        action.setShortcut(x.shortcut)
-                        action.triggered.connect(x.func)
-                        menu.addAction(action)
+        self.add_menus(items, self.menubar)
 
-        add_menus(items, self.menubar)
-
-        """End PandasGUI init"""
-
-    ################################################################################################
-    """
-    PandasGUI Methods
-    """
-    ################################################################################################
+    def add_menus(self, dic, root):
+        # Add menu items and actions to UI using the schema defined above
+        for menu_name in dic.keys():
+            menu = root.addMenu(menu_name)
+            for x in dic[menu_name]:
+                if type(x) == dict:
+                    self.add_menus(x, menu)
+                else:
+                    action = QtWidgets.QAction(x.name, self)
+                    action.setShortcut(x.shortcut)
+                    action.triggered.connect(x.func)
+                    menu.addAction(action)
 
     def apply_settings(self):
         theme = self.store.settings.theme.value
@@ -349,9 +250,9 @@ class MainWindow(QMainWindow):
         self.viewer = JsonViewer(d)
         self.viewer.show()
 
-    # Return all DataFrames, or a subset specified by names.
-    # Returns a dict of name:df or a single df if there's only 1
     def get_dataframes(self, names: Union[None, str, list] = None):
+        # Return all DataFrames, or a subset specified by names.
+        # Returns a dict of name:df or a single df if there's only 1
         return self.store.get_dataframes(names)
 
     def __getitem__(self, key):
@@ -434,6 +335,47 @@ class MainWindow(QMainWindow):
             print(f"Refreshed {', '.join(refreshed_names)}")
 
     """Main Methods"""
+    def load_excel_sheets(self):
+        self.df = pd.read_excel(
+            io="data/csv/transcripts.xlsx", sheet_name="Sheet1", header=0
+        )
+        self.df_2 = pd.read_excel(
+            io="data/csv/testing.xlsx", sheet_name="Sheet1", header=0
+        )
+        self.faq_df = pd.read_excel(
+            io="data/csv/recipes.xlsx", sheet_name="Sheet1", header=0
+        )
+
+    def setup_ui(self):
+        self.setObjectName("MainWindow")
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.centralwidget.setObjectName("centralwidget")
+        self.setCentralWidget(self.centralwidget)
+        self.central_grid = QtWidgets.QGridLayout(self.centralwidget)
+        self.central_grid.setObjectName("central_grid")
+        self.central_stacked_widget = QtWidgets.QStackedWidget(self.centralwidget)
+        self.central_stacked_widget.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.central_stacked_widget.setLineWidth(0)
+        self.central_stacked_widget.setObjectName("central_stacked_widget")
+        self.central_grid.addWidget(self.central_stacked_widget, 0, 0, 1, 1)
+        self.faq_search_tab = FaqSearchTabContainer(parent=self)
+        self.central_stacked_widget.insertWidget(2, self.faq_search_tab)
+
+    def setup_main_components(self):
+        self.analysis_suite = AnalysisSuite(parent=self)
+        self.central_stacked_widget.insertWidget(0, self.analysis_suite)
+
+        self.testing_suite = TestingSuite(parent=self)
+        self.central_stacked_widget.insertWidget(1, self.testing_suite)
+
+        self.populate_search_box()
+
+    def setup_menubar(self):
+        self.menubar = QtWidgets.QMenuBar(self)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1449, 26))
+        self.menubar.setObjectName("menubar")
+        self.setMenuBar(self.menubar)
+
     def populate_search_box(self):
         # Initializing FAQ search window item model
         model = QStandardItemModel(len(self.faq_df.index), len(self.faq_df.columns))
@@ -477,18 +419,17 @@ class MainWindow(QMainWindow):
         # Synchronize selectors
         page = self.central_stacked_widget.currentIndex()
 
-        if page != 0:
-            self.analysis_suite.faq_search_box.search_column_select.blockSignals(True)
-            self.analysis_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
-            self.analysis_suite.faq_search_box.search_column_select.blockSignals(False)
-        if page != 1:
-            self.testing_suite.faq_search_box.search_column_select.blockSignals(True)
-            self.testing_suite.faq_search_box.search_column_select.setCurrentIndex(idx)
-            self.testing_suite.faq_search_box.search_column_select.blockSignals(False)
-        elif page != 2:
-            self.faq_search_tab.search_column_select.blockSignals(True)
-            self.faq_search_tab.search_column_select.setCurrentIndex(idx)
-            self.faq_search_tab.search_column_select.blockSignals(False)
+        widgets = {
+            0: self.analysis_suite.faq_search_box.search_column_select,
+            1: self.testing_suite.faq_search_box.search_column_select,
+            2: self.faq_search_tab.search_column_select,
+        }
+
+        for i, widget in enumerate(widgets.values()):
+            if i != page:
+                widget.blockSignals(True)
+                widget.setCurrentIndex(idx)
+                widget.blockSignals(False)
 
         # Set table column to filter by
         try:
@@ -515,9 +456,7 @@ class MainWindow(QMainWindow):
                         self.testing_suite.faq_search_box.search_box.showColumn(i)
 
     def populate_search_column_select(self):
-        """
-        Set model for FAQ search selector
-        """
+        """Set model for FAQ search selector"""
 
         model = QStandardItemModel(len(self.faq_df.columns), 0)
         for idx, item in enumerate(list(self.faq_df.columns.values)):
@@ -536,7 +475,7 @@ class MainWindow(QMainWindow):
         Assigns dataframe_viewers to analysis and testing suite and switches out models
         """
         if mode == "analysis":
-            # Assigning viewers
+            # Assign viewers
             self.analysis_suite.viewer = self.store.data[df_title].dataframe_viewer
             self.analysis_df_name = df_title
 
@@ -564,9 +503,7 @@ class MainWindow(QMainWindow):
             self.testing_suite.canned.populate_canned()
 
     def keyPressEvent(self, event):
-        """
-        Hotkeys
-        """
+        """Hotkeys"""
         mods = event.modifiers()
 
         # Switch to Analysis
