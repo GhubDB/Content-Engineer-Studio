@@ -10,4 +10,4 @@ content_engineer_studio/ContentEngineerStudio.egg-info
 content_engineer_studio/.editorconfig
 content_engineer_studio/ContentEngineerStudio/utils/chromedriver.exe
 content_engineer_studio/content_engineer_studio.egg-info
-content_engineer_studio/ContentEngineerStudio/__pycache__
+*_pycache__
