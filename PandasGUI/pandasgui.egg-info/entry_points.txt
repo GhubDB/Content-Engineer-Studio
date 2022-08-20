@@ -1,3 +1,0 @@
-[gui_scripts]
-pandasgui = pandasgui.run_with_args:main
-
